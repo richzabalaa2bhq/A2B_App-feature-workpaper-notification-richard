@@ -1,0 +1,361 @@
+﻿@page "/account"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Client.Component.Utilities
+@using System.IO
+@using System.Net.Http.Headers
+@using A2B_App.Shared.Sox
+@using BlazorDateRangePicker
+@using A2B_App.Shared.Utilities
+@using A2B_App.Client.Services
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize]
+@inject IJSRuntime jsRuntime
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@*<h2>Drag/Drop Demo</h2>
+
+    <div class="row">
+        <div class="col-4">
+            <div class="form-group">
+                <DragDrop ReturnFiles="@((e) => {ReturnFiles(e);})" enable="true" />
+            </div>
+        </div>
+    </div>*@
+
+@*<div class="row">
+        <div class="col-10">
+            <div class="form-group">
+                <img src="https://localhost:5001/include/upload/image/Q_3743bbd8-4834-46ec-a545-eb667dd5a1d8.jpg" />
+            </div>
+        </div>
+    </div>*@
+
+
+@*<button @onclick="StartTimer">Start</button>
+    <button @onclick="StopTimer">Stop</button>
+
+    <ElapsedTime @ref="refElapseTime" startTimer="@startTimer"
+                                       ReturnTimeValue="ReturnTimeValue">
+
+    </ElapsedTime>*@
+
+
+
+@*@if (file !=null)
+    {
+        <div class="row">
+            <div class="col-10">
+                <img src="@($"https://localhost:5001/include/upload/image/{file}")" />
+            </div>
+        </div>
+    }*@
+
+
+
+
+
+@*<DateRangePicker @bind-StartDate="@StartDate" @bind-EndDate="@EndDate" Culture="@(System.Globalization.CultureInfo.GetCultureInfo("en-US"))">
+    <PickerTemplate>
+        <div id="@context.Id" @onclick="context.Toggle" style="background: #fff; cursor: pointer; padding: 5px 10px; width: 250px; border: 1px solid #ccc;">
+            <i class="oi oi-calendar"></i>&nbsp;
+            @*<span>@context.FormattedRange @(string.IsNullOrEmpty(context.FormattedRange) ? "Choose dates..." : "")</span>*@
+@*@if (string.IsNullOrEmpty(context.FormattedRange))
+                {
+                    <span>Select Date</span>
+                }
+                else
+                {
+                    <span>@(StartDate.HasValue ? StartDate.Value.ToString("MMM dd, yyyy") : string.Empty) - @(EndDate.HasValue ? EndDate.Value.ToString("MMM dd, yyyy") : string.Empty) </span>
+                }
+
+                <i class="oi oi-chevron-bottom float-right"></i>
+            </div>
+        </PickerTemplate>
+        <ButtonsTemplate>
+            <button class="cancelBtn btn btn-sm btn-default"
+                    @onclick="@context.ClickCancel" type="button">
+                Cancel
+            </button>
+            <button class="applyBtn btn btn-sm btn-primary" @onclick="@context.ClickApply"
+                    disabled="@(context.TStartDate == null || context.TEndDate == null)"
+                    type="button">
+                Apply
+            </button>
+        </ButtonsTemplate>
+    </DateRangePicker>*@
+
+
+@*<DateSelection OnDateChanged="GetDate"isDateRange="@isSingleDateRange" classOverwrite="@fontSize"></DateSelection>*@
+
+<!--<div class="row p-2">
+    <div class="col-6">-->
+        @*<div class="form-group">
+                <label for="Method Name"><span class="has-text-weight-bold"></span>Screenshot</label>
+                <InputFile multiple OnChange="HandleFileInputChange" />
+            </div>*@
+        <!--<div class="dropzone dropClass rounded">
+            <InputFile id="fileInput" multiple title=""
+                       OnChange="HandleFileInputChange"
+                       accept="image/png, image/jpeg, image/gif"
+                       ondragenter="HandleDragEnter"
+                       ondragleave="HandleDragLeave" />
+            Screenshot
+        </div>
+    </div>
+</div>
+<br />-->
+
+
+@*@if (selectedFiles != null)
+{
+
+    @foreach (var file in selectedFiles)
+    {
+        <div class="columns">
+            <div class="column is-two-fifths">
+                <div class="box @(file.Status == "uploaded" ? "has-background-success-light": "has-background-white-bis")">
+                    <span>
+                        <strong>@file.IFileEntry.Name</strong>
+                        @if (file.Status == "pending-upload" && file.Percent != "100")
+                        {
+                            @(file.Percent = (100.0 * file.IFileEntry.Data.Position / file.IFileEntry.Size).ToString("0"))
+                            <progress class="progress is-primary" value="@(file.Percent)" max="100"></progress>
+                        }
+
+                        @if (file.Status == "uploaded")
+                        {
+                            <button class="delete is-small is-pulled-right has-background-danger" @onclick="@(e => RemoveFile(file))"></button>
+                        }
+                    </span>
+                    @if (file.Status == "uploaded" && !string.IsNullOrEmpty(file.NewFilename))
+                    {
+                        <figure class="image is-2by1">
+                            <img src="@($"{NavManager.BaseUri}include/upload/image/{file.NewFilename}")">
+                        </figure>
+                    }
+
+                </div>
+
+            </div>
+        </div>
+    }
+
+}*@
+
+
+
+
+@code {
+    //private NotificationBetaTest notif;
+    private string file;
+    private bool startTimer { get; set; }
+    //ElapsedTime refElapseTime;
+    DateTimeOffset? StartDate { get; set; }
+    DateTimeOffset? EndDate { get; set; }
+    string dtValue { get; set; }
+    private bool isSingleDateRange { get; set; } = false;
+    System.Globalization.CultureInfo customCulture = new System.Globalization.CultureInfo("en-US", true);
+    private string dtFormat { get; set; } = "MMM dd, yyyy";
+    private string fontSize { get; set; } = "";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        //notif.Show();
+        var settings = await _getSettings;
+        startTimer = false;
+        System.Diagnostics.Debug.WriteLine("Settings received in main {0}", settings.SoxQuestionnaire.Eri.ELC10.ToString());
+        customCulture.DateTimeFormat.ShortDatePattern = "MMM dd, yyyy h:mm tt";
+        this.StateHasChanged();
+    }
+
+    private void StartTimer()
+    {
+        if (!startTimer)
+        {
+            startTimer = true;
+            //refElapseTime.startTimer = true;
+        }
+        this.StateHasChanged();
+    }
+
+    private void StopTimer()
+    {
+        if (startTimer)
+            startTimer = false;
+
+        this.StateHasChanged();
+    }
+
+    private void ReturnTimeValue(string value)
+    {
+        System.Diagnostics.Debug.WriteLine($"Elapse Time: {value}");
+        this.StateHasChanged();
+    }
+
+    private async void ReturnFiles(FileUpload fileUpload)
+    {
+
+        if (fileUpload.IFileEntry != null)
+        {
+            var ms = new MemoryStream();
+            await fileUpload.IFileEntry.Data.CopyToAsync(ms);
+
+            //upload file and get response
+            var response = await UploadFileAsync(ms, fileUpload.IFileEntry.Name, Http);
+
+            if (response.StatusCode.ToString() == "OK")
+            {
+                file = response.Content.ReadAsStringAsync().Result.ToString();
+                this.StateHasChanged();
+            }
+
+        }
+    }
+
+    public async Task<HttpResponseMessage> UploadFileAsync(MemoryStream ms, string fileName, HttpClient Http)
+    {
+
+        var content = new MultipartFormDataContent();
+        content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data");
+        content.Add(new ByteArrayContent(ms.GetBuffer()), "file", fileName);
+
+        var response = await Http.PostAsync($"api/fileupload/image", content);
+        System.Diagnostics.Debug.WriteLine(response.Content.ReadAsStringAsync().Result);
+        System.Diagnostics.Debug.WriteLine(response.StatusCode.ToString());
+
+        return response;
+
+    }
+
+    void ResetClick(MouseEventArgs e, DateRangePicker picker)
+    {
+        StartDate = null;
+        EndDate = null;
+        // Close the picker
+        picker.Close();
+        // Fire OnRangeSelectEvent
+        picker.OnRangeSelect.InvokeAsync(new DateRange());
+    }
+
+    private void GetDate(DateRangeSelected dtSelected)
+    {
+        if (dtSelected != null)
+        {
+            if (dtSelected.startDate.HasValue)
+            {
+                System.Diagnostics.Debug.WriteLine($"Return Start Date: {dtSelected.startDate.Value.ToString()}");
+
+            }
+            if (dtSelected.endDate.HasValue)
+            {
+                System.Diagnostics.Debug.WriteLine($"Return End Date: {dtSelected.endDate.Value.ToString()}");
+            }
+
+            dtValue = $"{dtSelected.startDate.Value.ToString("MMM dd, yyyy")} - {dtSelected.endDate.Value.ToString("MMM dd, yyyy")}";
+        }
+
+        this.StateHasChanged();
+    }
+
+
+    const int MaxFileSizeMB = 5;
+    const int MaxFileSize = MaxFileSizeMB * 1024 * 1024; // 5MB
+    private bool fileSizeError = false;
+    private bool fileTypeError = false;
+    //private IFileListEntry selectedFiles;
+    private List<KeyReportScreenshotUpload> selectedFiles = new List<KeyReportScreenshotUpload>();
+    private string dropClass = "";
+    FileService fileService = new FileService();
+    private async void HandleFileInputChange(IFileListEntry[] files)
+    {
+
+        List<string> acceptedFileTypes = new List<string>() { "image/png", "image/jpeg", "image/gif" };
+        if (files != null)
+        {
+            int position = 0;
+            foreach (var file in files)
+            {
+                bool error = false;
+                if (file.Size > MaxFileSize)
+                {
+                    error = true;
+                    fileSizeError = true;
+                }
+
+                if (!acceptedFileTypes.Contains(file.Type))
+                {
+                    error = true;
+                    fileTypeError = true;
+                }
+
+                //keep the good files
+                if (!error)
+                {
+                    KeyReportScreenshotUpload keyReportFileUpload = new KeyReportScreenshotUpload();
+                    keyReportFileUpload.IFileEntry = file;
+                    keyReportFileUpload.Position = position;
+                    keyReportFileUpload.Status = "pending-upload";
+                    keyReportFileUpload.Percent = "0";
+                    selectedFiles.Add(keyReportFileUpload);
+                    position++;
+                    //selectedFiles = file;
+                }
+            }
+
+            //try to upload
+
+            //writeLog.Display(selectedFiles);
+        }
+
+
+        if (selectedFiles != null && selectedFiles.Any())
+        {
+
+            foreach (var item in selectedFiles)
+            {
+                if (item.Status == "pending-upload")
+                {
+                    item.IsLoading = item.IFileEntry.Data.Position > 0 ? true : false;
+                    item.IFileEntry.OnDataRead += (sender, eventArgs) => InvokeAsync(StateHasChanged);
+
+                    var ms = new MemoryStream();
+                    await item.IFileEntry.Data.CopyToAsync(ms);
+
+                    //upload file and get response
+                    var response = await fileService.UploadFileAsync(ms, item.IFileEntry.Name, Http);
+
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        item.NewFilename = response.Content.ReadAsStringAsync().Result.ToString();
+                        item.Status = "uploaded";
+                    }
+                }
+            }
+
+        }
+
+        HandleDragLeave();
+        this.StateHasChanged();
+    }
+
+    private void RemoveFile(KeyReportScreenshotUpload file)
+    {
+        selectedFiles.Remove(file);
+        this.StateHasChanged();
+    }
+
+    private void HandleDragEnter()
+    {
+        dropClass = "dropzone-drag";
+        this.StateHasChanged();
+    }
+
+    private void HandleDragLeave()
+    {
+        dropClass = string.Empty;
+        this.StateHasChanged();
+    }
+
+}

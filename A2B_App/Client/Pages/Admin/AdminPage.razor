@@ -1,0 +1,31 @@
+﻿@page "/admin"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize]
+
+
+<h1>Admin</h1>
+
+<div class="container">
+
+    
+
+</div>
+
+@code {
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var settings = await _getSettings;
+
+        System.Diagnostics.Debug.WriteLine("Settings received in main {0}", settings.SoxQuestionnaire.Eri.ELC10.ToString());
+
+    }
+
+
+
+}

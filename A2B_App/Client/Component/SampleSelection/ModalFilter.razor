@@ -1,0 +1,41 @@
+﻿
+@inject IModalService ModalService
+
+
+    <div class="simple-form">
+
+        <div class="form-group">
+            <label for="first-name">First Name</label>
+            <input @bind="ClientName" type="text" class="form-control" id="first-name" placeholder="Enter First Name" />
+        </div>
+
+        <button @onclick="SubmitForm" class="btn btn-primary">Submit</button>
+        <button @onclick="BlazoredModal.Cancel" class="btn btn-secondary">Cancel</button>
+    </div>
+
+
+
+
+@code {
+
+
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+
+    private string ClientName { get; set; }
+
+    protected override void OnInitialized()
+    {
+
+    }
+
+    void SubmitForm()
+    {
+        BlazoredModal.Close(ModalResult.Ok($"{ClientName}"));
+    }
+
+    void Cancel()
+    {
+        BlazoredModal.Cancel();
+    }
+
+}

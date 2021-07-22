@@ -1,0 +1,14 @@
+{
+  "ApiServer": "https://ddohq.com/api/",
+  "SodUri": "https://sox.tools-dev.tech/sod",
+  "RcmUri": "https://sox.tools-dev.tech/rcm",
+  "SoxTrackerUri": "https://sox.tools-dev.tech/sox-tracker",
+  "IUCSystemAppId": "25885264",
+  "IUCNonSystemAppId": "25885344",
+  "SoxQuestionnaire": {
+    "ERI": {
+      "ELC10": "24885890"
+    }
+  }
+
+}

@@ -1,0 +1,218 @@
+﻿@using BlazorDateRangePicker
+@using A2B_App.Client.Services
+@using A2B_App.Shared.Podio
+@using A2B_App.Shared.Sox 
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@using A2B_App.Shared.User 
+
+
+@if (display && appUser != null)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">@title</p>
+                <button class="delete" aria-label="close" @onclick="SetReturnValue"></button>
+            </header>
+            <section class="modal-card-body">
+
+                <div class="@messageClass">
+                    <button class="delete" @onclick="HideNotification"></button>
+                    @message
+                </div>
+
+                @*<div class="simple-form">*@
+
+                <EditForm Model="@appUser" OnValidSubmit="@HandleValidSubmit" OnInvalidSubmit="@HandleInValidSubmit">
+                    <DataAnnotationsValidator />
+                    @*<ValidationSummary />*@
+
+                    <div class="field">
+                        <div class="form-group">
+                            <label for="Email">Email</label>
+                            <InputText class="input" type="text" placeholder="Email" id="Email" @bind-Value="@appUser.Email" disabled="@(email != string.Empty ? true : false)"></InputText>
+                            <ValidationMessage For="@(() => @appUser.Email)" />
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="form-group">
+                            <label for="Password">Password</label>
+                            <InputText class="input" type="password" placeholder="******" id="Password" @bind-Value="@appUser.Password"></InputText>
+                            <ValidationMessage For="@(() => @appUser.Password)" />
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="form-group">
+                            <label for="ConfirmPassword">Confirm Password</label>
+                            <InputText class="input" type="password" placeholder="******" id="ConfirmPassword" @bind-Value="@appUser.ConfirmPassword"></InputText>
+                            <ValidationMessage For="@(() => @appUser.ConfirmPassword)" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button class="button is-success" type="submit">@title</button>
+                    </div>
+
+
+                </EditForm>
+
+                @*</div>*@
+
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" @onclick="SetReturnValue">Cancel</button>
+            </footer>
+        </div>
+    </div>
+
+    
+
+}
+
+
+
+
+@code {
+
+
+    [Parameter] public string title { get; set; }
+    [Parameter] public EventCallback<bool> ReturnValue { get; set; }
+    [Parameter] public string email { get; set; }
+
+    private AdminService adminService;
+    private ClientSettings settings;
+    private HttpResponseMessage httpResponseMessage { get; set; }
+    private AppUser appUser { get; set; }
+    private DateTimeOffset? startDate { get; set; } = null;
+    private DateTimeOffset? endDate { get; set; } = null;
+    //private string confirmPassword = null;
+    private string message { get; set; }
+    private string messageClass { get; set; }
+    private bool isSuccess { get; set; }
+
+    protected override Task OnParametersSetAsync()
+    {
+        Initialize();
+        return base.OnParametersSetAsync();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        Initialize();
+        return base.OnInitializedAsync();
+    }
+
+    private async void Initialize()
+    {
+        if(title == "Add User" && email == string.Empty)
+            NewUser();
+        else
+        {
+            appUser = new AppUser();
+            appUser.Email = email;
+        }
+        HideNotification();
+        settings = await _getSettings;
+        adminService = new AdminService(settings);
+        message = string.Empty;
+        this.StateHasChanged();
+    }
+
+    private void NewUser()
+    {
+        appUser = new AppUser();
+        appUser.Email = string.Empty;
+        appUser.Password = string.Empty;
+        message = string.Empty;
+    }
+
+    private async void SaveUser()
+    {
+        var result = await adminService.UserManagement(appUser, Http, title);
+        var httpResponse = result.Item1;
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            ShowSuccessNotification("Sucessfully Save User");
+        }
+        else
+        {
+            ShowErrorNotification($"Error adding user {httpResponse.Content.ReadAsStringAsync().Result.ToString()}");
+        }
+        this.StateHasChanged();
+    }
+
+    private void SetReturnValue()
+    {
+        isSuccess = true;
+        ReturnValue.InvokeAsync(isSuccess);
+        Close();
+    }
+
+
+    private void HandleValidSubmit()
+    {
+        System.Diagnostics.Debug.WriteLine("OnValidSubmit");
+        SaveUser();
+        this.StateHasChanged();
+    }
+
+    private void HandleInValidSubmit()
+    {
+        System.Diagnostics.Debug.WriteLine("OnInValidSubmit");
+        this.StateHasChanged();
+    }
+
+    private async void ShowSuccessNotification(string notifMessage)
+    {
+        messageClass = "notification is-success";
+        message = notifMessage;
+        this.StateHasChanged();
+        await Task.Delay(3000);
+
+        if (title == "Add User" && email == string.Empty)
+        {
+            NewUser();
+            HideNotification();
+        }
+        else
+        {
+            SetReturnValue();
+        }
+
+    }
+
+    private async void ShowErrorNotification(string notifMessage)
+    {
+        messageClass = "notification is-danger";
+        message = notifMessage;
+        this.StateHasChanged();
+        await Task.Delay(5000);
+        HideNotification();
+    }
+
+    private void HideNotification()
+    {
+        messageClass = "is-hidden";
+        this.StateHasChanged();
+    }
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+}

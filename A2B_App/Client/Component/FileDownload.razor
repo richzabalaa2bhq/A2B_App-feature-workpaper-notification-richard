@@ -1,0 +1,45 @@
+﻿@inject NavigationManager NavigationManager
+
+@if (display)
+{
+    //<a class="btn btn-primary has-text-white" target="_top" download="@fileName" href="@DownloadFile2(fileName)">Download File</a> // download file directly to pc
+    //navigates to sharefile link
+    <button class="button display-2" @onclick="@((e) => { NavigateSF(Uri); })">
+        <span class="icon is-small">
+            <i class="oi oi-share"></i>
+        </span>
+        <span>Sharefile</span>
+    </button>
+ }
+@code {
+
+private bool display { get; set; } = false;
+    private string fileName { get; set; }
+    private string Uri { get; set; }
+
+    protected override Task OnParametersSetAsync()
+    {
+        System.Diagnostics.Debug.WriteLine($"Render FileName: {fileName}");
+        return base.OnParametersSetAsync();
+    }
+
+    private string DownloadFile2(string fileName)
+    {
+        return $"{NavigationManager.BaseUri}{Uri}{fileName}";
+    }
+
+    public void Show(string fileName, string Uri)
+    {
+        this.fileName = fileName;
+        this.Uri = Uri;
+        // this.Uri = "https://a2q2.sharefile.com/home/shared/fo4a53d1-73e3-4e0e-84cc-3c8d7a1344a5";//test static link
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+
+    private void NavigateSF(string link)
+    {
+        NavigationManager.NavigateTo($"{link}", forceLoad: true);
+    }
+ }

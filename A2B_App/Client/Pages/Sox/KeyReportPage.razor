@@ -1,0 +1,25 @@
+﻿@page "/keyreport/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Client.Component.KeyReport
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize(Roles = "Admin, IT, Accounting")]
+@using A2B_App.Client.Component.Utilities
+
+
+<NotificationBetaTest></NotificationBetaTest>
+<KeyReport></KeyReport>
+
+
+@code {
+
+    private string soxTracker { get; set; }
+    private ClientSettings settings;
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await _getSettings;
+        //ClientSettings settings = new ClientSettings();
+        soxTracker = settings.GetSoxTrackerUri();
+    }
+
+}

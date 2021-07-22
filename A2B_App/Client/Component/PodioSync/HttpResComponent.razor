@@ -1,0 +1,39 @@
+﻿
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+
+<article class="message @(isSuccess ? success: failed)">
+    <div class="message-header">
+        <p>@(isSuccess ? "Success": "Failed")</p>
+    </div>
+    @if (response != string.Empty)
+    {
+        <div class="message-body">
+            @(FormatJson(response))
+        </div>
+    }
+
+</article>
+
+@code {
+    [Parameter] public string response { get; set; }
+    [Parameter] public bool isSuccess { get; set; }
+    string success { get; set; } = "is-success";
+    string failed { get; set; } = "is-danger";
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+
+    private static string FormatJson(string json)
+    {
+        dynamic parsedJson = JsonConvert.DeserializeObject(json);
+        return JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
+    }
+
+
+
+
+}

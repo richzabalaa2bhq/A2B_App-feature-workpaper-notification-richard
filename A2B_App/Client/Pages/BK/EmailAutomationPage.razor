@@ -1,0 +1,34 @@
+﻿@page "/bk/emailautomation/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Client.Component.Client
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize]
+
+
+
+<h3>BK Email Automation</h3>
+<div>
+
+    <iframe id="JotFormIFrame-203257854275461"
+            title="Clone of BK Email Request"
+            onload="window.parent.scrollTo(0,0)"
+            allowtransparency="true"
+            allowfullscreen="true"
+            allow="geolocation; microphone; camera"
+            src="https://form.jotform.com/203257854275461"
+            frameborder="0"
+            style="
+      min-width: 100%;
+      height:700px;
+      border:none;"
+            scrolling="yes">
+    </iframe>
+
+</div>
+
+
+
+@code {
+
+}

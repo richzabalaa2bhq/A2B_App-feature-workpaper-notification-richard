@@ -1,0 +1,2512 @@
+﻿
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using System.Text
+@using A2B_App.Shared.Sox
+@using A2B_App.Client.Component.KeyReport
+@using A2B_App.Client.Component.Utilities
+@using System.Globalization
+@using System.IO
+@inject NavigationManager NavManager
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+
+<h3>Key Report</h3>
+
+<div class="columns">
+
+    <div class="column is-half">
+
+        @*Q1 Year*@
+        <div class="row">
+            <div class="col-10">
+                <div class="form-group">
+                    <label for="Question1"><span class="has-text-weight-bold">1. </span> Year?</label>
+                    <select class="form-control" id="Question1" @bind="Q1Answer">
+                        <option value="">Select Year</option>
+                        @if (listFy != null && listFy.Count > 0)
+                        {
+                            @foreach (var item in listFy)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        }
+
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        @if (listClient != null && listClient.Count > 0)
+        {
+            @*Q2 Client*@
+            <div class="row">
+                <div class="col-10">
+                    <div class="form-group">
+                        <label for="Q2Client"><span class="has-text-weight-bold">2. </span> What is the Client Name</label>
+                        <select class="form-control" id="Q2Client" @bind="Q2Answer">
+                            <option value="">Select Client</option>
+                            @foreach (var item in listClient)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (listReportName != null && listReportName.Count > 0)
+        {
+            @*Q3 Report Name*@
+            <div class="row">
+                <div class="col-10">
+                    <div class="form-group">
+                        <label for="Q3ReportName"><span class="has-text-weight-bold">3. </span>Report Name</label>
+                        <select class="form-control" id="Q3ReportName" @bind="Q3Answer">
+                            <option value="">Select Report</option>
+                            @foreach (var item in listReportName)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (listControlId != null && listControlId.Count > 0)
+        {
+            @*Q4 Control Id*@
+            <div class="row">
+                <div class="col-10">
+                    <div class="form-group">
+                        <label for="Q4ControlId"><span class="has-text-weight-bold">4. </span>Control Id</label>
+                        <select class="form-control" id="Q4ControlId" @bind="Q4Answer">
+                            <option value="">Select Report</option>
+                            @foreach (var item in listControlId)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        }
+
+            @*<div class="row">
+                <div class="col-10">
+                    <div class="form-group">
+                        <label for="Method Name"><span class="has-text-weight-bold"></span>Screenshot</label>
+                        <InputFile multiple OnChange="HandleFileSelected" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-10">
+                    <div class="form-group">
+                        <label for="Method Name"><span class="has-text-weight-bold"></span>Reports</label>
+                        <InputFile multiple OnChange="HandleFileSelected" />
+                    </div>
+                </div>
+            </div>*@
+
+        @if (keyReport1 != null || keyReport2 != null || keyReport3 != null || keyReport4 != null)
+                {
+
+                    <div class="tabs">
+
+                        <ul>
+                            @*<li class="@(tab1 ? "is-active" : string.Empty)">
+                                <a @onclick="@(() => { TabControl(1); })">
+                                    <span class="icon is-small"><i class="oi" aria-hidden="true"></i></span>
+                                    <span>Consolidated Original Format</span>
+                                </a>
+                            </li>*@
+                            <li class="@(tab2 ? "is-active" : string.Empty)">
+                                <a @onclick="@(() => { TabControl(2); })">
+                                    <span class="icon is-small"><i class="oi" aria-hidden="true"></i></span>
+                                    <span>IUC KR Questionnaire</span>
+                                </a>
+                            </li>
+                            <li class="@(tab3 ? "is-active" : string.Empty)">
+                                <a @onclick="@(() => { TabControl(3); })">
+                                    <span class="icon is-small"><i class="oi" aria-hidden="true"></i></span>
+                                    <span>IUC Report Tracker</span>
+                                </a>
+                            </li>
+                            @*<li class="@(tab4 ? "is-active" : string.Empty)">
+                                <a @onclick="@(() => { TabControl(4); })">
+                                    <span class="icon is-small"><i class="oi" aria-hidden="true"></i></span>
+                                    <span>Exceptions</span>
+                                </a>
+                            </li>*@
+
+                        </ul>
+
+                    </div>
+
+                    <div class="container is-fluid">
+                        @if (tab1)
+                        {
+                            <div class="columns">
+                                <div class="column is-full">
+                                    @if (keyReport1 != null)
+                                    {
+                                        @*<hr />*@
+                                        @*<KeyReportOrigFormat keyReportQuestion="@keyReport1"
+                                        keyReportAnswer="@keyAnswer1"
+                                        clientName="@clientName"
+                                        fy="@FY"
+                                        reportName="@reportName"
+                                        controlId="@controlId"
+                                        ReturnListAnswer="@((e) => { ReturnUserAnswer(e); })"></KeyReportOrigFormat>*@
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else if (tab2)
+                        {
+                            <div class="columns">
+                                <div class="column is-full">
+                                    @if (keyReport2 != null)
+                                    {
+                                        @*<hr />*@
+                                        <KeyReportALLIUC keyReportQuestion="@keyReport2"
+                                                         keyReportAnswer="@keyAnswer2"
+                                                         clientName="@clientName"
+                                                         fy="@FY"
+                                                         methodLibrary="@methodLibrary"
+                                                         reportName="@reportName"
+                                                         controlId="@controlId"></KeyReportALLIUC>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else if (tab3)
+                        {
+                            <div class="columns">
+                                <div class="column is-full">
+                                    @if (keyReport3 != null)
+                                    {
+                                        @*<hr />*@
+                                        <KeyReportTestStatusTracker keyReportQuestion="@keyReport3"
+                                                                    keyReportAnswer="@keyAnswer3"
+                                                                    clientName="@clientName"
+                                                                    fy="@FY"
+                                                                    reportName="@reportName"
+                                                                    controlId="@controlId"></KeyReportTestStatusTracker>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else if (tab4)
+                        {
+                            <div class="columns">
+                                <div class="column is-full">
+                                    @if (keyReport4 != null)
+                                    {
+                                        @*<hr />*@
+                                        @*<KeyReportException keyReportQuestion="@keyReport4"
+                                        keyReportAnswer="@keyAnswer4"
+                                        clientName="@clientName"
+                                        fy="@FY"
+                                        reportName="@reportName"
+                                        controlId="@controlId"></KeyReportException>*@
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="container is-fluid">
+
+                        <div class="columns">
+                            <div class="column is-full">
+                                <div class="dropzone @dropClass rounded">
+                                    <InputFile id="fileInput" multiple title=""
+                                               OnChange="HandleFileInputChange"
+                                               accept="image/png, image/jpeg, image/gif"
+                                               @ondragenter="HandleDragEnter"
+                                               @ondragleave="HandleDragLeave" />
+                                    Upload Screenshot
+                                </div>
+
+                            </div>
+                        </div>
+
+                        @if (selectedImageFiles != null)
+                        {
+
+                            @foreach (var file in selectedImageFiles)
+                            {
+                                <div class="columns">
+                                    <div class="column is-two-fifths">
+                                        <div class="box @(file.Status == "uploaded" ? "has-background-success-light": "has-background-white-bis")">
+                                            <span>
+                                                <strong>@file.Filename</strong>
+                                                @if (file.Status == "pending-upload" && file.Percent != "100")
+                                                {
+                                                    @(file.Percent = (100.0 * file.IFileEntry.Data.Position / file.IFileEntry.Size).ToString("0"))
+                                                    <progress class="progress is-primary" value="@(file.Percent)" max="100"></progress>
+                                                }
+
+                                                @if (file.Status == "uploaded")
+                                                {
+                                                    <button class="delete is-small is-pulled-right has-background-danger" @onclick="@(e => RemoveImageFile(file))"></button>
+                                                }
+                                            </span>
+                                            @if (file.Status == "uploaded" && !string.IsNullOrEmpty(file.NewFilename))
+                                            {
+                                                <figure class="image is-2by1">
+                                                    <img src="@($"{NavManager.BaseUri}include/upload/image/{file.NewFilename}")">
+                                                </figure>
+                                            }
+
+                                        </div>
+
+                                    </div>
+                                </div>
+                            }
+
+                        }
+
+
+
+                    </div>
+
+                    <div class="container is-fluid">
+
+                        <div class="columns">
+                            <div class="column is-full">
+                                <div class="dropzone @dropClass rounded">
+                                    <InputFile id="fileInput2" multiple title=""
+                                               OnChange="HandleReportFileInputChange"
+                                               accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                                               @ondragenter="HandleDragEnter"
+                                               @ondragleave="HandleDragLeave" />
+                                    Upload Report
+                                </div>
+
+                            </div>
+                        </div>
+
+                        @if (selectedFiles != null)
+                        {
+
+                            @foreach (var file in selectedFiles)
+                            {
+                                <div class="columns">
+                                    <div class="column is-two-fifths">
+                                        <div class="box @(file.Status == "uploaded" ? "has-background-success-light": "has-background-white-bis")">
+                                            <span>
+                                                <strong>@file.Filename</strong>
+                                                @if (file.Status == "pending-upload" && file.Percent != "100")
+                                                {
+                                                    @(file.Percent = (100.0 * file.IFileEntry.Data.Position / file.IFileEntry.Size).ToString("0"))
+                                                    <progress class="progress is-primary" value="@(file.Percent)" max="100"></progress>
+                                                }
+
+                                                @if (file.Status == "uploaded")
+                                                {
+                                                    <button class="delete is-small is-pulled-right has-background-danger" @onclick="@(e => RemoveReportFile(file))"></button>
+                                                }
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            }
+
+                        }
+
+
+
+                    </div>
+
+                    <br />
+                    <div class="container is-fluid">
+                        <div class="columns">
+                            <div class="column is-half">
+                                <div class="form-group">
+                                    <button class="btn btn-success" @onclick="StopTimer">Save Key Report</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    
+                }
+
+            
+
+    </div>
+
+</div>
+
+<ElapsedTime startTimer="@startTimer"
+             ReturnTimeValue="ReturnTimeValue">
+
+</ElapsedTime>
+
+
+@code {
+    //private ModalQuestions modalQuestions;
+    private string title;
+    public bool startTimer { get; set; }
+    //ElapsedTime refElapseTime;
+    private ClientSettings settings;
+    private RcmService RcmService;
+    private SoxTrackerService SoxTrackerService;
+    private int generatedParameter { get; set; }
+    private int generatedReport { get; set; }
+    private int generatedCompleteness { get; set; }
+    private int generatedAccuracy { get; set; }
+    private List<string> listFy = new List<string>();
+    private List<string> listClient = new List<string>();
+    private List<string> listReportName = new List<string>();
+    private List<string> listControlId = new List<string>();
+    private List<int> selectedParameterMethods = new List<int>();
+    private List<int> selectedReportMethods = new List<int>();
+    private List<int> selectedCompletenessMethods = new List<int>();
+    private List<int> selectedAccuracyMethods = new List<int>();
+    private List<KeyReportQuestion> keyReport1, keyReport2, keyReport3, keyReport4;
+    private List<KeyReportUserInput> keyAnswer1, keyAnswer2, keyAnswer3, keyAnswer4;
+    private List<CAMethodLibrary> listMethods_completeness = new List<CAMethodLibrary>();
+    private List<CAMethodLibrary> listMethods_accuracy = new List<CAMethodLibrary>();
+    private List<CAMethodLibrary> listMethods_parameters = new List<CAMethodLibrary>();
+    private List<CAMethodLibrary> listMethods_report = new List<CAMethodLibrary>();
+    public List<ParametersLibrary> parameters_list = new List<ParametersLibrary>();
+    public List<ReportsLibrary> reports_list = new List<ReportsLibrary>();
+    public List<CompletenessLibrary> completeness_list = new List<CompletenessLibrary>();
+    public List<AccuracyLibrary> accuracy_list = new List<AccuracyLibrary>();
+
+    //for temporary container of answers Parameters, Reports, Completeness, Accuracy
+
+    public ParametersLibrary[] parameters_answer = new ParametersLibrary[10];
+    public ReportsLibrary[] reports_answer = new ReportsLibrary[10];
+    public CompletenessLibrary[] completeness_answer = new CompletenessLibrary[10];
+    public AccuracyLibrary[] accuracy_answer = new AccuracyLibrary[10];
+
+    private List<CAMethodLibrary> methodLibrary;
+    //private A2B_App.Shared.Sox.Rcm rcm = new A2B_App.Shared.Sox.Rcm();
+    //private RcmQuestionnaireFilter filter = new RcmQuestionnaireFilter();
+    private KeyReportService KeyReportService;
+    private KeyReportQuestionsFilter questionsFilter;
+    private bool isSavingState { get; set; }
+
+    private string FY { get; set; }
+    private string clientName { get; set; }
+    private string reportName { get; set; }
+    private string controlId { get; set; }
+    private int itemId { get; set; }
+    private string duration { get; set; }
+    private string sampleProceduresOverrideField { get; set; }
+
+    private bool OverrideSampleProcedure { get; set; } = false;
+    private bool tab1 { get; set; } = false;
+    private bool tab2 { get; set; } = false;
+    private bool tab3 { get; set; } = false;
+    private bool tab4 { get; set; } = false;
+    private bool questionsGenerated { get; set; } = false;
+    private List<string> keyReportControlActivity { get; set; }
+    private List<string> keyReportKeyControl { get; set; }
+    private List<string> keyReport { get; set; }
+    private List<string> keyReportName { get; set; }
+    private List<string> keyReportSystemSource { get; set; }
+    private List<string> keyReportNonKeyReport { get; set; }
+    private List<string> keyReportReportCustomized { get; set; }
+    private List<string> keyReportIUCType { get; set; }
+    private List<string> keyReportControlsRelyingIUC { get; set; }
+    private List<string> keyReportPreparer { get; set; }
+    private List<string> keyReportUniqueKeyReport { get; set; }
+    private List<string> keyReportNotes { get; set; }
+    private List<string> keyReportNumber { get; set; }
+    private List<string> keyReportTester { get; set; }
+    private List<string> keyReportReviewer { get; set; }
+    private List<string> keyReportControlId { get; set; }
+    private List<string> keyReportProcess { get; set; }
+    private List<string> keyReportProcessOwner { get; set; }
+    private KeyReportFilter reportFilter { get; set; }
+
+    private Rcm rcm { get; set; }
+    private SoxTracker soxTracker { get; set; }
+
+    private KeyReportItemId keyReportItemId { get; set; }
+    private string[] keyreportMethod = new string[] { };
+    private string[] keyreportParameterAnswer = new string[10];
+    private string[] keyreportReportAnswer = new string[10];
+    private string[] keyreportCompletenessAnswer = new string[10];
+    private string[] keyreportAccuracyAnswer = new string[10];
+
+    private KeyReportIds KeyReportIDs { get; set; }
+    public int count { get; set; }
+    private bool previewClicked { get; set; } = false;
+    public string previewOutputSampleProcedures { get; set; } = string.Empty;
+    const int MaxFileSizeMB = 5;
+    const int MaxFileSize = MaxFileSizeMB * 1024 * 1024; // 5MB
+    private bool fileSizeError = false;
+    private bool fileTypeError = false;
+    //private IFileListEntry selectedFiles;
+    private List<KeyReportScreenshotUpload> selectedImageFiles = new List<KeyReportScreenshotUpload>();
+    private List<KeyReportFile> selectedFiles = new List<KeyReportFile>();
+    private string dropClass = "";
+    FileService fileService = new FileService();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        settings = await _getSettings;
+        RcmService = new RcmService(settings);
+        KeyReportService = new KeyReportService(settings);
+        SoxTrackerService = new SoxTrackerService(settings);
+        Http.Timeout = TimeSpan.FromMinutes(30);
+
+        isSavingState = false;
+        keyReportControlActivity = new List<string>();
+        keyReportKeyControl = new List<string>();
+        keyReportName = new List<string>();
+        keyReportSystemSource = new List<string>();
+        keyReportNonKeyReport = new List<string>();
+        keyReportReportCustomized = new List<string>();
+        keyReportIUCType = new List<string>();
+        keyReportControlsRelyingIUC = new List<string>();
+        keyReportPreparer = new List<string>();
+        keyReportUniqueKeyReport = new List<string>();
+        keyReportNotes = new List<string>();
+        keyReportNumber = new List<string>();
+        keyReportTester = new List<string>();
+        keyReportReviewer = new List<string>();
+        keyReportControlId = new List<string>();
+        keyReportProcess = new List<string>();
+        keyReportProcessOwner = new List<string>();
+        reportFilter = new KeyReportFilter();
+
+        GetAccuracyMethods();
+        GetCompletenessMethods();
+        GetParametersMethods();
+        GetReportsMethods();
+        GetKeyReportControlActivity();
+        GetKeyReportKeyControl();
+        GetKeyReportName();
+        GetKeyReportSystemSource();
+        GetKeyReportNonKeyReport();
+        GetKeyReportReportCustomized();
+        GetKeyReportIUCType();
+        GetKeyReportControlsRelyingIUC();
+        GetKeyReportPreparer();
+        GetKeyReportUniqueKeyReport();
+        GetKeyReportNotes();
+        GetKeyReportNumber();
+        GetKeyReportTester();
+        GetKeyReportReviewer();
+        GetRcmControlId();
+        GetRcmProcess();
+        GetRcmControlOwner();
+
+
+        GetFY();
+        StartTimer();
+        //initializedParams();
+
+        //return base.OnInitializedAsync();
+    }
+
+    private void OvverrideSampleProcedure(bool x)
+    {
+        OverrideSampleProcedure = x;
+    }
+    protected override void OnParametersSet()
+    {
+        this.StateHasChanged();
+        base.OnParametersSet();
+    }
+
+
+    private string Q1Answer
+    {
+        get
+        {
+            return FY;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ1Selected(eventArgs);
+        }
+    }
+    private void EventQ1Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"Fy: {e.Value}");
+            FY = e.Value.ToString();
+            reportFilter.FY = e.Value.ToString();
+
+            if (reportFilter.FY != string.Empty)
+            {
+                GetClient();
+            }
+        }
+        else
+        {
+            FY = string.Empty;
+        }
+
+    }
+
+    private string Q2Answer
+    {
+        get
+        {
+            return clientName;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ2Selected(eventArgs);
+        }
+    }
+    private void EventQ2Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"clientName: {e.Value}");
+            clientName = e.Value.ToString();
+            reportFilter.ClientName = e.Value.ToString();
+            if (reportFilter.ClientName != string.Empty)
+            {
+                GetReportName();
+                //GetKeyReport(reportFilter, 1);
+                //GetKeyReport(reportFilter, 2);
+                //GetKeyReport(reportFilter, 3);
+                //GetKeyReport(reportFilter, 4);
+            }
+        }
+        else
+        {
+            clientName = string.Empty;
+            reportFilter.ClientName = string.Empty;
+        }
+
+    }
+    private void parameterMethodClickEvent(int value, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            if (!selectedParameterMethods.Contains(value))
+            {
+                selectedParameterMethods.Add(value);
+                // System.Diagnostics.Debug.WriteLine($"Add Q8: {value}");
+            }
+        }
+        else
+        {
+            if (selectedParameterMethods.Contains(value))
+            {
+                selectedParameterMethods.Remove(value);
+                System.Diagnostics.Debug.WriteLine($"Remove Parameter Selected Method: {value}");
+            }
+        }
+    }
+    private void reportMethodClickEvent(int value, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            if (!selectedReportMethods.Contains(value))
+            {
+                selectedReportMethods.Add(value);
+                // System.Diagnostics.Debug.WriteLine($"Add Q8: {value}");
+            }
+        }
+        else
+        {
+            if (selectedReportMethods.Contains(value))
+            {
+                selectedReportMethods.Remove(value);
+                System.Diagnostics.Debug.WriteLine($"Remove Report Selected Method: {value}");
+            }
+        }
+    }
+    private void completenessMethodClickEvent(int value, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            if (!selectedCompletenessMethods.Contains(value))
+            {
+                selectedCompletenessMethods.Add(value);
+                // System.Diagnostics.Debug.WriteLine($"Add Q8: {value}");
+            }
+        }
+        else
+        {
+            if (selectedCompletenessMethods.Contains(value))
+            {
+                selectedCompletenessMethods.Remove(value);
+                System.Diagnostics.Debug.WriteLine($"Remove Completeness Selected Method: {value}");
+            }
+        }
+    }
+    private void accuracyMethodClickEvent(int value, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            if (!selectedAccuracyMethods.Contains(value))
+            {
+                selectedAccuracyMethods.Add(value);
+                // System.Diagnostics.Debug.WriteLine($"Add Q8: {value}");
+            }
+        }
+        else
+        {
+            if (selectedAccuracyMethods.Contains(value))
+            {
+                selectedAccuracyMethods.Remove(value);
+                System.Diagnostics.Debug.WriteLine($"Remove Accuracy Selected Method: {value}");
+            }
+        }
+    }
+    private string Q3Answer
+    {
+        get
+        {
+            return reportName;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ3Selected(eventArgs);
+        }
+    }
+    private void EventQ3Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"clientName: {e.Value}");
+            reportName = e.Value.ToString();
+            reportFilter.KeyReportName = e.Value.ToString();
+            if (reportFilter.ClientName != string.Empty)
+            {
+                GetControlId();
+            }
+        }
+        else
+        {
+            clientName = string.Empty;
+            reportFilter.KeyReportName = string.Empty;
+        }
+
+    }
+
+    private string Q4Answer
+    {
+        get
+        {
+            return controlId;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ4Selected(eventArgs);
+        }
+    }
+    private async void EventQ4Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"controlId: {e.Value}");
+            controlId = e.Value.ToString();
+            reportFilter.ControlId = e.Value.ToString();
+            if (reportFilter.ControlId != string.Empty)
+            {
+                await GetRcm(reportFilter);
+                await GetSoxTracker(reportFilter);
+                await GetItemId(reportFilter);
+
+
+                //await GetKeyReport(reportFilter, 1);
+                await GetKeyReport(reportFilter, 2);
+                await GetKeyReport(reportFilter, 3);
+                //await GetKeyReport(reportFilter, 4);
+
+                await GetScreenshot(reportFilter);
+                await GetReportFile(reportFilter);
+            }
+        }
+        else
+        {
+            controlId = string.Empty;
+            reportFilter.ControlId = string.Empty;
+        }
+
+    }
+
+
+    private async void GetFY()
+    {
+        //listFy = await RcmService.GetRcmQuestionnaireFy(Http);
+        //this.StateHasChanged();
+        var response = await KeyReportService.GetFy(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            listFy = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetClient()
+    {
+        //reportFilter.FY = Fy;
+        //RcmQuestionnaireFilter rcmFilter = new RcmQuestionnaireFilter();
+        //rcmFilter.FY = reportFilter.FY;
+        //rcmFilter.Client = reportFilter.ClientName;
+
+        var response = await KeyReportService.GetClient(reportFilter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            listClient = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+
+        //var response = await RcmService.GetRcmQuestionnaireClient(rcmFilter, Http);
+
+        //if (response.StatusCode.ToString() == "OK")
+        //{
+        //    string result = response.Content.ReadAsStringAsync().Result.ToString();
+        //    listClient = JsonConvert.DeserializeObject<List<string>>(result);
+        //    this.StateHasChanged();
+        //}
+
+
+    }
+
+    private async void GetReportName()
+    {
+        //reportFilter.ClientName = clientName;
+
+        var response = await KeyReportService.GetReportName2(reportFilter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            listReportName = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+
+    }
+
+    private async void GetControlId()
+    {
+
+        var response = await KeyReportService.GetControlId(reportFilter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            listControlId = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+
+    }
+
+    private async void GetKeyReportControlActivity()
+    {
+        var response = await KeyReportService.GetKeyReportControlActivity(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportControlActivity = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportKeyControl()
+    {
+        var response = await KeyReportService.GetKeyReportKeyControl(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportKeyControl = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportName()
+    {
+        var response = await KeyReportService.GetKeyReportName(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportName = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportSystemSource()
+    {
+        var response = await KeyReportService.GetKeyReportSystemSource(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportSystemSource = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportNonKeyReport()
+    {
+        var response = await KeyReportService.GetKeyReportNonKeyReport(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportNonKeyReport = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportReportCustomized()
+    {
+        var response = await KeyReportService.GetKeyReportReportCustomized(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportReportCustomized = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportIUCType()
+    {
+        var response = await KeyReportService.GetKeyReportIUCType(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportIUCType = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportControlsRelyingIUC()
+    {
+        var response = await KeyReportService.GetKeyReportControlsRelyingIUC(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportControlsRelyingIUC = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportPreparer()
+    {
+        var response = await KeyReportService.GetKeyReportPreparer(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportPreparer = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportUniqueKeyReport()
+    {
+        var response = await KeyReportService.GetKeyReportUniqueKeyReport(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportUniqueKeyReport = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportNotes()
+    {
+        var response = await KeyReportService.GetKeyReportNotes(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportNotes = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportNumber()
+    {
+        var response = await KeyReportService.GetKeyReportNumber(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportNumber = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportTester()
+    {
+        var response = await KeyReportService.GetKeyReportTester(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportTester = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetKeyReportReviewer()
+    {
+        var response = await KeyReportService.GetKeyReportReviewer(Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportReviewer = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetRcmControlId()
+    {
+        var response = await KeyReportService.GetKeyReportItem(Http, "GetRcmControlId");
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportControlId = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetRcmProcess()
+    {
+        var response = await KeyReportService.GetKeyReportItem(Http, "GetRcmProcess");
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportProcess = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetRcmControlOwner()
+    {
+        var response = await KeyReportService.GetKeyReportItem(Http, "GetRcmControlOwner");
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportProcessOwner = result != string.Empty ? JsonConvert.DeserializeObject<List<string>>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task GetRcm(KeyReportFilter filter)
+    {
+        var response = await RcmService.GetRcm(filter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            rcm = result != string.Empty ? JsonConvert.DeserializeObject<Rcm>(result) : null;
+            //System.Diagnostics.Debug.WriteLine("------------------------------------");
+            ////WriteLog writeLog = new WriteLog();
+            ////writeLog.Display(rcm);
+            ////Console.WriteLine(rcm.ControlActivityFy19);
+
+            //System.Diagnostics.Debug.WriteLine("------------------------------------");
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task GetItemId(KeyReportFilter filter)
+    {
+        var response = await KeyReportService.GetItemId(filter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            keyReportItemId = result != string.Empty ? JsonConvert.DeserializeObject<KeyReportItemId>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task GetSoxTracker(KeyReportFilter filter)
+    {
+        var response = await SoxTrackerService.GetSoxTracker2(filter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            soxTracker = result != string.Empty ? JsonConvert.DeserializeObject<SoxTracker>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task GetKeyReportItemId(KeyReportFilter filter)
+    {
+        var response = await KeyReportService.GetClient(filter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            soxTracker = result != string.Empty ? JsonConvert.DeserializeObject<SoxTracker>(result) : null;
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task GetScreenshot(KeyReportFilter filter)
+    {
+        var response = await KeyReportService.GetScreenshot(filter, Http);
+        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            selectedImageFiles = result != string.Empty ? JsonConvert.DeserializeObject<List<KeyReportScreenshotUpload>>(result) : null;
+
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task GetReportFile(KeyReportFilter filter)
+    {
+        var response = await KeyReportService.GetReportFile(filter, Http);
+        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            selectedFiles = result != string.Empty ? JsonConvert.DeserializeObject<List<KeyReportFile>>(result) : null;
+
+            this.StateHasChanged();
+        }
+    }
+
+
+    private async void GetParametersMethods()
+    {
+        var response = await KeyReportService.GetMethods(Http, "A. Parameter");
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            methodLibrary = new List<CAMethodLibrary>();
+            methodLibrary = JsonConvert.DeserializeObject<List<CAMethodLibrary>>(result);
+
+            foreach (var item in methodLibrary)
+            {
+                listMethods_parameters.Add(item);
+            }
+        }
+        this.StateHasChanged();
+    }
+    private async void GetReportsMethods()
+    {
+        var response = await KeyReportService.GetMethods(Http, "B. Report");
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            methodLibrary = new List<CAMethodLibrary>();
+            methodLibrary = JsonConvert.DeserializeObject<List<CAMethodLibrary>>(result);
+
+            foreach (var item in methodLibrary)
+            {
+                listMethods_report.Add(item);
+            }
+        }
+        this.StateHasChanged();
+    }
+    private async void GetCompletenessMethods()
+    {
+
+        var response = await KeyReportService.GetMethods(Http, "C. Completeness");
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            methodLibrary = new List<CAMethodLibrary>();
+            methodLibrary = JsonConvert.DeserializeObject<List<CAMethodLibrary>>(result);
+
+            foreach (var item in methodLibrary)
+            {
+                listMethods_completeness.Add(item);
+            }
+        }
+        this.StateHasChanged();
+    }
+    private async void GetAccuracyMethods()
+    {
+
+        var response = await KeyReportService.GetMethods(Http, "D. Accuracy");
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            methodLibrary = new List<CAMethodLibrary>();
+            methodLibrary = JsonConvert.DeserializeObject<List<CAMethodLibrary>>(result);
+
+            foreach (var item in methodLibrary)
+            {
+                listMethods_accuracy.Add(item);
+            }
+        }
+        this.StateHasChanged();
+    }
+
+    private async Task GetKeyReport(KeyReportFilter filter, int num)
+    {
+        //Get workpaper or questionnaire
+        var response = await KeyReportService.GetKeyReport(filter, Http, num);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            switch (num)
+            {
+                case 1:
+                    keyReport1 = new List<KeyReportQuestion>();
+                    keyReport1 = JsonConvert.DeserializeObject<List<KeyReportQuestion>>(result);
+                    keyReport1 = PopulateOptions(keyReport1);
+                    keyAnswer1 = new List<KeyReportUserInput>();
+                    var keyReportItem1 = await GetKeyReport2(reportFilter, keyReportItemId.OrigFormatItemId);
+                    keyAnswer1 = PopulateAnswer(keyReport1, keyReportItem1.ToList(), keyReportItemId.OrigFormatItemId).OrderBy(x => x.Position).ToList();
+                    break;
+                case 2:
+                    keyReport2 = new List<KeyReportQuestion>();
+                    keyReport2 = JsonConvert.DeserializeObject<List<KeyReportQuestion>>(result);
+                    keyReport2 = PopulateOptions(keyReport2);
+                    keyAnswer2 = new List<KeyReportUserInput>();
+                    var keyReportItem2 = await GetKeyReport2(reportFilter, keyReportItemId.AllIUCItemId);
+                    keyAnswer2 = PopulateAnswer(keyReport2, keyReportItem2.ToList(), keyReportItemId.AllIUCItemId).OrderBy(x => x.Position).ToList();
+                    break;
+                case 3:
+                    keyReport3 = new List<KeyReportQuestion>();
+                    keyReport3 = JsonConvert.DeserializeObject<List<KeyReportQuestion>>(result);
+                    keyReport3 = PopulateOptions(keyReport3);
+                    keyAnswer3 = new List<KeyReportUserInput>();
+                    var keyReportItem3 = await GetKeyReport2(reportFilter, keyReportItemId.TestItemId);
+                    keyAnswer3 = PopulateAnswer(keyReport3, keyReportItem3.ToList(), keyReportItemId.TestItemId).OrderBy(x => x.Position).ToList();
+                    break;
+                case 4:
+                    keyReport4 = new List<KeyReportQuestion>();
+                    keyReport4 = JsonConvert.DeserializeObject<List<KeyReportQuestion>>(result);
+                    keyReport4 = PopulateOptions(keyReport4);
+                    keyAnswer4 = new List<KeyReportUserInput>();
+                    var keyReportItem4 = await GetKeyReport2(reportFilter, keyReportItemId.ExceptionItemId);
+                    keyAnswer4 = PopulateAnswer(keyReport4, keyReportItem4.ToList(), keyReportItemId.ExceptionItemId).OrderBy(x => x.Position).ToList();
+
+                    break;
+                default:
+                    break;
+            }
+
+            if (keyReport1 != null || keyReport2 != null || keyReport3 != null || keyReport4 != null)
+            {
+                InitTabControls();
+            }
+
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task<List<KeyReportUserInput>> GetKeyReport2(KeyReportFilter filter, int itemId)
+    {
+        List<KeyReportUserInput> listKeyReportItems = new List<KeyReportUserInput>();
+        if (itemId != 0)
+        {
+            var response = await KeyReportService.GetKeyReport2(Http, itemId);
+            if (response.StatusCode.ToString() == "OK")
+            {
+                string result = response.Content.ReadAsStringAsync().Result.ToString();
+                listKeyReportItems = new List<KeyReportUserInput>();
+                listKeyReportItems = JsonConvert.DeserializeObject<List<KeyReportUserInput>>(result);
+            }
+        }
+        return listKeyReportItems;
+    }
+
+    private void InitTabControls()
+    {
+        tab1 = false;
+        tab2 = true;
+        tab3 = false;
+        tab4 = false;
+    }
+
+    //handles tab control
+    private void TabControl(int activeControl)
+    {
+        switch (activeControl)
+        {
+            case 1:
+                tab1 = true;
+                tab2 = false;
+                tab3 = false;
+                tab4 = false;
+                break;
+            case 2:
+                tab1 = false;
+                tab2 = true;
+                tab3 = false;
+                tab4 = false;
+                break;
+            case 3:
+                tab1 = false;
+                tab2 = false;
+                tab3 = true;
+                tab4 = false;
+                break;
+            case 4:
+                tab1 = false;
+                tab2 = false;
+                tab3 = false;
+                tab4 = true;
+                break;
+            default:
+                break;
+        }
+        this.StateHasChanged();
+    }
+
+    private List<KeyReportUserInput> PopulateAnswer(List<KeyReportQuestion> listQuestion, List<KeyReportUserInput> listUserAnswer, int itemId)
+    {
+        //Console.WriteLine("listQuestion", listQuestion);
+        //Console.WriteLine(listUserAnswer);
+        //Console.WriteLine(rcm.ControlActivityFy19);
+        List<KeyReportUserInput> listAnswer = new List<KeyReportUserInput>();
+
+        try
+        {
+            if (listQuestion != null && listQuestion.Count > 0)
+            {
+                foreach (var item in listQuestion.OrderBy(x => x.Position))
+                {
+                    if (item != null)
+                    {
+                        KeyReportUserInput keyReportAnswer = new KeyReportUserInput();
+                        keyReportAnswer.StrQuestion = item.QuestionString;
+
+                        keyReportAnswer.FieldId = item.FieldId;
+                        keyReportAnswer.Position = item.Position;
+                        keyReportAnswer.AppId = item.AppId;
+                        keyReportAnswer.Type = item.Type;
+                        keyReportAnswer.CreatedOn = DateTime.Now;
+                        keyReportAnswer.UpdatedOn = DateTime.Now;
+                        keyReportAnswer.Description = item.Description;
+                        keyReportAnswer.Tag = item.Tag;
+                        keyReportAnswer.StrAnswer = string.Empty;
+                        keyReportAnswer.StrAnswer2 = string.Empty;
+                        keyReportAnswer.TagFY = FY;
+                        keyReportAnswer.TagClientName = clientName;
+                        keyReportAnswer.ItemId = itemId;
+                        keyReportAnswer.TagReportName = reportName;
+                        keyReportAnswer.TagControlId = controlId;
+
+
+                        //System.Diagnostics.Debug.WriteLine($"FieldId: {item.FieldId} - AppId: {item.AppId}");
+                        //Console.WriteLine($"FieldId: {item.FieldId} - AppId: {item.AppId}");
+                        //System.Diagnostics.Debug.WriteLine($"Debug: {item.FieldId.Value} - AppId: {item.AppId} - Name: {reportName}");
+                        var checkUserInput = listUserAnswer.Where(x => x.FieldId.Equals(item.FieldId.Value) && x.AppId.Equals(item.AppId) && x.TagReportName.Equals(reportName)).FirstOrDefault();
+                        //Console.WriteLine($"Position: {checkUserInput.Position}");
+                        //Console.WriteLine($"checkUserInput: {checkUserInput}");
+                        //Console.WriteLine($"rcm: {rcm}");
+
+                        if (checkUserInput != null)
+                        {
+                            keyReportAnswer.Id = checkUserInput.Id;
+                            keyReportAnswer.StrAnswer = checkUserInput.StrAnswer;
+                            keyReportAnswer.StrAnswer2 = checkUserInput.StrAnswer2;
+                            keyReportAnswer.Link = checkUserInput.Link;
+                            keyReportAnswer.TagStatus = checkUserInput.TagStatus;
+
+                            //Console.WriteLine("checkUserInput.StrAnswer result=>", checkUserInput.StrAnswer);
+                        }
+                        else
+                        {
+                            //Console.WriteLine("checkUserInput result is empty");
+                        }
+
+
+                        //try to add answer if its blank from another tab
+                        if (keyReportAnswer.StrAnswer == string.Empty)
+                        {
+                            switch (keyReportAnswer.StrQuestion.ToLower())
+                            {
+                                case "1. what is the fy?":
+                                    keyReportAnswer.StrAnswer = FY;
+                                    break;
+                                case "2. client name":
+                                    keyReportAnswer.StrAnswer = clientName;
+                                    break;
+                                case string s when s.Contains("key control using iuc"):
+                                    keyReportAnswer.StrAnswer = controlId;
+                                    break;
+                                case string s when s.Contains("name of iuc"):
+                                    keyReportAnswer.StrAnswer = reportName;
+                                    break;
+                                case string s when s.Contains("control activity using iuc"):
+                                    if (rcm != null && rcm.ControlActivityFy19 != string.Empty)
+                                        keyReportAnswer.StrAnswer = rcm.ControlActivityFy19;
+                                    break;
+                                case string s when s.Contains("key/non-key control"):
+                                    if (rcm != null && rcm.Key != string.Empty)
+                                        keyReportAnswer.StrAnswer = rcm.Key;
+                                    break;
+                                case string s when s.Contains("sub-process"):
+                                    if (rcm != null && rcm.Process != string.Empty)
+                                        keyReportAnswer.StrAnswer = rcm.Process;
+                                    break;
+
+                                case string s when s.Contains("key/non-key report"):
+                                    if (rcm != null && rcm.Process != string.Empty)
+                                        keyReportAnswer.StrAnswer = rcm.Key;
+                                    break;
+
+                                case string s when s.Contains("iuc/key report type"):
+                                    if (keyReportAnswer != null && keyReportAnswer.StrAnswer != string.Empty)
+                                        keyReportAnswer.StrAnswer = checkUserInput.StrAnswer;
+
+                                    //Console.WriteLine("UIC TYPE ANSWER=======>", keyReportAnswer.StrAnswer);
+                                    break;
+
+
+                                case string s when s.Contains("key report system name"):
+                                    if (keyReportAnswer != null && keyReportAnswer.StrAnswer != string.Empty)
+                                        keyReportAnswer.StrAnswer = checkUserInput.StrAnswer;
+
+                                    //Console.WriteLine("report customized=======>", keyReportAnswer.StrAnswer);
+                                    break;
+
+
+
+                                default:
+                                    break;
+                            }
+
+
+                        }
+                        listAnswer.Add(keyReportAnswer);
+                    }
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"{ex}");
+
+        }
+
+
+        return listAnswer;
+    }
+
+    private List<KeyReportQuestion> PopulateOptions(List<KeyReportQuestion> listQuestion)
+    {
+        if (listQuestion != null)
+        {
+            foreach (var item in listQuestion)
+            {
+                switch (item.QuestionString.ToLower())
+                {
+                    //add option for fy
+                    case string s when s.Contains("1. what is the fy"):
+                        if (FY != null && FY != string.Empty)
+                            item.Options.Add(new KeyReportOption { OptionName = FY });
+                        break;
+
+                    //add option for client name
+                    case string s when s.Contains("2. client name"):
+                        if (clientName != null && clientName != string.Empty)
+                            item.Options.Add(new KeyReportOption { OptionName = clientName });
+                        break;
+
+                    //add option for key control id
+                    case string s when s.Contains("key control using iuc") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (controlId != null && controlId != string.Empty)
+                            item.Options.Add(new KeyReportOption { OptionName = controlId });
+                        break;
+
+                    //add option for key KeyReportControlActivity
+                    case string s when s.Contains("control activity using iuc") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportControlActivity != null && keyReportControlActivity.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportControlActivity)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+                    case string s when s.Contains("source control") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportControlId != null && keyReportControlId.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportControlId)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    //add option for key KeyReportKeyControl
+                    case string s when s.Contains("key/non-key control") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportKeyControl != null && keyReportKeyControl.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportKeyControl)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    //add option for key KeyReportName
+                    case string s when s.Contains("name of iuc") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (reportName != null && reportName != string.Empty)
+                            item.Options.Add(new KeyReportOption { OptionName = reportName });
+                        break;
+
+                    //add option for key KeyReportSystemSource
+                    case string s when s.Contains("key report system name") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportSystemSource != null && keyReportSystemSource.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportSystemSource)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    //add option for key KeyReportNonKeyReport
+                    case string s when s.Contains("key/non-key report") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportNonKeyReport != null && keyReportNonKeyReport.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportNonKeyReport)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+                    case string s when s.Contains("12. key report") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportNonKeyReport != null && keyReportNonKeyReport.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportNonKeyReport)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+
+                    //add option for key KeyReportReportCustomized
+                    case string s when s.Contains("key report customized") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportReportCustomized != null && keyReportReportCustomized.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportReportCustomized)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    //add option for key KeyReportIUCType
+                    case string s when s.Contains("iuc/key report type") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportIUCType != null && keyReportIUCType.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportIUCType)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+                    case string s when s.Contains("iuc type") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportIUCType != null && keyReportIUCType.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportIUCType)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    case string s when s.Contains("iuc number") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportControlId != null && keyReportControlId.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportControlId)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    //add option for key KeyReportControlsRelyingIUC
+                    //case string s when s.Contains("controls relying on iuc") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                    //    if (keyReportControlsRelyingIUC != null && keyReportControlsRelyingIUC.Count > 0)
+                    //    {
+                    //        foreach (var itemOption in keyReportControlsRelyingIUC)
+                    //        {
+                    //            item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                    //        }
+                    //    }
+                    //    break;
+
+                    //add option for key KeyReportPreparer
+                    case string s when s.Contains("preparer") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportPreparer != null && keyReportPreparer.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportPreparer)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    //add option for key KeyReportUniqueKeyReport
+                    case string s when s.Contains("unique key report") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportUniqueKeyReport != null && keyReportUniqueKeyReport.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportUniqueKeyReport)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    //add option for key KeyReportNotes
+                    case string s when s.Contains("28. notes") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportNotes != null && keyReportNotes.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportNotes)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    //add option for key KeyReportNumber
+                    case string s when s.Contains("key report number") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportNumber != null && keyReportNumber.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportNumber)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    ////add option for key KeyReportTester
+                    //case string s when s.Contains("tester") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                    //    if (keyReportTester != null && keyReportTester.Count > 0)
+                    //    {
+                    //        foreach (var itemOption in keyReportTester)
+                    //        {
+                    //            item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                    //        }
+                    //    }
+                    //    break;
+
+                    //add option for key KeyReportReviewer
+                    case string s when s.Contains("reviewer") || s.Contains("2nd reviewer") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportReviewer != null && keyReportReviewer.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportReviewer)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    //add option for key GetRcmProcess
+                    case string s when s.Contains("sub-process") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportProcess != null && keyReportProcess.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportProcess)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+                    //add option for key GetRcmControlOwner
+                    case string s when s.Contains("reviewer") && (item.Type.Equals("app") || item.Type.Equals("category")):
+                        if (keyReportProcessOwner != null && keyReportProcessOwner.Count > 0)
+                        {
+                            foreach (var itemOption in keyReportProcessOwner)
+                            {
+                                item.Options.Add(new KeyReportOption { OptionName = itemOption });
+                            }
+                        }
+                        break;
+
+
+                    default:
+                        break;
+                }
+            }
+        }
+
+        return listQuestion;
+
+    }
+
+    private void ReturnUserAnswer(KeyReportReturnAnswer userAnswer)
+    {
+        if (userAnswer != null) //verify if not null
+        {
+            switch (userAnswer.Position)
+            {
+                case 1:
+                    keyAnswer1 = userAnswer.ListKeyReportUserInput;
+                    break;
+                case 2:
+                    keyAnswer2 = userAnswer.ListKeyReportUserInput;
+                    break;
+                case 3:
+                    keyAnswer3 = userAnswer.ListKeyReportUserInput;
+                    break;
+                case 4:
+                    keyAnswer4 = userAnswer.ListKeyReportUserInput;
+                    break;
+                default:
+                    break;
+            }
+
+            this.StateHasChanged();
+        }
+    }
+
+    private async void Save()
+    {
+
+        int count = 0;
+        //Check Answers
+
+  
+
+
+       
+       
+        if (duration != string.Empty)
+        {
+            //var checkItem1 = keyAnswer1.Where(x => x.StrQuestion.Equals("Duration")).FirstOrDefault();
+            //if (checkItem1 != null)
+            //{
+            //    checkItem1.StrAnswer = duration;
+            //}
+
+
+            var checkItem2 = keyAnswer2.Where(x => x.StrQuestion.Equals("Duration")).FirstOrDefault();
+            if (checkItem2 != null)
+            {
+                checkItem2.StrAnswer = duration;
+            }
+
+            var checkItem3 = keyAnswer3.Where(x => x.StrQuestion.Equals("Duration")).FirstOrDefault();
+            if (checkItem3 != null)
+            {
+                checkItem3.StrAnswer = duration;
+            }
+
+            //var checkItem4 = keyAnswer4.Where(x => x.StrQuestion.Equals("Duration")).FirstOrDefault();
+            //if (checkItem4 != null)
+            //{
+            //    checkItem4.StrAnswer = duration;
+            //}
+        }
+
+
+        //Save key report screenshot
+        var resultKRScreenshot = await KeyReportService.SaveScreenshot(selectedImageFiles, Http);
+        if (resultKRScreenshot.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            toastService.ShowSuccess($"Successfully save key report screenshot");
+            this.StateHasChanged();
+        }
+        else
+        {
+            toastService.ShowError($"Failed to save key report screenshot");
+        }
+
+        //Save key report file
+        var resultKRFile = await KeyReportService.SaveReportFile(selectedFiles, Http);
+        if (resultKRFile.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            toastService.ShowSuccess($"Successfully save key report file");
+            this.StateHasChanged();
+        }
+        else
+        {
+            toastService.ShowError($"Failed to save key report file");
+        }
+
+        #region Save in Podio
+        //Save key report origin format in Podio
+
+        #region KeyReport Orig Format
+        //var response = await KeyReportService.SavePodioKeyReportItem2(Http, "SavePodioKeyReportOrigFormat", keyAnswer1, keyreportParameterMethod, keyreportReportMethod, keyreportCompletenessMethod, keyreportAccuracyMethod, parameterAnswer, reportAnswer, completenessAnswer, accuracyAnswer);
+        //if (response.StatusCode.ToString() == "OK")
+        //{
+        //    string result = response.Content.ReadAsStringAsync().Result.ToString();
+        //    keyAnswer1 = result != string.Empty ? JsonConvert.DeserializeObject<List<KeyReportUserInput>>(result) : null;
+        //    toastService.ShowSuccess($"Successfully save key report orig format to podio");
+        //    this.StateHasChanged();
+        //}
+        //else
+        //{
+        //    toastService.ShowError($"Failed to save key report orig format to podio");
+        //}
+        #endregion
+
+        //Save key report all IUC in Podio
+
+
+        var response2 = await KeyReportService.SavePodioKeyReportItem2(Http, "SavePodioKeyReportAllIUC", keyAnswer2);
+        if (response2.StatusCode.ToString() == "OK")
+        {
+            string result = response2.Content.ReadAsStringAsync().Result.ToString();
+            keyAnswer2 = result != string.Empty ? JsonConvert.DeserializeObject<List<KeyReportUserInput>>(result) : null;
+            toastService.ShowSuccess($"Successfully save key report IUC KR questionnaire to podio");
+            this.StateHasChanged();
+        }
+        else
+        {
+            toastService.ShowError($"Failed to save key report IUC KR questionnaire to podio");
+        }
+
+        //Save key report test status in Podio
+
+        var response3 = await KeyReportService.SavePodioKeyReportItem2(Http, "SavePodioKeyReportTestStatus", keyAnswer3);
+        if (response3.StatusCode.ToString() == "OK")
+        {
+            string result = response3.Content.ReadAsStringAsync().Result.ToString();
+            keyAnswer3 = result != string.Empty ? JsonConvert.DeserializeObject<List<KeyReportUserInput>>(result) : null;
+            toastService.ShowSuccess($"Successfully save key report IUC report list to podio");
+            this.StateHasChanged();
+        }
+        else
+        {
+            toastService.ShowError($"Failed to save key report IUC report list to podio");
+        }
+
+        #region KeyReport Exception
+        ////Save key report exception in Podio
+        //var response4 = await KeyReportService.SavePodioKeyReportItem2(Http, "SavePodioKeyReportException", keyAnswer4, keyreportParameterMethod, keyreportReportMethod, keyreportCompletenessMethod, keyreportAccuracyMethod, parameterAnswer, reportAnswer, completenessAnswer, accuracyAnswer);
+        //if (response4.StatusCode.ToString() == "OK")
+        //{
+        //    string result = response4.Content.ReadAsStringAsync().Result.ToString();
+        //    keyAnswer4 = result != string.Empty ? JsonConvert.DeserializeObject<List<KeyReportUserInput>>(result) : null;
+        //    toastService.ShowSuccess($"Successfully save key report exception to podio");
+        //    this.StateHasChanged();
+        //}
+        //else
+        //{
+        //    toastService.ShowError($"Failed to save key report exception to podio");
+        //}
+        #endregion
+
+        #endregion
+
+
+        //Save key report in Database
+
+        KeyReportIDs = new KeyReportIds();
+        KeyReportIDs.ConsolidatedId = keyReportItemId.OrigFormatItemId;
+        KeyReportIDs.UicId = keyReportItemId.AllIUCItemId;
+        KeyReportIDs.TestId = keyReportItemId.TestItemId;
+        KeyReportIDs.ExceptionId = keyReportItemId.ExceptionItemId;
+
+
+        //Save key report orig format in Database
+        //KeyReportIDs.ListReport = keyAnswer1;
+
+
+
+
+        ////Save key report original format
+        //var response5 = await KeyReportService.SavePodioKeyReportItem(Http, "SaveDBKeyReportIfNew", KeyReportIDs);
+        //if (response5.StatusCode.ToString() == "OK")
+        //{
+        //    //string result = response5.Content.ReadAsStringAsync().Result.ToString();
+        //    //keyAnswer1 = result != string.Empty ? JsonConvert.DeserializeObject<List<KeyReportUserInput>>(result) : null;
+        //    toastService.ShowSuccess($"Successfully save key report orig format to database");
+        //    this.StateHasChanged();
+        //}
+        //else
+        //{
+        //    toastService.ShowError($"Failed to save key report orig format to database");
+        //}
+
+
+        //Save key report all IUC in Database
+        KeyReportIDs.ListReport = keyAnswer2;
+       
+        var response6 = await KeyReportService.SavePodioKeyReportItem(Http, "SaveDBKeyReportIfNew", KeyReportIDs);
+        if (response6.StatusCode.ToString() == "OK")
+        {
+            this.StateHasChanged();
+            toastService.ShowSuccess($"Successfully save key report IUC KR questionnaire to database");
+        }
+
+
+        //Save key report test status in Database
+        KeyReportIDs.ListReport = keyAnswer3;
+        var response7 = await KeyReportService.SavePodioKeyReportItem(Http, "SaveDBKeyReportIfNew", KeyReportIDs);
+        if (response7.StatusCode.ToString() == "OK")
+        {
+            toastService.ShowSuccess($"Successfully save key report IUC report list to database");
+            this.StateHasChanged();
+        }
+        else
+        {
+            toastService.ShowError($"Failed to save key report IUC report list to database");
+        }
+
+
+        if (tab1)
+        {
+
+            ////Save key report orig format in Database
+            //KeyReportIDs.ListReport = keyAnswer1;
+            //var response9 = await KeyReportService.SavePodioKeyReportItem(Http, "SaveDBKeyReport", KeyReportIDs);
+            //if (response9.StatusCode.ToString() == "OK")
+            //{
+            //    //string result = response5.Content.ReadAsStringAsync().Result.ToString();
+            //    //keyAnswer1 = result != string.Empty ? JsonConvert.DeserializeObject<List<KeyReportUserInput>>(result) : null;
+            //    toastService.ShowSuccess($"Successfully save key report orig format to database");
+            //    this.StateHasChanged();
+            //}
+            //else
+            //{
+            //    toastService.ShowError($"Failed to save key report orig format to database");
+            //}
+
+        }
+
+        if (tab2)
+        {
+            //Save key report all IUC in Database
+            KeyReportIDs.ListReport = keyAnswer2;
+            var response10 = await KeyReportService.SavePodioKeyReportItem(Http, "SaveDBKeyReport", KeyReportIDs);
+            if (response10.StatusCode.ToString() == "OK")
+            {
+                toastService.ShowSuccess($"Successfully save key report all iuc to database");
+                this.StateHasChanged();
+            }
+            else
+            {
+                toastService.ShowError($"Failed to save key report all iuc to database");
+            }
+        }
+
+        if (tab3)
+        {
+            //Save key report test status in Database
+            KeyReportIDs.ListReport = keyAnswer3;
+            var response11 = await KeyReportService.SavePodioKeyReportItem(Http, "SaveDBKeyReport", KeyReportIDs);
+            if (response11.StatusCode.ToString() == "OK")
+            {
+                toastService.ShowSuccess($"Successfully save key report orig format to database");
+                this.StateHasChanged();
+            }
+            else
+            {
+                toastService.ShowError($"Failed to save key report orig format to database");
+            }
+
+        }
+
+        if (tab4)
+        {
+
+            ////Save key report exception in Database
+            //KeyReportIDs.ListReport = keyAnswer4;
+            //var response12 = await KeyReportService.SavePodioKeyReportItem(Http, "SaveDBKeyReport", KeyReportIDs);
+            //if (response12.StatusCode.ToString() == "OK")
+            //{
+            //    toastService.ShowSuccess($"Successfully save key report orig format to database");
+            //    this.StateHasChanged();this.StateHasChanged();
+            //}
+            //else
+            //{
+            //    toastService.ShowError($"Failed to save key report orig format to database");
+            //}
+        }
+
+        isSavingState = false;
+    }
+
+    public void StartTimer()
+    {
+        if (!startTimer)
+        {
+            startTimer = true;
+            //refElapseTime.startTimer = true;
+        }
+        this.StateHasChanged();
+    }
+
+    public void StopTimer()
+    {
+        if (startTimer)
+        {
+            startTimer = false;
+            isSavingState = true;
+        }
+
+        this.StateHasChanged();
+    }
+    public async void previewSampleProcedures()
+    {
+        previewOutputSampleProcedures = "";
+        var preview_param = string.Empty;
+        var preview_report = string.Empty;
+        var preview_completeness = string.Empty;
+        var preview_accuracy = string.Empty;
+        if (selectedParameterMethods.Any() || selectedReportMethods.Any() || selectedCompletenessMethods.Any() || selectedAccuracyMethods.Any())
+        {
+            if (selectedParameterMethods.Any())
+            {
+                if (parameters_list.Any())
+                {
+                    foreach (var (item, index) in parameters_list.Select((value, i) => (value, i)))
+                    {
+                        preview_param += item.Parameter;
+                        preview_param = preview_param.Replace("<p>", string.Empty)
+                                                     .Replace("</p>", string.Empty)
+                                                     .Replace("</strong", string.Empty)
+                                                     .Replace("<br>", "\n")
+                                                     .Replace("<strong class=\"text-bold\">", string.Empty)
+                                                     .Replace("<br/>", "\n");
+                        if (parameters_answer[index] != null)
+                        {
+                            preview_param = preview_param.Replace("(A1)", parameters_answer[index].A1)
+                                                         .Replace("(A2)", parameters_answer[index].A2)
+                                                         .Replace("(A3)", parameters_answer[index].A3)
+                                                         .Replace("(A4)", parameters_answer[index].A4)
+                                                         .Replace("(A5)", parameters_answer[index].A5)
+                                                         .Replace("(A6)", parameters_answer[index].A6)
+                                                         .Replace("(A7)", parameters_answer[index].A7)
+                                                         .Replace("(A8)", parameters_answer[index].A8)
+                                                         .Replace("(A9)", parameters_answer[index].A9)
+                                                         .Replace("(A10)", parameters_answer[index].A10);
+                            preview_param += "\n";
+
+                        }
+                        else
+                            preview_param += "\n";
+                    }
+                    previewOutputSampleProcedures += preview_param;
+                    previewOutputSampleProcedures += "\n\n";
+                }
+            }
+            if (selectedReportMethods.Any())
+            {
+                if (reports_list.Any())
+                {
+                    foreach (var (item, index) in reports_list.Select((value, i) => (value, i)))
+                    {
+                        preview_report += item.Report;
+                        preview_report = preview_report.Replace("<p>", string.Empty)
+                                                 .Replace("</p>", string.Empty)
+                                                 .Replace("</strong", string.Empty)
+                                                 .Replace("<br>", "\n")
+                                                 .Replace("<strong class=\"text-bold\">", string.Empty)
+                                                 .Replace("<br/>", "\n");
+                        if (reports_answer[index] != null)
+                        {
+                            preview_report = preview_report.Replace("(B1)", reports_answer[index].B1)
+                                                     .Replace("(B2)", reports_answer[index].B2)
+                                                     .Replace("(B3)", reports_answer[index].B3)
+                                                     .Replace("(B4)", reports_answer[index].B4)
+                                                     .Replace("(B5)", reports_answer[index].B5)
+                                                     .Replace("(B6)", reports_answer[index].B6)
+                                                     .Replace("(B7)", reports_answer[index].B7)
+                                                     .Replace("(B8)", reports_answer[index].B8)
+                                                     .Replace("(B9)", reports_answer[index].B9)
+                                                     .Replace("(B10)", reports_answer[index].B10);
+                            preview_report += "\n";
+
+                        }
+                        else
+                            preview_report += "\n";
+                    }
+                    previewOutputSampleProcedures += preview_report;
+                    previewOutputSampleProcedures += "\n\n";
+                }
+            }
+            if (selectedCompletenessMethods.Any())
+            {
+                if (completeness_list.Any())
+                {
+                    foreach (var (item, index) in completeness_list.Select((value, i) => (value, i)))
+                    {
+                        preview_completeness += item.Completeness;
+                        preview_completeness = preview_completeness.Replace("<p>", string.Empty)
+                                             .Replace("</p>", string.Empty)
+                                             .Replace("</strong", string.Empty)
+                                             .Replace("<br>", "\n")
+                                             .Replace("<strong class=\"text-bold\">", string.Empty)
+                                             .Replace("<br/>", "\n");
+                        if (completeness_answer[index] != null)
+                        {
+                            preview_completeness = preview_completeness.Replace("(C1)", completeness_answer[index].C1)
+                                                                         .Replace("(C2)", completeness_answer[index].C2)
+                                                                         .Replace("(C3)", completeness_answer[index].C3)
+                                                                         .Replace("(C4)", completeness_answer[index].C4)
+                                                                         .Replace("(C5)", completeness_answer[index].C5)
+                                                                         .Replace("(C6)", completeness_answer[index].C6)
+                                                                         .Replace("(C7)", completeness_answer[index].C7)
+                                                                         .Replace("(C8)", completeness_answer[index].C8)
+                                                                         .Replace("(C9)", completeness_answer[index].C9)
+                                                                         .Replace("(C10)", completeness_answer[index].C10);
+                            preview_completeness += "\n";
+
+                        }
+                        else
+                            preview_completeness += "\n";
+                    }
+                    previewOutputSampleProcedures += preview_completeness;
+                    previewOutputSampleProcedures += "\n\n";
+                }
+            }
+            if (selectedAccuracyMethods.Any())
+            {
+                if (accuracy_list.Any())
+                {
+                    foreach (var (item, index) in accuracy_list.Select((value, i) => (value, i)))
+                    {
+                        preview_accuracy += item.Accuracy;
+                        preview_accuracy = preview_accuracy.Replace("<p>", string.Empty)
+                                                             .Replace("</p>", string.Empty)
+                                                             .Replace("</strong", string.Empty)
+                                                             .Replace("<br>", "\n")
+                                                             .Replace("<strong class=\"text-bold\">", string.Empty)
+                                                             .Replace("<br/>", "\n");
+                        if (accuracy_answer[index] != null)
+                        {
+                            preview_accuracy = preview_accuracy.Replace("(D1)", accuracy_answer[index].D1)
+                                                                     .Replace("(D2)", accuracy_answer[index].D2)
+                                                                     .Replace("(D3)", accuracy_answer[index].D3)
+                                                                     .Replace("(D4)", accuracy_answer[index].D4)
+                                                                     .Replace("(D5)", accuracy_answer[index].D5)
+                                                                     .Replace("(D6)", accuracy_answer[index].D6)
+                                                                     .Replace("(D7)", accuracy_answer[index].D7)
+                                                                     .Replace("(D8)", accuracy_answer[index].D8)
+                                                                     .Replace("(D9)", accuracy_answer[index].D9)
+                                                                     .Replace("(D10)", accuracy_answer[index].D10);
+                            preview_accuracy += "\n";
+                        }
+                        else
+                            preview_accuracy += "\n";
+                    }
+                    previewOutputSampleProcedures += preview_accuracy;
+                    previewOutputSampleProcedures += "\n\n";
+                }
+            }
+        }
+        previewClicked = true;
+        this.StateHasChanged();
+    }
+    public async void generateQuestions()
+    {
+        int params_counter = 0;
+        int reports_counter = 0;
+        int completeness_counter = 0;
+        int accuracy_counter = 0;
+
+        if (selectedAccuracyMethods != null && selectedCompletenessMethods != null && selectedParameterMethods != null && selectedReportMethods != null)
+        {
+            if (clientName != null && reportName != null)
+            {
+
+                foreach (var item in selectedParameterMethods)
+                {
+                    questionsFilter = new KeyReportQuestionsFilter();
+
+                    questionsFilter.method = item;
+                    questionsFilter.clientName = clientName;
+                    questionsFilter.reportName = reportName;
+
+                    var responseParameter = await KeyReportService.GetQuestions(Http, "Parameter", questionsFilter);
+
+                    if (responseParameter.StatusCode.ToString() == "OK")
+                    {
+                        string result = responseParameter.Content.ReadAsStringAsync().Result.ToString();
+                        if (result == null)
+                            toastService.ShowError($"Response is Null");
+                        else
+                        {
+                            if (keyReport1 != null)
+                            {
+                                //keyReport1.Where(x => x.QuestionString.Equals("")).FirstOrDefault();
+                                // Console.WriteLine(keyReport1);
+                            }
+                            parameters_list.AddRange(JsonConvert.DeserializeObject<List<ParametersLibrary>>(result));
+
+                        }
+                    }
+                    else
+                    {
+                        toastService.ShowError($"Failed to Generate Parameters Key Report Questions");
+                    }
+                }
+
+                foreach (var item in selectedReportMethods)
+                {
+                    questionsFilter = new KeyReportQuestionsFilter();
+
+                    questionsFilter.method = item;
+                    questionsFilter.clientName = clientName;
+                    questionsFilter.reportName = reportName;
+
+                    var responseReport = await KeyReportService.GetQuestions(Http, "Report", questionsFilter);
+                    if (responseReport.StatusCode.ToString() == "OK")
+                    {
+                        string result = responseReport.Content.ReadAsStringAsync().Result.ToString();
+                        if (result == null)
+                            toastService.ShowError($"Response is Null");
+                        else
+                        {
+                            var temp = JsonConvert.DeserializeObject<List<ReportsLibrary>>(result);
+                            reports_list.AddRange(temp);
+                        }
+
+                    }
+                    else
+                    {
+                        toastService.ShowError($"Failed to Generate Reports Key Report Questions");
+                    }
+
+                }
+
+                foreach (var item in selectedCompletenessMethods)
+                {
+                    questionsFilter = new KeyReportQuestionsFilter();
+
+                    questionsFilter.method = item;
+                    questionsFilter.clientName = clientName;
+                    questionsFilter.reportName = reportName;
+
+                    var responseCompleteness = await KeyReportService.GetQuestions(Http, "Completeness", questionsFilter);
+                    if (responseCompleteness.StatusCode.ToString() == "OK")
+                    {
+                        string result = responseCompleteness.Content.ReadAsStringAsync().Result.ToString();
+                        if (result == null)
+                            toastService.ShowError($"Response is Null");
+                        else
+                        {
+                            completeness_list.AddRange(JsonConvert.DeserializeObject<List<CompletenessLibrary>>(result));
+
+                        }
+                    }
+                    else
+                    {
+                        toastService.ShowError($"Failed to Generate Reports Key Report Questions");
+                    }
+
+
+                }
+
+                foreach (var item in selectedAccuracyMethods)
+                {
+                    questionsFilter = new KeyReportQuestionsFilter();
+
+                    questionsFilter.method = item;
+                    questionsFilter.clientName = clientName;
+                    questionsFilter.reportName = reportName;
+
+                    var responseAccuracy = await KeyReportService.GetQuestions(Http, "Accuracy", questionsFilter);
+                    if (responseAccuracy.StatusCode.ToString() == "OK")
+                    {
+                        string result = responseAccuracy.Content.ReadAsStringAsync().Result.ToString();
+                        if (result == null)
+                            toastService.ShowError($"Response is Null");
+                        else
+                        {
+                            accuracy_list.AddRange(JsonConvert.DeserializeObject<List<AccuracyLibrary>>(result));
+
+                        }
+                    }
+                    else
+                    {
+                        toastService.ShowError($"Failed to Generate Reports Key Report Questions");
+                    }
+                }
+
+                if (parameters_list != null)
+                {
+                    foreach (var item in parameters_list)
+                    {
+                        parameters_answer[params_counter] = new ParametersLibrary();
+                        parameters_answer[params_counter].A1 = "";
+                        parameters_answer[params_counter].A2 = "";
+                        parameters_answer[params_counter].A3 = "";
+                        parameters_answer[params_counter].A4 = "";
+                        parameters_answer[params_counter].A5 = "";
+                        parameters_answer[params_counter].A6 = "";
+                        parameters_answer[params_counter].A7 = "";
+                        parameters_answer[params_counter].A8 = "";
+                        parameters_answer[params_counter].A9 = "";
+                        parameters_answer[params_counter].A10 = "";
+                        params_counter++;
+                    }
+                    generatedParameter = 1;
+                }
+                if (reports_list != null)
+                {
+                    foreach (var item in reports_list)
+                    {
+                        reports_answer[reports_counter] = new ReportsLibrary();
+                        reports_answer[reports_counter].B1 = "";
+                        reports_answer[reports_counter].B2 = "";
+                        reports_answer[reports_counter].B3 = "";
+                        reports_answer[reports_counter].B4 = "";
+                        reports_answer[reports_counter].B5 = "";
+                        reports_answer[reports_counter].B6 = "";
+                        reports_answer[reports_counter].B7 = "";
+                        reports_answer[reports_counter].B8 = "";
+                        reports_answer[reports_counter].B9 = "";
+                        reports_answer[reports_counter].B10 = "";
+                        reports_counter++;
+                    }
+                    generatedReport = 1;
+                }
+                if (completeness_list != null)
+                {
+                    foreach (var item in completeness_list)
+                    {
+                        completeness_answer[completeness_counter] = new CompletenessLibrary();
+                        completeness_answer[completeness_counter].C1 = "";
+                        completeness_answer[completeness_counter].C2 = "";
+                        completeness_answer[completeness_counter].C3 = "";
+                        completeness_answer[completeness_counter].C4 = "";
+                        completeness_answer[completeness_counter].C5 = "";
+                        completeness_answer[completeness_counter].C6 = "";
+                        completeness_answer[completeness_counter].C7 = "";
+                        completeness_answer[completeness_counter].C8 = "";
+                        completeness_answer[completeness_counter].C9 = "";
+                        completeness_answer[completeness_counter].C10 = "";
+                        completeness_counter++;
+                    }
+                    generatedCompleteness = 1;
+                }
+                if (accuracy_list != null)
+                {
+                    foreach (var item in accuracy_list)
+                    {
+                        accuracy_answer[accuracy_counter] = new AccuracyLibrary();
+                        accuracy_answer[accuracy_counter].D1 = "";
+                        accuracy_answer[accuracy_counter].D2 = "";
+                        accuracy_answer[accuracy_counter].D3 = "";
+                        accuracy_answer[accuracy_counter].D4 = "";
+                        accuracy_answer[accuracy_counter].D5 = "";
+                        accuracy_answer[accuracy_counter].D6 = "";
+                        accuracy_answer[accuracy_counter].D7 = "";
+                        accuracy_answer[accuracy_counter].D8 = "";
+                        accuracy_answer[accuracy_counter].D9 = "";
+                        accuracy_answer[accuracy_counter].D10 = "";
+                        accuracy_counter++;
+                    }
+                    generatedAccuracy = 1;
+                }
+                questionsGenerated = true;
+                this.StateHasChanged();
+            }
+        }
+        else
+        {
+            questionsGenerated = true;
+            this.StateHasChanged();
+        }
+    }
+    private void ReturnTimeValue(string timeValue)
+    {
+        System.Diagnostics.Debug.WriteLine($"Elapse Time: {timeValue}");
+        duration = timeValue;
+
+        if (isSavingState)
+            Save();
+
+        //TimeSpan ts;
+        //if (TimeSpan.TryParse(timeValue, CultureInfo.CurrentCulture, out ts))
+        //{
+        //    duration = ts;
+        //}
+
+        //Console.WriteLine($"rcm.Duration: {rcm.Duration}");
+    }
+
+    private async void HandleFileInputChange(IFileListEntry[] files)
+    {
+
+        List<string> acceptedFileTypes = new List<string>() { "image/png", "image/jpeg", "image/gif" };
+        if (files != null)
+        {
+            int position = 0;
+            foreach (var file in files)
+            {
+                bool error = false;
+                if (file.Size > MaxFileSize)
+                {
+                    error = true;
+                    fileSizeError = true;
+                }
+
+                if (!acceptedFileTypes.Contains(file.Type))
+                {
+                    error = true;
+                    fileTypeError = true;
+                }
+
+                //keep the good files
+                if (!error)
+                {
+                    KeyReportScreenshotUpload keyReportFileUpload = new KeyReportScreenshotUpload();
+                    keyReportFileUpload.IFileEntry = file;
+                    keyReportFileUpload.Filename = keyReportFileUpload.IFileEntry.Name;
+                    keyReportFileUpload.Position = position;
+                    keyReportFileUpload.Status = "pending-upload";
+                    keyReportFileUpload.Percent = "0";
+                    keyReportFileUpload.Client = clientName;
+                    keyReportFileUpload.ReportName = reportName;
+                    keyReportFileUpload.ControlId = controlId;
+                    keyReportFileUpload.Fy = FY;
+                    selectedImageFiles.Add(keyReportFileUpload);
+                    position++;
+                    //selectedFiles = file;
+                }
+            }
+
+        }
+
+
+        if (selectedImageFiles != null && selectedImageFiles.Any())
+        {
+            //try to upload
+            foreach (var item in selectedImageFiles)
+            {
+                if (item.Status == "pending-upload")
+                {
+                    item.IsLoading = item.IFileEntry.Data.Position > 0 ? true : false;
+                    item.IFileEntry.OnDataRead += (sender, eventArgs) => InvokeAsync(StateHasChanged);
+
+                    var ms = new MemoryStream();
+                    await item.IFileEntry.Data.CopyToAsync(ms);
+
+                    //upload file and get response
+                    var response = await fileService.UploadFileAsync(ms, item.IFileEntry.Name, Http);
+
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        item.NewFilename = response.Content.ReadAsStringAsync().Result.ToString();
+                        item.Status = "uploaded";
+                    }
+                }
+            }
+
+        }
+
+        HandleDragLeave();
+        this.StateHasChanged();
+    }
+
+    private async void HandleReportFileInputChange(IFileListEntry[] files)
+    {
+
+        List<string> acceptedFileTypes = new List<string>() { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel" };
+        if (files != null)
+        {
+            int position = 0;
+            foreach (var file in files)
+            {
+                bool error = false;
+                if (file.Size > MaxFileSize)
+                {
+                    error = true;
+                    fileSizeError = true;
+                }
+
+                if (!acceptedFileTypes.Contains(file.Type))
+                {
+                    error = true;
+                    fileTypeError = true;
+                }
+
+                //keep the good files
+                if (!error)
+                {
+                    KeyReportFile keyReportFileUpload = new KeyReportFile();
+                    keyReportFileUpload.IFileEntry = file;
+                    keyReportFileUpload.Filename = keyReportFileUpload.IFileEntry.Name;
+                    keyReportFileUpload.Status = "pending-upload";
+                    keyReportFileUpload.Percent = "0";
+                    keyReportFileUpload.Client = clientName;
+                    keyReportFileUpload.ReportName = reportName;
+                    keyReportFileUpload.ControlId = controlId;
+                    keyReportFileUpload.Fy = FY;
+
+                    if (selectedFiles.Count() > 0)
+                        selectedFiles[0] = keyReportFileUpload;
+                    else
+                        selectedFiles.Add(keyReportFileUpload);
+
+
+                }
+            }
+
+        }
+
+
+        if (selectedFiles != null && selectedFiles.Any())
+        {
+            //try to upload
+            foreach (var item in selectedFiles)
+            {
+                if (item.Status == "pending-upload")
+                {
+                    item.IsLoading = item.IFileEntry.Data.Position > 0 ? true : false;
+                    item.IFileEntry.OnDataRead += (sender, eventArgs) => InvokeAsync(StateHasChanged);
+
+                    var ms = new MemoryStream();
+                    await item.IFileEntry.Data.CopyToAsync(ms);
+
+                    //upload file and get response
+                    var response = await fileService.UploadReportFileAsync(ms, item.IFileEntry.Name, Http);
+
+                    if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        item.NewFilename = response.Content.ReadAsStringAsync().Result.ToString();
+                        item.Status = "uploaded";
+                    }
+                }
+            }
+
+        }
+
+        HandleDragLeave();
+        this.StateHasChanged();
+    }
+
+    private void RemoveImageFile(KeyReportScreenshotUpload file)
+    {
+        selectedImageFiles.Remove(file);
+        this.StateHasChanged();
+    }
+
+    private void RemoveReportFile(KeyReportFile file)
+    {
+        selectedFiles.Remove(file);
+        this.StateHasChanged();
+    }
+
+    private void HandleDragEnter()
+    {
+        dropClass = "dropzone-drag";
+        this.StateHasChanged();
+    }
+
+    private void HandleDragLeave()
+    {
+        dropClass = string.Empty;
+        this.StateHasChanged();
+    }
+
+}
+

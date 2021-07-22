@@ -1,0 +1,6 @@
+[2021-07-05 17:59:17.749] ==> Error SharefileUploadAsync ShareFile.Api.Client.Security.Authentication.OAuth2.OAuthErrorException: Error: invalid_grant | Description: invalid username or password
+   at ShareFile.Api.Client.Requests.Providers.AsyncRequestProvider.HandleNonSuccess(HttpResponseMessage responseMessage, Int32 retryCount, Type expectedType)
+   at ShareFile.Api.Client.Requests.Providers.AsyncRequestProvider.HandleTypedResponse[T](HttpResponseMessage httpResponseMessage, ApiRequest request, Int32 retryCount, Boolean tryResolveUnauthorizedChallenge)
+   at ShareFile.Api.Client.Requests.Providers.AsyncRequestProvider.ExecuteAsync[T](IQuery`1 query, CancellationToken token)
+   at A2B_App.Server.Controllers.ShareFileController.PasswordAuthentication(SharefileUser SFUser, String ClientID, String ClientSecret) in C:\Remote 4\A2B_App\A2B_App\Server\Controllers\ShareFileController.cs:line 622
+   at A2B_App.Server.Controllers.ShareFileController.SharefileUploadAsync(SharefileItem sharefileItem) in C:\Remote 4\A2B_App\A2B_App\Server\Controllers\ShareFileController.cs:line 70

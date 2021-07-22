@@ -1,0 +1,27 @@
+﻿@if(display) 
+{
+    <div class="notification is-warning">
+        <button class="delete" @onclick="Close"></button>
+        This content is in <strong>Beta Testing</strong>.
+    </div>
+}
+
+
+@code {
+
+
+    private bool display = true;
+
+    public void Show()
+    {
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+}

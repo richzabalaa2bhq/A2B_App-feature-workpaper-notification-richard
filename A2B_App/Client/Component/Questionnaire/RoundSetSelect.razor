@@ -1,0 +1,151 @@
+﻿@using A2B_App.Client.Services
+@using A2B_App.Shared.Sox
+@using Microsoft.AspNetCore.Authorization
+@using Newtonsoft.Json
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize]
+@inject HttpClient Http
+@inject IToastService toastService
+@inject NavigationManager NavigationManager
+
+
+@if (display)
+{
+    if (items != null && items.Count > 0)
+    {
+        <div class="modal is-active">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">@title</p>
+                    <button class="delete" aria-label="close" @onclick="Close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <div class="simple-form">
+                        <EditForm Model="rcm">
+
+
+                            <RcmListComponent Items="@items"
+                                              ColumnsToExcludeCSV=""
+                                              ReturnItemIdAsStr="@((e) => { ReturnItemId(e); })"
+                                              ReturnField="ItemId"
+                                              tableClass="table table-striped table-sm table-hover is-size-8"
+                                              rowBodyClass="cursor-pointer"></RcmListComponent>
+
+
+                        </EditForm>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-success" @onclick="@(() => { NavigateTo($"questionnairegenerate/{rcm.PodioItemId}/0/0/{version}"); })">New Workpaper</button>
+                    <button class="button" @onclick="Close">Close</button>
+                </footer>
+            </div>
+        </div>
+    }
+}
+
+@code {
+
+    [Parameter] public Rcm rcm { get; set; }
+    [Parameter] public string title { get; set; }
+    [Parameter] public string version { get; set; }
+    private List<DisplayTable> items { get; set; }
+    private QuestionnaireService QuestionnaireService;
+    private ClientSettings settings;
+    private List<QuestionnaireRoundSet> listRoundSet;
+    private WriteLog writeLog = new WriteLog();
+
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.display = true;
+        ShowQuestionnaireSet();
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+    private async void ShowQuestionnaireSet()
+    {
+        settings = await _getSettings;
+        QuestionnaireService = new QuestionnaireService(settings);
+        items = new List<DisplayTable>();
+        listRoundSet = new List<QuestionnaireRoundSet>();
+        try
+        {
+            var roundSet = await QuestionnaireService.GetAllRoundSetAsync(rcm, Http);
+            if (roundSet.StatusCode.ToString() == "OK")
+            {
+                string result = roundSet.Content.ReadAsStringAsync().Result.ToString();
+                listRoundSet = JsonConvert.DeserializeObject<List<QuestionnaireRoundSet>>(result);
+
+                if (listRoundSet.Count > 0)
+                {
+                    foreach (var item in listRoundSet)
+                    {
+                        DisplayTable dispItem = new DisplayTable();
+                        dispItem.ItemId = item.UniqueId;
+                        dispItem.Round1 = item.isRound1.ToString();
+                        dispItem.Round2 = item.isRound2.ToString();
+                        dispItem.Round3 = item.isRound3.ToString();
+                        dispItem.LastUpdate = item.UpdatedOn.ToString("MM-dd-yyyy HH:mm:ss");
+                        items.Add(dispItem);
+                    }
+                }
+                else
+                {
+                    NavigateTo($"questionnairegenerate/{rcm.PodioItemId}/0/0/{version}");
+                }
+
+
+                this.StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+
+            writeLog.Display(ex);
+            toastService.ShowError($"{ex}");
+            //throw;
+        }
+
+
+    }
+
+    private void ReturnItemId(string value)
+    {
+        if (value != null && value != string.Empty)
+        {
+            //navigate to questionnaire
+            System.Diagnostics.Debug.WriteLine($"ReturnItemId: {value}");
+            //NavigationManager.NavigateTo($"questionnaire/{value}/0/0");
+            //NavigationManager.NavigateTo($"questionnairegenerate/{value}/0/0");
+            NavigateTo($"questionnairegenerate/{rcm.PodioItemId}/0/{value}/{version}");
+        }
+    }
+
+    private void NavigateTo(string uri)
+    {
+        NavigationManager.NavigateTo($"{uri}");
+    }
+
+    private class DisplayTable
+    {
+        public string ItemId { get; set; }
+        public string Round1 { get; set; }
+        public string Round2 { get; set; }
+        public string Round3 { get; set; }
+        public string LastUpdate { get; set; }
+    }
+
+
+}
+
+

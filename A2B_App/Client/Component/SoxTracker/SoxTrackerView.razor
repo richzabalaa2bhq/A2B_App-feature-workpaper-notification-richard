@@ -1,0 +1,207 @@
+﻿
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using System.Text
+@using System.IO
+@using A2B_App.Shared.Sox
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@inject NavigationManager NavManager
+
+<h4>SOX Control Tracker - View</h4>
+
+
+<div class="columns">
+
+    <div class="column is-half">
+
+        @*Q1 FY*@
+        <div class="row">
+            <div class="col-10">
+                <div class="form-group">
+                    <label for="Question1"><span class="has-text-weight-bold">1. </span> For what year is the SoxTracker for?</label>
+                    <select class="form-control" id="Question1" @bind="Q1Answer">
+                        <option value="">Select Year</option>
+                        @if (listFy != null && listFy.Count > 0)
+                        {
+                            @foreach (var item in listFy)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        }
+
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        @*Q1 FY*@
+        <div class="row">
+            <div class="col-10">
+                <div class="form-group">
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-10">
+                <div class="form-group">
+                    <table class="table is-striped is-hoverable is-bordered">
+                        <tbody>
+
+                            @if (listClient != null && listClient.Count > 0)
+                            {
+                                foreach (var item in listClient)
+                                {
+
+                                    <tr>
+                                        <td>
+                                            <span class="is-pulled-left">Client: @item.ClientName</span>
+
+                                            
+
+                                            <a class="button is-primary is-pulled-right mr-2 " href="/view-sox-tracker/@Fy/@item.ClientName">View</a>
+                                        </td>
+                                    </tr>
+
+                                }
+
+                            }
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+</div>
+
+@code {
+
+    private List<string> listFy = new List<string>();
+    private List<RcmOutputFile> listClient = new List<RcmOutputFile>();
+    private string Fy { get; set; } = string.Empty;
+    private ClientSettings settings;
+    private RcmService RcmService;
+    private SoxTrackerService SoxTrackerService;
+    private RcmQuestionnaireFilter filter = new RcmQuestionnaireFilter();
+
+    protected async override void OnInitialized()
+    {
+        settings = await _getSettings;
+        RcmService = new RcmService(settings);
+        SoxTrackerService = new SoxTrackerService(settings);
+        GetFY();
+        base.OnInitialized();
+    }
+
+    private string Q1Answer
+    {
+        get
+        {
+            return Fy;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ1Selected(eventArgs);
+        }
+    }
+
+    private void EventQ1Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"FY: {e.Value}");
+            Fy = e.Value.ToString();
+            if (Fy != string.Empty)
+            {
+                GetClient(Fy); //pass fy to get all client name that is related to
+            }
+        }
+
+    }
+
+    private async void GetFY()
+    {
+        listFy = await SoxTrackerService.GetSoxTrackerFy(Http);
+        this.StateHasChanged();
+    }
+
+    private async void GetClient(string Fy)
+    {
+        filter.FY = Fy;
+        var response = await SoxTrackerService.GetSoxTrackerClient(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            listClient = JsonConvert.DeserializeObject<List<RcmOutputFile>>(result);
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GenerateSoxTrackerOutput(RcmOutputFile rcmOutput)
+    {
+        System.Diagnostics.Debug.WriteLine($"ClientName: {rcmOutput.ClientName}");
+
+        rcmOutput.FileName = string.Empty;
+        rcmOutput.LoadingStatus = "is-loading";
+        this.StateHasChanged();
+
+        //generate the file
+        var response = await SoxTrackerService.GenerateSoxTrackerControl(rcmOutput.ClientName, Fy, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            rcmOutput.FileName = result;
+            toastService.ShowSuccess($"Successfully created SoxTracker File");
+
+            //upload to sharefile
+
+            SharefileItem sfItem = new SharefileItem();
+            sfItem.FileName = rcmOutput.FileName;
+            sfItem.FilePath = string.Empty;
+            sfItem.Directory = "SoxTrackerFolder";
+
+            var uploadRes = await SoxTrackerService.UploadToSharefile(sfItem, Http);
+            if (uploadRes.StatusCode.ToString() == "OK")
+            {
+                string resultUpload = uploadRes.Content.ReadAsStringAsync().Result.ToString();
+                //rcmOutput.FileName = resultUpload;
+                toastService.ShowSuccess($"Successfully uploaded in Sharefile");
+            }
+            else
+            {
+                toastService.ShowError($"Failed to upload in Sharefile");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError($"Failed to create SoxTracker File");
+        }
+
+        //await Task.Delay(5000);
+
+        rcmOutput.LoadingStatus = string.Empty;
+
+        this.StateHasChanged();
+    }
+
+    private void NavigateSF(string link)
+    {
+        NavManager.NavigateTo($"{link}", forceLoad: true);
+    }
+
+
+}

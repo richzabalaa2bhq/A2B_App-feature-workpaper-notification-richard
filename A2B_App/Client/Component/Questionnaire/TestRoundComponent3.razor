@@ -1,0 +1,230 @@
+﻿@using System.Text
+@using A2B_App.Shared.Sox
+@using System
+
+@if(listRoundItem != null && listRoundItem.Any())
+{
+
+    <div class="table-container">
+        <table class="table table-active table-sm table-hover small">
+
+                <thead>
+                    <tr class="table-info">
+                        <th class="align-top has-text-weight-semibold is-size-7" style="white-space: nowrap;">Sampe #</th>
+
+                        @foreach (var itemQA in listRoundItem[0].ListRoundQA.OrderBy(pos => pos.Position))
+                        {
+                            <th class="align-top has-text-weight-semibold is-size-7" style="white-space: nowrap;">
+                                @itemQA.Question
+                                <InputText class="input text-danger text-align-center input-inner-position-header input is-primary is-small is-size-7" type="text" maxlength="3" disabled="@(disable)" @bind-Value="@itemQA.Note" @onblur="ReturnListRound"></InputText>
+                            </th>
+                        }
+
+
+                        <th class="align-top has-text-weight-semibold is-size-7"></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (totalQuestion > 0)
+                    {
+                        <tr class="table-secondary">
+                            <td colspan="@(totalQuestion + 1)" class="is-size-7" style="white-space: nowrap;">@roundName</td>
+                            <td style="white-space: nowrap;">
+
+                                <button class="button is-link is-size-7 p-2"
+                                        disabled="@(disable)"
+                                        @onclick="@(()=>
+                                                    {
+                                                        AddRow(1);
+                                                    })">
+                                    <span class="oi oi-plus"></span>
+                                </button>
+
+                                <button class="button is-danger is-size-7 p-2"
+                                        disabled="@(disable)"
+                                        @onclick="@(() =>
+                                                    {
+                                                        AddRow(-1);
+                                                    })">
+                                    <span class="oi oi-minus"></span>
+                                </button>
+
+                            </td>
+                        </tr>
+                    }
+
+                    @foreach (var itemRound in listRoundItem.Skip(1))
+                    {
+                        <tr>
+                            <td style="text-align: center;">@itemRound.Position</td>
+
+                            @foreach (var itemQA in itemRound.ListRoundQA.OrderBy(ord => ord.Position))
+                            {
+
+                                <td class="align-top has-text-weight-semibold is-size-7" style="white-space: nowrap;">
+                                    @switch (itemQA.Type)
+                                    {
+                                        case "category":
+                                            <InputSelect class="form-control" @bind-Value="@itemQA.Answer" disabled="@(disable)">
+                                                @if (itemQA.Options.Count > 0)
+                                                                    {
+                                                    @*@(riskPostion = item.Position - 1);*@
+                                                    <option value="">Select Option</option>
+                                                                        foreach (var option in itemQA.Options)
+                                                                        {
+                                                        <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                                                        }
+                                                                    }
+                                            </InputSelect>
+                                            break;
+                                        case "date":
+                                            <QuestionnaireDateFieldComponent position="@(itemQA.Position)"
+                                                                                OnDateChanged="@((e) => {
+                                                                                                        if(e != null && e.startDate.HasValue)
+                                                                                                        {
+                                                                                                            itemQA.Answer = e.startDate.Value.DateTime.ToString();
+                                                                                                        }
+                                                                                                        if(e != null && e.endDate.HasValue)
+                                                                                                        {
+                                                                                                            itemQA.Answer2 = e.endDate.Value.DateTime.ToString();
+                                                                                                        }
+                                                                                                    })"
+                                                                                answer1="@itemQA.Answer"
+                                                                                answer2="@itemQA.Answer2"
+                                                                                isDateRange="@(itemQA.DtEndRequire == "enabled" ? false : true)"
+                                                                                isDisabled="@disable">
+                                            </QuestionnaireDateFieldComponent>
+                                            break;
+                                        default:
+                                            <InputTextArea rows="3" class="form-control" @bind-Value="@itemQA.Answer" disabled="@(disable)"></InputTextArea>
+                                            break;
+                                    }
+
+                                    @*note input*@
+                                    <InputText class="text-danger text-align-center input-inner-position is-size-7" type="text" maxlength="3" disabled="@(disable)" @bind-Value="@itemQA.Note" @onblur="ReturnListRound"></InputText>
+
+                                </td>
+                            }
+                        </tr>
+                    }
+
+                </tbody>
+
+
+        </table>   
+    </div>
+}
+
+
+
+@code {
+
+    [Parameter] public List<RoundItem2> listRoundItem { get; set; }
+    [Parameter] public EventCallback<ListRoundItem2> ReturnAddRound { get; set; }
+    [Parameter] public string roundName { get; set; }
+    [Parameter] public bool disable { get; set; }
+    private int totalQuestion { get; set; }
+    private string staticValue { get; set; }
+    private List<RoundQA2> listRoundQA2 { get; set; }
+
+
+    protected override void OnParametersSet()
+    {
+        if(listRoundItem != null && listRoundItem.Any())
+        {
+            totalQuestion = 0;
+            var tempListQA = listRoundItem[0].ListRoundQA;
+            if(tempListQA != null)
+            {
+                listRoundQA2 = new List<RoundQA2>();
+                foreach (var item in tempListQA)
+                {
+                    listRoundQA2.Add(item);
+                    totalQuestion++;
+                }
+            }
+        }
+        this.StateHasChanged();
+        base.OnParametersSet();
+    }
+
+    private void AddRow(int i)
+    {
+        ListRoundItem2 tempListRoundItem = new ListRoundItem2();
+        RoundItem2 roundItem2 = new RoundItem2();
+        switch (i)
+        {
+            case 1:
+                if(listRoundItem != null)
+                {
+                    var lastItem = listRoundItem[listRoundItem.Count - 1];
+                    roundItem2.RoundName = roundName;
+                    roundItem2.Position = lastItem.Position + 1;
+                    roundItem2.A2Q2Samples = roundItem2.Position.ToString();
+                    roundItem2.AppId = roundItem2.AppId;
+                    roundItem2.ListRoundQA = new List<RoundQA2>();
+                    foreach (var item in listRoundQA2)
+                    {
+                        RoundQA2 roundQA = new RoundQA2();
+                        roundQA.Question = item.Question;
+                        roundQA.Position = item.Position;
+                        roundItem2.ListRoundQA.Add(roundQA);
+                        roundQA.DtEndRequire = item.DtEndRequire;
+                        roundQA.Type = item.Type;
+                        roundQA.Options = item.Options;
+
+                    }
+                    listRoundItem.Add(roundItem2);
+                }
+                break;
+            case -1:
+                if(listRoundItem.Count() > 1)
+                    listRoundItem.RemoveAt(listRoundItem.Count - 1);
+                break;
+        }
+
+        //tempListRoundItem.ListRoundItem = listRoundItem;
+
+        //ReturnAddRound.InvokeAsync(tempListRoundItem);
+
+        ReturnListRound();
+
+        this.StateHasChanged();
+    }
+
+    private void ReturnListRound()
+    {
+        if(listRoundItem != null && !disable)
+        {
+            ListRoundItem2 tempListRoundItem = new ListRoundItem2();
+            List<NotesItem2> listUniqueNotes = new List<NotesItem2>();
+            int countPos = 0;
+            foreach (var itemRoundItem in listRoundItem)
+            {
+                foreach (var itemQA in itemRoundItem.ListRoundQA)
+                {
+                    if (itemQA.Note != string.Empty && itemQA.Note != null)
+                    {
+                        if(listUniqueNotes.Where(x => x.Notes.ToLower().Equals(itemQA.Note.ToLower())).FirstOrDefault() == null)
+                        {
+                            NotesItem2 noteItem = new NotesItem2();
+                            noteItem.Position = countPos;
+                            noteItem.Notes = itemQA.Note;
+                            listUniqueNotes.Add(noteItem);
+                        }
+
+                    }
+
+                }
+            }
+            tempListRoundItem.ListUniqueNotes = listUniqueNotes;
+            tempListRoundItem.ListRoundItem = listRoundItem;
+
+            ReturnAddRound.InvokeAsync(tempListRoundItem);
+        }
+    }
+
+
+}

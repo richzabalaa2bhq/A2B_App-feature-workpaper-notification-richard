@@ -1,0 +1,329 @@
+﻿@page "/questionnairegenerate"
+@page  "/questionnairegenerate/{rcmItemId}/{sampleSelectionItemId}/{roundSetId}/{version}"
+@*@page "/questionnairegenerate/{appId}/{rcmItemId}/{sampleSelectionItemId}/{testingPhase}"*@
+
+@using A2B_App.Client.Component.Questionnaire
+@using A2B_App.Client.Services
+@using A2B_App.Shared.Sox
+@using Newtonsoft.Json
+@using A2B_App.Shared.Podio
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize(Roles = "Admin, IT, Accounting")]
+@inject HttpClient Http
+
+
+@if (questionnaireParam != null
+ && settings != null
+ && rcm != null
+ && isRendered)
+{
+
+    <h3>@($"{rcm.ClientName} {rcm.ControlId}") Workpaper </h3>
+
+
+
+    <div class="container-fluid">
+
+        @*//Old UI
+        //Date: 10-15-2020*@
+
+        @*<QuestionnaireComponent listQuestion="@listQuestion"
+        sampleSelection="@sampleSelection"
+        objIUCSystemGen="@objIUCSystemGen"
+        objIUCNonSystemGen="@objIUCNonSystemGen"
+        percentRound1="@round1Percent"
+        percentRound2="@round2Percent"
+        rcm="@rcm"></QuestionnaireComponent>*@
+
+
+        @*//New UI with round in each column
+        //Date 10-22-2020*@
+        <div class="table-container"> 
+
+            @*<QuestionnaireComponent2 listQuestion="@listQuestion"
+                                     rcm="@rcm"
+                                     objIUCSystemGen="@objIUCSystemGen"
+                                     objIUCNonSystemGen="@objIUCNonSystemGen"
+                                     roundSet="@roundSet"
+                                     percentRound1="@round1Percent"
+                                     percentRound2="@round2Percent">*@
+
+            <QuestionnaireComponent2 listQuestion="@listQuestion"
+                                 rcm="@rcm"
+                                 objIUCSystemGen="@objIUCSystemGen"
+                                 objIUCNonSystemGen="@objIUCNonSystemGen"
+                                 roundSet="@roundSet"
+                                 percentRound1="@round1Percent"
+                                 percentRound2="@round2Percent"
+                                 version="@version">
+
+            </QuestionnaireComponent2>
+
+        </div>
+
+    </div>
+
+
+}
+else
+{
+    <p><em>Loading...</em></p>
+}
+
+
+@code {
+
+    [Parameter] public string rcmItemId { get; set; }
+    [Parameter] public string sampleSelectionItemId { get; set; }
+    [Parameter] public string roundSetId { get; set; }
+    [Parameter] public string version { get; set; }
+
+    public string appId { get; set; }
+    public QuestionnaireFieldParam questionnaireParam { get; set; }
+    private QuestionnaireService QuestionnaireService;
+    private SampleSelectionService SampleSelectionService;
+    private RcmService RcmService;
+    private ClientSettings settings;
+    private List<QuestionnaireQuestion> listQuestion = new List<QuestionnaireQuestion>();
+    private SampleSelection sampleSelection;
+    private IUCSystemGen objIUCSystemGen;
+    private IUCNonSystemGen objIUCNonSystemGen;
+    private PodioAppKey appkey { get; set; }
+    private string round1Percent { get; set; }
+    private string round2Percent { get; set; }
+    private List<ClientSs> ListClient { get; set; }
+    //private RcmCta rcm;
+    private Rcm rcm;
+    private QuestionnaireRoundSet roundSet { get; set; }
+    private bool isRendered;
+
+    protected override Task OnInitializedAsync()
+    {
+        //GetData();
+        return base.OnInitializedAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+
+        GetData();
+        base.OnParametersSet();
+    }
+
+    private async void GetData()
+    {
+        isRendered = false;
+        settings = await _getSettings;
+        RcmService = new RcmService(settings);
+        QuestionnaireService = new QuestionnaireService(settings);
+        SampleSelectionService = new SampleSelectionService(settings);
+
+        roundSet = new QuestionnaireRoundSet();
+        roundSet.UniqueId = string.Empty;
+
+        if (roundSetId != "0")
+        {
+            System.Diagnostics.Debug.WriteLine($"Get Round Set");
+            var roundResponse = await QuestionnaireService.GetSpecificRoundSetAsync(roundSetId, Http);
+            if (roundResponse.StatusCode.ToString() == "OK")
+            {
+                string result = roundResponse.Content.ReadAsStringAsync().Result.ToString();
+                roundSet = JsonConvert.DeserializeObject<QuestionnaireRoundSet>(result);
+            }
+        }
+
+
+        if (rcmItemId != "0")
+        {
+            rcm = new Rcm();
+            rcm = await RcmService.GetRcmByPodioItemId(rcmItemId, Http);
+            questionnaireParam = new QuestionnaireFieldParam();
+            questionnaireParam.ClientName = rcm.ClientName;
+            questionnaireParam.ControlName = rcm.ControlId;
+            //appId = await QuestionnaireService.GetQuestionnaireAppId(questionnaireParam);
+            round1Percent = string.Empty;
+            round2Percent = string.Empty;
+
+            var httpResponse = await QuestionnaireService.GetQuestionnaireAppId(questionnaireParam, Http);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+                    appId = httpResponse.Content.ReadAsStringAsync().Result.ToString();
+                    if (appId != string.Empty)
+                    {
+                        //questionnaireParam.AppKey.AppId = appId;
+                        //if (questionnaireParam.AppKey.AppId != string.Empty)
+                        //{
+                        //    GetQuestion(questionnaireParam);
+                        //}
+
+                        appkey = new PodioAppKey();
+                        appkey.AppId = appId;
+                        questionnaireParam.AppKey = appkey;
+                        if (questionnaireParam.AppKey.AppId != string.Empty)
+                        {
+                            GetQuestion(questionnaireParam);
+                        }
+                    }
+
+
+                    this.StateHasChanged();
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError("Failed to load questionnaire field");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError("Failed to load questionnaire field");
+            }
+
+        }
+
+
+        if (sampleSelectionItemId != "0")
+        {
+            sampleSelection = new SampleSelection();
+            sampleSelection = await RcmService.GetSampleSelectionByRcmPodioItemId(sampleSelectionItemId, Http);
+
+            var jsonData3 = Newtonsoft.Json.JsonConvert.SerializeObject(sampleSelection);
+            System.Diagnostics.Debug.WriteLine(jsonData3);
+            this.StateHasChanged();
+        }
+        else
+        {
+            sampleSelection = new SampleSelection();
+            sampleSelection.ListTestRound = new List<TestRound>();
+            sampleSelection.ListTestRound2 = new List<TestRound>();
+            sampleSelection.ListTestRound3 = new List<TestRound>();
+
+
+            //load default test round
+            List<TestRound> listTestRound = new List<TestRound>();
+            for (int i = 0; i < 3; i++)
+            {
+                TestRound testRound = new TestRound();
+                testRound.TestingRound = $"Round {(i + 1)}";
+                testRound.A2Q2Samples = $"{(i + 1)}";
+                listTestRound.Add(testRound);
+                sampleSelection.ListTestRound.Add(testRound);
+                sampleSelection.ListTestRound2.Add(testRound);
+                sampleSelection.ListTestRound3.Add(testRound);
+            }
+            //sampleSelection.ListTestRound = listTestRound;
+        }
+
+
+        //Get IUC System Question
+        appkey = new PodioAppKey();
+        appkey.AppToken = string.Empty;
+        appkey.AppId = settings.GetIUCSystemAppId();
+        questionnaireParam.AppKey = appkey;
+        GetIUCSystem(questionnaireParam);
+
+        //Get IUC Non System Question
+        appkey = new PodioAppKey();
+        appkey.AppToken = string.Empty;
+        appkey.AppId = settings.GetIUCNonSystemAppId();
+        questionnaireParam.AppKey = appkey;
+        GetIUCNonSystem(questionnaireParam);
+
+
+        GetClientDetail();
+
+
+        isRendered = true;
+        this.StateHasChanged();
+
+    }
+
+    private async void GetQuestion(QuestionnaireFieldParam questionnaireParam)
+    {
+
+        var httpResponse = await QuestionnaireService.GetQuestionnaireField(questionnaireParam, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                listQuestion = JsonConvert.DeserializeObject<List<QuestionnaireQuestion>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                toastService.ShowSuccess($"Successfully loaded questionnaire");
+                this.StateHasChanged();
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to load questionnaire");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to load questionnaire");
+        }
+    }
+
+    private async void GetIUCSystem(QuestionnaireFieldParam questionnaireParam)
+    {
+        var httpResponse = await QuestionnaireService.GetIUCSystem(questionnaireParam, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                objIUCSystemGen = JsonConvert.DeserializeObject<IUCSystemGen>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                //objIUCSystemGen.ListQuestionAnswer = objIUCSystemGen.ListQuestionAnswer.OrderBy(x => x.Position).ToList();
+                toastService.ShowSuccess($"Successfully Loaded IUCSystem");
+                this.StateHasChanged();
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to Load IUCSystem Question");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to Load IUCSystem Question");
+        }
+    }
+
+    private async void GetIUCNonSystem(QuestionnaireFieldParam questionnaireParam)
+    {
+        var httpResponse = await QuestionnaireService.GetIUCNonSystem(questionnaireParam, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                objIUCNonSystemGen = JsonConvert.DeserializeObject<IUCNonSystemGen>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                //objIUCNonSystemGen.ListQuestionAnswer = objIUCNonSystemGen.ListQuestionAnswer.OrderBy(x => x.Position).ToList();
+                toastService.ShowSuccess($"Successfully Loaded IUCNonSystemGen");
+                this.StateHasChanged();
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to Load IUCNonSystem Question");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to Load IUCNonSystem Question");
+        }
+    }
+
+    private async void GetClientDetail()
+    {
+        ListClient = new List<ClientSs>();
+        ListClient = await SampleSelectionService.SetClientAsync(Http);
+
+        List<ClientSs> selectedClient = new List<ClientSs>();
+        round1Percent = ListClient.Where(x => x.ClientName == rcm.ClientName).Select(d => d.Percent.ToString()).FirstOrDefault();
+        round2Percent = ListClient.Where(x => x.ClientName == rcm.ClientName).Select(d => d.PercentRound2.ToString()).FirstOrDefault();
+
+    }
+
+}

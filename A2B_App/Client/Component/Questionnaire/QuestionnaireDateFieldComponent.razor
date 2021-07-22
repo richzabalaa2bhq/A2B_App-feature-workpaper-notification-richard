@@ -1,0 +1,106 @@
+﻿@using BlazorDateRangePicker
+@using A2B_App.Shared.Sox 
+
+<div class="@(isDisabled ? "disable-div" : string.Empty)">
+    <DateRangePicker Culture="@(System.Globalization.CultureInfo.GetCultureInfo("en-US"))"
+                     @bind-StartDate="@startDate"
+                     @bind-EndDate="@endDate"
+                     Drops="DropsType.Up"
+                     SingleDatePicker="@isDateRange"
+                     OnClosed="@(()=> {
+                                 if(startDate != null)
+                                {
+	                                DtQuestionnaire dtQuestion = new DtQuestionnaire();
+	                                dtQuestion.startDate = startDate.Value;
+                                    if(isDateRange)
+                                    {
+                                        dtQuestion.endDate = null;
+                                    }
+                                    else
+                                        dtQuestion.endDate = endDate.Value;
+
+	                                dtQuestion.position = position;
+	                                ReturnValue(dtQuestion);
+                                }
+                             })">
+        <PickerTemplate>
+            <div id="@context.ParentId" @onclick="context.Toggle" style="background: #fff; cursor: pointer; padding: 5px 10px; width: 250px; border: 1px solid #ccc;" class="control is-expanded">
+                <i class="oi oi-calendar"></i>&nbsp;
+                <span>@context.FormattedRange @(string.IsNullOrEmpty(context.FormattedRange) ? "Select date" : "")</span>
+                <i class="oi oi-chevron-bottom float-right"></i>
+            </div>
+        </PickerTemplate>
+        <ButtonsTemplate>
+            <button class="cancelBtn btn btn-sm btn-default"
+                    @onclick="@context.ClickCancel" type="button">
+                Cancel
+            </button>
+            @if (!isDisabled)
+            {
+                <button class="applyBtn btn btn-sm btn-primary" @onclick="@context.ClickApply"
+                        disabled="@(context.TStartDate == null || context.TEndDate == null)"
+                        type="button">
+                    Apply
+                </button>
+            }
+
+        </ButtonsTemplate>
+    </DateRangePicker>
+
+</div>
+
+
+@code {
+    [Parameter] public DateTimeOffset? startDate { get; set; } = null;
+    [Parameter] public DateTimeOffset? endDate { get; set; } = null;
+    [Parameter] public int position { get; set; }
+    [Parameter] public EventCallback<DtQuestionnaire> OnDateChanged { get; set; }
+    [Parameter] public bool isDateRange { get; set; }
+    [Parameter] public string answer1 { get; set; }
+    [Parameter] public string answer2 { get; set; }
+    [Parameter] public bool enabled { get; set; }
+    [Parameter] public bool isDisabled { get; set; }
+    private DtQuestionnaire dtQuestion { get; set; }
+
+
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        dtQuestion = new DtQuestionnaire();
+
+        //check if RCM has value, then try to parse into datetimeoffset
+        if (answer1 != string.Empty)
+        {
+            if (DateTimeOffset.TryParse(answer1, out DateTimeOffset tempStartDate))
+            {
+                startDate = tempStartDate;
+            }
+        }
+
+        //check if RCM has value, then try to parse into datetimeoffset
+        if (answer2 != string.Empty)
+        {
+
+            if (DateTimeOffset.TryParse(answer2, out DateTimeOffset tempEndDate))
+            {
+                endDate = tempEndDate;
+            }
+        }
+
+        return base.OnParametersSetAsync();
+    }
+
+    private void ReturnValue(DtQuestionnaire dtQuestion)
+    {
+        if (dtQuestion != null)
+        {
+            OnDateChanged.InvokeAsync(dtQuestion);
+            this.StateHasChanged();
+        }
+    }
+
+
+
+
+}

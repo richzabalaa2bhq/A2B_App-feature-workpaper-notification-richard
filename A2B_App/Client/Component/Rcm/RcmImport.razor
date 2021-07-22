@@ -1,0 +1,91 @@
+﻿
+@using A2B_App.Client.Component.SoxTracker
+@using A2B_App.Shared.Sox
+@using System.IO
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject IToastService toastService
+
+<h3>RCM Import</h3>
+
+<div class="columns">
+    <div class="column is-half">
+        <DragDropFile 
+                      ReturnFiles="@((e) => { ReturnFiles(e); })" 
+                      title="Upload Rcm Excel File" 
+                      enableRemove="true" 
+                      fileFormatAccepted="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+        </DragDropFile>
+    </div>
+</div>
+
+
+@if (importFields != null
+   && importFields.ListDatabaseColumns != null
+   && importFields.ListExcelColumns != null
+   && importFields.ListDatabaseColumns.Count > 0
+   && importFields.ListExcelColumns.Count > 0)
+{
+    <RcmImportItems importFields="@importFields"></RcmImportItems>
+}
+
+
+
+
+
+@code {
+
+    private string status { get; set; }
+    //private FileImport fileImport { get; set; }
+    private FileService fileService { get; set; }
+    private ImportFields importFields { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        //fileImport = new FileImport();
+        fileService = new FileService();
+        importFields = new ImportFields();
+        importFields.ListDatabaseColumns = new List<DBColumnVal>();
+        importFields.ListExcelColumns = new List<ColumnVal>();
+        base.OnInitialized();
+    }
+
+
+    private async void ReturnFiles(FileUpload fileUpload)
+    {
+
+        //fileImport.File = fileUpload;
+        if (fileUpload.IFileEntry != null)
+        {
+            var ms = new MemoryStream();
+            await fileUpload.IFileEntry.Data.CopyToAsync(ms);
+
+            //upload file and get response
+            var response = await fileService.UploadFileForImport(ms, fileUpload.IFileEntry.Name, 1, Http);
+
+            if (response.StatusCode.ToString() == "OK")
+            {
+                //keyReportAnswer[fileUpload.Position - 1].StrAnswer = response.Content.ReadAsStringAsync().Result.ToString();
+                //file = response.Content.ReadAsStringAsync().Result.ToString();
+                string result = response.Content.ReadAsStringAsync().Result.ToString();
+                importFields = result != string.Empty ? JsonConvert.DeserializeObject<ImportFields>(result) : null;
+                toastService.ShowSuccess($"Successfully read excel file");
+                this.StateHasChanged();
+            }
+            else
+                toastService.ShowError($"Failed to read excel file");
+
+        }
+        else
+        {
+            importFields = new ImportFields();
+            importFields.ListDatabaseColumns = new List<DBColumnVal>();
+            importFields.ListExcelColumns = new List<ColumnVal>();
+        }
+    }
+
+
+
+}

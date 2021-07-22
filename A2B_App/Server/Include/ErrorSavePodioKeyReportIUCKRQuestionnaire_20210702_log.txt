@@ -1,0 +1,36 @@
+[2021-07-02 11:49:48.270] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.deleted","error_description":"field.app.deleted","request":{"url":"http://api.podio.com/item/1790481552","query_string":"","method":"PUT"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Put[T](String url, Object requestData)
+   at PodioAPI.Services.ItemService.UpdateItem(Item item, Nullable`1 spaceId, Nullable`1 revision, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCKRQuestionnaire(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4415
+[2021-07-02 12:39:16.858] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.deleted","error_description":"field.app.deleted","request":{"url":"http://api.podio.com/item/1790481552","query_string":"","method":"PUT"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Put[T](String url, Object requestData)
+   at PodioAPI.Services.ItemService.UpdateItem(Item item, Nullable`1 spaceId, Nullable`1 revision, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCKRQuestionnaire(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4415
+[2021-07-02 12:51:01.214] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.deleted","error_description":"field.app.deleted","request":{"url":"http://api.podio.com/item/1790481552","query_string":"","method":"PUT"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Put[T](String url, Object requestData)
+   at PodioAPI.Services.ItemService.UpdateItem(Item item, Nullable`1 spaceId, Nullable`1 revision, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCKRQuestionnaire(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4415
+[2021-07-02 13:04:09.457] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.deleted","error_description":"field.app.deleted","request":{"url":"http://api.podio.com/item/1790481552","query_string":"","method":"PUT"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Put[T](String url, Object requestData)
+   at PodioAPI.Services.ItemService.UpdateItem(Item item, Nullable`1 spaceId, Nullable`1 revision, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCKRQuestionnaire(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4415
+[2021-07-02 13:04:20.648] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.deleted","error_description":"field.app.deleted","request":{"url":"http://api.podio.com/item/1790481552","query_string":"","method":"PUT"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Put[T](String url, Object requestData)
+   at PodioAPI.Services.ItemService.UpdateItem(Item item, Nullable`1 spaceId, Nullable`1 revision, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCKRQuestionnaire(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4415
+[2021-07-02 13:05:24.941] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.deleted","error_description":"field.app.deleted","request":{"url":"http://api.podio.com/item/1790481552","query_string":"","method":"PUT"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Put[T](String url, Object requestData)
+   at PodioAPI.Services.ItemService.UpdateItem(Item item, Nullable`1 spaceId, Nullable`1 revision, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCKRQuestionnaire(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4415

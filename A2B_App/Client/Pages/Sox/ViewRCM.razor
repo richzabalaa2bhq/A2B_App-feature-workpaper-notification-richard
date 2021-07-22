@@ -1,0 +1,152 @@
+﻿@page "/view-rcm/{FY}/{ClientName}"
+@using Microsoft.AspNetCore.Authorization
+@using A2B_App.Client.Services
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Client.Component.Rcm
+@inject Task<ClientSettings> _getSettings
+
+@using Newtonsoft.Json
+@using System.Text
+@using System.IO
+@using A2B_App.Shared.Sox
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@attribute [Authorize(Roles = "Admin, IT, Accounting")]
+<!-- 1:1 aspect ratio -->
+<!--<div class="embed-responsive embed-responsive-1by1">
+    <iframe class="embed-responsive-item" src="@rcmUri" frameborder="0" allowfullscreen></iframe>
+</div>-->
+
+<div class="table-container px-4" style="overflow: scroll !important; width: 100vw; max-height: 1000px; margin-right: -650px;">
+    @ClientName<br>
+    Risk Control Matrix<br />
+    @FY<br /><br />
+    <table class="table is-bordered is-fullwidth is-scrollable">
+        <thead>
+            <tr style="background-color: lightgray;">
+                <th class="is-vcentered">Process</th>
+                <th class="is-vcentered" style="min-width: 180px">Sub-Process</th>
+                <th class="is-vcentered" style="min-width: 500px">Control Objective</th>
+                <th class="is-vcentered" style="min-width: 500px">Specific Risk</th>
+                <th class="is-vcentered" style="min-width: 180px">Financial Statement Elements</th>
+                <th class="is-vcentered">Completeness & Accuracy</th>
+                <th class="is-vcentered">Existence & Occurrence</th>
+                <th class="is-vcentered">Presentation & Disclosure</th>
+                <th class="is-vcentered">Rights & Obligations</th>
+                <th class="is-vcentered">Valuation & Allocation</th>
+                <th class="is-vcentered">Control Id</th>
+                <th class="is-vcentered" style="min-width: 500px">Control Activity FY19</th>
+                <th class="is-vcentered">Control In Place Date </th>
+                <th class="is-vcentered">Control Owner</th>
+                <th class="is-vcentered">Control Frequency</th>
+                <th class="is-vcentered">Key/Non - Key</th>
+                <th class="is-vcentered">Control Type</th>
+                <th class="is-vcentered">Nature of Procedure </th>
+                <th class="is-vcentered">Fraud Control</th>
+                <th class="is-vcentered">Risk Level</th>
+                <th class="is-vcentered">Management Review Control</th>
+                <th class="is-vcentered" style="min-width: 500px">PBC List</th>
+                <th class="is-vcentered" style="min-width: 500px">Test procedures</th>
+
+            </tr>
+        </thead>
+        <tbody>
+          
+            @foreach (var item in listClient)
+            {
+
+                
+<tr>
+                <td>@(item.Process != null ? item.Process.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.Subprocess != null ? item.Subprocess.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.ControlObjective != null ? item.ControlObjective.Replace("<p>", "").Replace("</p>", "").Replace("<li>", "").Replace("</li>", "").Replace("<ol>", "").Replace("</ol>", "").Replace("<br/>", ""): string.Empty)</td>
+                <td>@(item.SpecificRisk != null ? item.SpecificRisk.Replace("<p>", "").Replace("</p>", "").Replace("<li>", "").Replace("</li>", "").Replace("<ol>", "").Replace("</ol>", "").Replace("<br/>", "") : string.Empty)</td>
+                <td>@(item.FinStatementElement != null ? item.FinStatementElement.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@((item.CompletenessAccuracy))</td>
+                <td>@((item.ExistenceDisclosure))</td>
+                <td>@((item.PresentationDisclosure))</td>
+                <td>@((item.RightsObligation))</td>
+                <td>@((item.ValuationAlloc))</td>
+                <td>@(item.ControlId != null ? item.ControlId.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.ControlActivityFy19 != null ? item.ControlActivityFy19.Replace("<p>", "").Replace("</p>", "").Replace("<li>", "").Replace("</li>", "").Replace("<ol>", "").Replace("</ol>", "").Replace("<br/>", "") : string.Empty)</td>
+                <td>@(item.ControlPlaceDate != null ? item.ControlPlaceDate.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.ControlOwner != null ? item.ControlOwner.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.ControlFrequency != null ? item.ControlFrequency.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.Key != null ? item.Key.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.ControlType != null ? item.ControlType.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.NatureProc != null ? item.NatureProc.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.FraudControl != null ? item.FraudControl.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.RiskLvl != null ? item.RiskLvl.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.ManagementRevControl != null ? item.ManagementRevControl.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.PbcList != null ? item.PbcList.Replace("<p>", "").Replace("</p>", "").Replace("<li>", "").Replace("</li>", "").Replace("<ol>", "").Replace("</ol>", "").Replace("<br/>", "") : string.Empty)</td>
+                <td>@(item.TestProc != null ? item.TestProc.Replace("<p>", "").Replace("</p>", "").Replace("<li>", "").Replace("</li>", "").Replace("<ol>", "").Replace("</ol>", "").Replace("<br/>", "") : string.Empty)</td>
+                
+                
+
+            </tr>
+                }
+        </tbody>
+    </table>
+</div>
+
+
+
+
+@code {
+    private List<string> listFy = new List<string>();
+    private List<RcmViewAccess> listClient = new List<RcmViewAccess>();
+    private string Fy { get; set; } = string.Empty;
+    private ClientSettings settings;
+    private RcmService RcmService;
+    private SoxTrackerService SoxTrackerService;
+    private string rcmUri { get; set; }
+    [Parameter]
+    public string FY { get; set; }
+    [Parameter]
+    public string ClientName { get; set; }
+    
+    //public string Status { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        settings = await _getSettings;
+        RcmService = new RcmService(settings);
+        SoxTrackerService = new SoxTrackerService(settings);
+        //ClientSettings settings = new ClientSettings();
+        rcmUri = settings.GetRcmUri();
+        FY = FY ?? "FY";
+        ClientName = ClientName ?? "ClientName";
+        //Status
+        // Status = Status.ToLower() != "closed";
+        // && Status.Status.ToLower() != "completed";
+
+        fetch(FY, ClientName);
+        //fetch(FY, ClientName, Status);
+        base.OnInitialized();
+
+        //Console.WriteLine("testttt:" + Text);
+    }
+    private async void fetch(String FY, String ClientName)
+    //private async void fetch(String FY, String ClientName, string Status)
+    {
+        // var test = Request.QueryString["subject_type_cd"];
+        var response = await RcmService.fetch_rcm(Http, FY, ClientName);
+        //Console.WriteLine(rcmUri);
+        //Console.WriteLine(response);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            listClient = JsonConvert.DeserializeObject<List<RcmViewAccess>>(result);
+            //Console.WriteLine(listClient);
+            this.StateHasChanged();
+        }
+
+    }
+
+    
+
+}

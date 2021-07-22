@@ -1,0 +1,22 @@
+﻿@page "/clientuiprocess/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Client.Component.Client
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize]
+
+<ClientUI></ClientUI>
+
+
+@code {
+
+    private string clientui { get; set; }
+    private ClientSettings settings;
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await _getSettings;
+        //ClientSettings settings = new ClientSettings();
+        clientui = settings.GetClientUi();
+    }
+
+}

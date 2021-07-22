@@ -1,0 +1,223 @@
+﻿@using BlazorDateRangePicker
+@using A2B_App.Client.Services
+@using A2B_App.Shared.Podio
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+
+@if (display)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Sync @title</p>
+                <button class="delete" aria-label="close" @onclick="Close"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="simple-form">
+
+                    <div class="form-group col-6">
+                        <label for="round1Range">Created Date Range</label>
+                        @*<DateRangePicker OnRangeSelect="OnRangeSelect1" @bind-StartDate="startDate" @bind-EndDate="endDate" id="round1range" class="form-control bg-white" />*@
+                        <DateRangePicker OnRangeSelect="OnRangeSelect1" @bind-StartDate="startDate" @bind-EndDate="endDate" id="round1range">
+                            <PickerTemplate>
+                                <div id="@context.ParentId" @onclick="context.Toggle" style="background: #fff; cursor: pointer; padding: 5px 10px; width: 250px; border: 1px solid #ccc;">
+                                    <i class="oi oi-calendar"></i>&nbsp;
+                                    <span>@context.FormattedRange @(string.IsNullOrEmpty(context.FormattedRange) ? "Choose dates..." : "")</span>
+                                    <i class="oi oi-chevron-bottom float-right"></i>
+                                </div>
+                            </PickerTemplate>
+                        </DateRangePicker>
+                    
+                    </div>
+                    
+
+                    <div class="form-group col-6">
+                        <label for="limit">Limit</label>
+                        <input class="input" type="tel" placeholder="Limit" id="limit" @bind-value="syncDate.limit">
+                    </div>
+
+                    <div class="form-group col-6">
+                        <label for="offset">Offset</label>
+                        <input class="input" type="tel" placeholder="Offset" id="offset" @bind-value="syncDate.offset">
+                    </div>
+
+                    
+                </div>
+            </section>
+            @if (isProcess)
+            {
+                <section>
+                    <HttpResComponent isSuccess="@isSuccess" response="@response"></HttpResComponent>
+                </section>
+            }
+
+            <footer class="modal-card-foot">
+                <button class="button is-success @(isLoading ? "is-loading" : string.Empty )" @onclick="@(() => { GetApiResponse2(); })"  disabled="@isLoading">Sync Podio Items</button>
+                <button class="button" @onclick="Close">Close</button>
+            </footer>
+        </div>
+    </div>
+
+}
+
+
+
+
+@code {
+
+    [Parameter] public EventCallback<SyncDateRange> ReturnValue { get; set; }
+    [Parameter] public string title { get; set; }
+
+    private PodioSyncService podioSyncService;
+    private ClientSettings settings;
+    private HttpResponseMessage httpResponseMessage { get; set; }
+    private SyncDateRange syncDate;
+    private DateTimeOffset? startDate { get; set; } = DateTime.Today;
+    private DateTimeOffset? endDate { get; set; } = DateTime.Today;
+    private bool isSuccess { get; set; }
+    private string response { get; set; }
+    private bool isProcess { get; set; }
+    private bool isLoading { get; set; }
+
+
+    protected override void OnParametersSet()
+    {
+        //startDate = null;
+        //endDate = null;
+
+        this.StateHasChanged();
+    }
+
+
+    protected override void OnInitialized()
+    {
+        Http.Timeout = TimeSpan.FromMinutes(30);
+        base.OnInitialized();
+    }
+
+    private async void Initialize()
+    {
+        settings = await _getSettings;
+        podioSyncService = new PodioSyncService(settings);
+        isProcess = false;
+        isLoading = false;
+        response = string.Empty;
+    }
+
+    private void SetReturnValue()
+    {
+        //System.Diagnostics.Debug.WriteLine($"Start: {syncDate.startDate.Value.Date} - End: {syncDate.endDate.Value.Date}");
+        //ReturnValue.InvokeAsync(syncDate);
+        //Close();
+    }
+
+    //Obsolete - this function is replace
+    private void GetApiResponse()
+    {
+        //if (podioSyncService != null)
+        //{
+        //    isProcess = false;
+        //    HttpResponseMessage httpResponse = null;
+        //    response = string.Empty;
+        //    switch (title)
+        //    {
+        //        case "RCM":
+        //            httpResponse = await podioSyncService.SyncPodioRcmAsync(syncDate, Http);
+        //            break;
+        //        case "Sample Selection Client":
+        //            httpResponse = await podioSyncService.SyncPodioSampleSelectionClientAsync(syncDate, Http);
+        //            break;
+        //        case "Sample Selection Matrix":
+        //            httpResponse = await podioSyncService.SyncPodioSampleSelectionMatrixAsync(syncDate, Http);
+        //            break;
+        //        case "Client Reference":
+        //            httpResponse = await podioSyncService.SyncPodioRcmAsync(syncDate, Http);
+        //            break;
+        //        case "Project Reference":
+        //            httpResponse = await podioSyncService.SyncPodioRcmAsync(syncDate, Http);
+        //            break;
+        //        case "Task Reference":
+        //            httpResponse = await podioSyncService.SyncPodioRcmAsync(syncDate, Http);
+        //            break;
+        //        case "Time Code":
+        //            httpResponse = await podioSyncService.SyncPodioRcmAsync(syncDate, Http);
+        //            break;
+        //    }
+
+        //    if (httpResponse.StatusCode.ToString() == "OK")
+        //    {
+        //        var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(httpResponse.Content);
+        //        response = jsonData;
+        //        isSuccess = true;
+        //    }
+        //    else
+        //    {
+        //        isSuccess = false;
+        //    }
+        //    isProcess = true;
+        //}
+        //this.StateHasChanged();
+    }
+
+    private async void GetApiResponse2()
+    {
+        isLoading = true;
+        isProcess = false;
+        var res = await podioSyncService.SyncByDateAsync(syncDate, Http, title);
+
+        HttpResponseMessage httpResponse = res.Item1;
+        string retTitle = res.Item2;
+
+        if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK || httpResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
+        {
+            //var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(httpResponse.Content.ReadAsStringAsync().Result, Newtonsoft.Json.Formatting.Indented);
+
+            response = httpResponse.Content.ReadAsStringAsync().Result.Trim();
+            isSuccess = true;
+        }
+        else
+        {
+            isSuccess = false;
+        }
+        isProcess = true;
+        isLoading = false;
+        this.StateHasChanged();
+    }
+
+    public void OnRangeSelect1(DateRange range)
+    {
+        syncDate.startDate = range.Start.Date;
+        syncDate.endDate = range.End.Date;
+
+        System.Diagnostics.Debug.WriteLine($"Start: {syncDate.startDate.Value.Date} - End: {syncDate.endDate.Value.Date}");
+    }
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.display = true;
+        Initialize();
+        startDate = DateTime.Now;
+        endDate = DateTime.Now;
+
+
+        syncDate = new SyncDateRange();
+        syncDate.startDate = startDate.Value.Date;
+        syncDate.endDate = startDate.Value.Date;
+        syncDate.limit = 0;
+        syncDate.offset = 0;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        isProcess = false;
+        response = string.Empty;
+        this.StateHasChanged();
+    }
+
+}

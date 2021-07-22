@@ -1,0 +1,161 @@
+﻿@using A2B_App.Shared.Sox
+@using System.IO
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject IToastService toastService
+
+
+@if (importFields != null && importFields.ListDatabaseColumns != null && importFields.ListExcelColumns != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Data Mapping</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    @if (importFields.ListDatabaseColumns.Count > 0)
+                    {
+                        @foreach (var item in importFields.ListDatabaseColumns)
+                        {
+                            <div class="field has-addons">
+                                <p class="control">
+                                    <select class="form-control" @bind="importFields.ListDatabaseColumns[item.Position - 1].ExcelColumn.Index">
+                                        <option value="">Select Option</option>
+                                        @if (importFields.ListExcelColumns.Count > 0)
+                                        {
+                                            @foreach (var itemExcel in importFields.ListExcelColumns)
+                                            {
+                                                <option value="@itemExcel.Index">@itemExcel.ExcelColumnName</option>
+                                            }
+                                        }
+
+                                    </select>
+                                </p>
+                                <p class="control">
+                                    <a class="button is-static">
+                                        @item.DbColumnName
+                                    </a>
+                                </p>
+                            </div>
+                        }
+                    }
+
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    @*Save button*@
+    <div class="row">
+        <div class="col-10">
+            <div class="form-group">
+                <button class="btn btn-success" @onclick="StartImport">Start Import</button>
+            </div>
+        </div>
+    </div>
+
+}
+
+
+@code {
+
+    [Parameter] public ImportFields importFields { get; set; }
+    int currentIndex;
+    private FileService fileService { get; set; }
+
+    protected override void OnInitialized()
+    {
+        //importFields = new ImportFields();
+        //SetValue();
+        fileService = new FileService();
+        base.OnInitialized();
+    }
+
+    private void SetValue()
+    {
+        importFields.ListExcelColumns = new List<ColumnVal>();
+        importFields.ListDatabaseColumns = new List<DBColumnVal>();
+        importFields.ListExcelColumns.AddRange(
+            new List<ColumnVal>()
+            {
+                new ColumnVal
+                {
+                    Index = 1, ExcelColumnName = "Test1"
+                },
+                new ColumnVal
+                {
+                    Index = 2, ExcelColumnName = "Test2"
+                },
+                new ColumnVal
+                {
+                    Index = 2, ExcelColumnName = "Test3"
+                },
+                new ColumnVal
+                {
+                    Index = 2, ExcelColumnName = "Test4"
+                },
+                new ColumnVal
+                {
+                    Index = 2, ExcelColumnName = "Test5"
+                },
+                new ColumnVal
+                {
+                    Index = 2, ExcelColumnName = "Test6"
+                },
+                new ColumnVal
+                {
+                    Index = 2, ExcelColumnName = "Test7"
+                },
+                new ColumnVal
+                {
+                    Index = 2, ExcelColumnName = "Test8"
+                }
+                });
+
+        importFields.ListDatabaseColumns.AddRange(
+            new List<DBColumnVal>()
+            {
+                new DBColumnVal
+                {
+                    DbColumnName = "DBColumn 1"
+                },
+                new DBColumnVal
+                {
+                    DbColumnName = "DBColumn 2"
+                }
+                });
+    }
+
+    void StartDrag(ColumnVal item)
+    {
+        currentIndex = GetIndex(item);
+        //Console.WriteLine($"DragStart for {item.ExcelColumnName} index {currentIndex}");
+    }
+
+    int GetIndex(ColumnVal item)
+    {
+        return importFields.ListExcelColumns.FindIndex(a => a.Index == item.Index);
+    }
+
+
+    private async void StartImport()
+    {
+        System.Diagnostics.Debug.WriteLine(importFields);
+        var response = await fileService.StartImportRcm(importFields, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            //keyReportAnswer[fileUpload.Position - 1].StrAnswer = response.Content.ReadAsStringAsync().Result.ToString();
+            //file = response.Content.ReadAsStringAsync().Result.ToString();
+            toastService.ShowSuccess($"Successfully imported Rcm data");
+            this.StateHasChanged();
+        }
+        else
+            toastService.ShowError($"Failed to import Rcm data");
+    }
+}

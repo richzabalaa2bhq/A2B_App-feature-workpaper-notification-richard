@@ -1,0 +1,344 @@
+﻿@using BlazorDateRangePicker
+@using A2B_App.Client.Services
+@using A2B_App.Shared.Podio
+@using A2B_App.Shared.Sox
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@attribute [Authorize]
+@using A2B_App.Shared.User
+@using Newtonsoft.Json
+
+
+@if (display && appUser != null)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">@title</p>
+                <button class="delete" aria-label="close" @onclick="SetReturnValue"></button>
+            </header>
+            <section class="modal-card-body">
+
+                <div class="@messageClass">
+                    <button class="delete" @onclick="HideNotification"></button>
+                    @message
+                </div>
+
+                @*<div class="simple-form">*@
+
+                <EditForm Model="@appUser" OnValidSubmit="@HandleValidSubmit" OnInvalidSubmit="@HandleInValidSubmit">
+                    <DataAnnotationsValidator />
+                    @*<ValidationSummary />*@
+
+                    <div class="@messageClass">
+                        <button class="delete" @onclick="HideNotification"></button>
+                        @message
+                    </div>
+
+                    <article class="message">
+                        <div class="message-body">
+                            User Email: <strong>@email</strong>.
+                        </div>
+                    </article>
+                    Roles
+                    <article class="message">
+                        <div class="message-body">
+
+
+                            <div class="block">
+
+                                @if(appUser.ListAppRole != null && appUser.ListAppRole.Count > 0)
+                                {
+                                    foreach (var item in appUser.ListAppRole)
+                                    {
+                                        <span class="tag is-success is-medium">
+                                            @item.RoleName
+                                            <button class="delete is-small" @onclick="@(()=> { DeleteRole(item.RoleName); })"></button>
+                                        </span>
+                                    }
+                                }
+
+
+                            </div>
+
+
+
+                        </div>
+                    </article>
+
+
+                    <div class="field has-addons">
+                        <div class="control is-expanded">
+                            <div class="select is-fullwidth">
+                                <select name="listRoles" @bind="@selectedRoleName">
+                                    @if (appRole != null && appRole.Count() > 0)
+                                    {
+                                        <option value=""></option>
+                                        foreach (var item in appRole)
+                                        {
+                                            <option value="@item.RoleName">@item.RoleName</option>
+                                        }
+
+                                    }
+                                    @*<option value="Admin">Admin</option>
+                                        <option value="IT">IT</option>
+                                        <option value="Accounting">Accounting</option>*@
+                                </select>
+                            </div>
+                        </div>
+                        <div class="control">
+                            <button type="submit" class="button is-primary" @onclick="@(()=> { AddRole(selectedRoleName); })">Add Role</button>
+                        </div>
+                    </div>
+
+                </EditForm>
+
+                @*</div>*@
+
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" @onclick="SetReturnValue">Close</button>
+            </footer>
+        </div>
+    </div>
+
+
+
+}
+
+
+
+
+@code {
+
+
+    [Parameter] public string title { get; set; }
+    [Parameter] public EventCallback<bool> ReturnValue { get; set; }
+    [Parameter] public string email { get; set; }
+
+    private AdminService adminService;
+    private ClientSettings settings;
+    private HttpResponseMessage httpResponseMessage { get; set; }
+    private AppUser appUser { get; set; }
+    private AppRole[] appRole { get; set; }
+    private DateTimeOffset? startDate { get; set; } = null;
+    private DateTimeOffset? endDate { get; set; } = null;
+    //private string confirmedPassword = null;
+    private string message { get; set; }
+    private string messageClass { get; set; }
+    private string hideClass { get; set; }
+    private string cancelBtnLabel { get; set; }
+    private string selectedRoleName { get; set; }
+    private bool isSuccess { get; set; }
+
+    protected override Task OnParametersSetAsync()
+    {
+        Initialize();
+        return base.OnParametersSetAsync();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        Initialize();
+        return base.OnInitializedAsync();
+    }
+
+    private async void Initialize()
+    {
+        if (email != string.Empty && email != null)
+        {
+            appUser = new AppUser();
+            GetUser();
+            GetRole();
+        }
+        HideNotification();
+        settings = await _getSettings;
+        adminService = new AdminService(settings);
+        message = string.Empty;
+        this.StateHasChanged();
+    }
+
+    private async void AddRole(string roleName)
+    {
+        AppUser tempAppUser = new AppUser();
+        AppRole appRole = new AppRole();
+        List<AppRole> listAppRole = new List<AppRole>();
+
+        appRole.RoleName = roleName;
+        tempAppUser.Email = email;
+        tempAppUser.Password = "123Qwe!!";
+        tempAppUser.ConfirmPassword = tempAppUser.Password;
+        listAppRole.Add(appRole);
+        tempAppUser.ListAppRole = listAppRole;
+
+        var result = await adminService.UserManagement(tempAppUser, Http, "Add Role");
+        var httpResponse = result.Item1;
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                appUser = new AppUser();
+                GetUser();
+            }
+            catch (Exception ex)
+            {
+                ShowErrorNotification($"Error adding role {ex.ToString()}");
+            }
+
+        }
+        else
+        {
+            ShowErrorNotification("Error adding role");
+        }
+        this.StateHasChanged();
+    }
+
+    private async void DeleteRole(string roleName)
+    {
+        AppUser tempAppUser = new AppUser();
+        AppRole appRole = new AppRole();
+        List<AppRole> listAppRole = new List<AppRole>();
+
+        appRole.RoleName = roleName;
+        tempAppUser.Email = email;
+        tempAppUser.Password = "123Qwe!!";
+        tempAppUser.ConfirmPassword = tempAppUser.Password;
+        listAppRole.Add(appRole);
+        tempAppUser.ListAppRole = listAppRole;
+
+        var result = await adminService.UserManagement(tempAppUser, Http, "Delete Role");
+        var httpResponse = result.Item1;
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+
+                appUser = new AppUser();
+                GetUser();
+            }
+            catch (Exception ex)
+            {
+                ShowErrorNotification($"Error adding user {ex.ToString()}");
+            }
+
+        }
+        else
+        {
+            ShowErrorNotification("Error adding user");
+        }
+        this.StateHasChanged();
+    }
+
+    private async void GetUser()
+    {
+        //appUser = await Http.GetFromJsonAsync<AppUser>($"api/Admin/admin/user/get?email={email}");
+        //System.Diagnostics.Debug.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(appUser, Newtonsoft.Json.Formatting.Indented));
+
+        //Updated 5.13.2021 | Levin jay Tagapan
+        var response = await adminService.GetData(Http, $"api/Admin/admin/user/get?email={email}");
+        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            appUser = JsonConvert.DeserializeObject<AppUser>(result);
+        }
+        else
+        {
+            ShowErrorNotification("Error getting user data");
+        }
+
+        this.StateHasChanged();
+    }
+
+    private async void GetRole()
+    {
+        //appRole = await Http.GetFromJsonAsync<AppRole[]>($"api/Admin/admin/roles");
+        //System.Diagnostics.Debug.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(appRole, Newtonsoft.Json.Formatting.Indented));
+
+        //Updated 5.13.2021 | Levin jay Tagapan
+        var response = await adminService.GetData(Http, $"api/Admin/admin/roles");
+        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            appRole = JsonConvert.DeserializeObject<AppRole[]>(result);
+        }
+        else
+        {
+            ShowErrorNotification("Error getting user data");
+        }
+
+        this.StateHasChanged();
+    }
+
+    private void SetReturnValue()
+    {
+        isSuccess = true;
+        ReturnValue.InvokeAsync(isSuccess);
+        Close();
+    }
+
+    private void HandleValidSubmit()
+    {
+        System.Diagnostics.Debug.WriteLine("OnValidSubmit");
+        //AddRole();
+        this.StateHasChanged();
+    }
+
+    private void HandleInValidSubmit()
+    {
+        System.Diagnostics.Debug.WriteLine("OnInValidSubmit");
+        this.StateHasChanged();
+    }
+
+    private async void ShowSuccessNotification(string notifMessage)
+    {
+        messageClass = "notification is-success";
+        message = notifMessage;
+        this.StateHasChanged();
+        await Task.Delay(3000);
+
+        if (title == "Add User" && email == string.Empty)
+        {
+            //NewUser();
+            HideNotification();
+        }
+        else
+        {
+            SetReturnValue();
+        }
+
+    }
+
+    private async void ShowErrorNotification(string notifMessage)
+    {
+        messageClass = "notification is-danger";
+        message = notifMessage;
+        this.StateHasChanged();
+        await Task.Delay(3000);
+        HideNotification();
+    }
+
+    private void HideNotification()
+    {
+        messageClass = "is-hidden";
+        this.StateHasChanged();
+    }
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+}

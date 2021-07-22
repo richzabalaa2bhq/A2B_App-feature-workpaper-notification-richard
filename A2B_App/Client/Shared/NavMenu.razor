@@ -1,0 +1,296 @@
+﻿
+@inject IJSRuntime JSRuntime
+
+        <div class="top-row pl-4 navbar navbar-dark">
+            <a class="navbar-brand" href="">A2B App</a>
+            <button class="navbar-toggler" @onclick="ToggleNavMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+
+        <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+            <ul class="nav flex-column">
+
+                <AuthorizeView Roles="Admin, Normal, Accounting, IT">
+                    <Authorized>
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                                <span class="oi oi-home" aria-hidden="true"></span> Home
+                            </NavLink>
+                        </li>
+
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="account">
+                                <span class="oi oi-person" aria-hidden="true"></span> Account
+                            </NavLink>
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Admin, Accounting">
+                    <Authorized>
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" @onclick="()=>expandSubNav = !expandSubNav">
+                                <span class="oi oi-laptop" aria-hidden="true"></span> SOX
+                            </NavLink>
+                            @if (expandSubNav)
+                            {
+                                <NavLink class="nav-link nav-sub-menu" href="rcm">
+                                    <span class="" aria-hidden="true"></span> - RCM
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="soxtracker">
+                                    <span class="" aria-hidden="true"></span> - SOX Controls
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="workpaper/sox">
+                                    <span class="" aria-hidden="true"></span> - SOX Workpaper
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="workpaper/itgc">
+                                    <span class="" aria-hidden="true"></span> - ITGC Workpaper
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Sample Selection
+                                </NavLink>
+                                //specify parameter for version if 1  then handle version 1 configuration
+                                <NavLink class="nav-link nav-sub-menu" href="sampleselectionpage/1/0/0">
+                                    <span class="" aria-hidden="true"></span>  ---- Sample Selection Full
+                                </NavLink>
+
+                                //specify parameter for version if 2  then handle version 2 configuration
+                                <NavLink class="nav-link nav-sub-menu" href="sampleselectionpage/2/0/0">
+                                    <span class="" aria-hidden="true"></span>  ---- Sample Selection Adj
+                                </NavLink>
+
+                                <NavLink class="nav-link nav-sub-menu" href="sampleselectionpage/3/0/0">
+                                    <span class="" aria-hidden="true"></span>  ---- Sample Selection T&M
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="keyreport">
+                                    <span class="" aria-hidden="true"></span> - Key Report
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="sod">
+                                    <span class="" aria-hidden="true"></span> - SOD
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - SOC1 Mapping
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - COSO
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - PBC Tracker
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Narrative
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Flowchart
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="sox/wps">
+                                    <span class="" aria-hidden="true"></span> - WPS
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="sox/emailautomation/">
+                                    <span class="" aria-hidden="true"></span> - Email Automation Jotform
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="sox/sox-email-automation/">
+                                    <span class="" aria-hidden="true"></span> - Email Automation
+                                </NavLink>
+                            }
+                        </li>
+
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" @onclick="()=>expandSubNavAcct = !expandSubNavAcct">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> BK
+                            </NavLink>
+                            @if (expandSubNavAcct)
+                            {
+
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Bank Reconciliation
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Prepaid
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Fixed Asset
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Deferrals
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Accruals
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Expenses
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - AR
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - AP
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - GL
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - MEC
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="bk/emailautomation/">
+                                    <span class="" aria-hidden="true"></span> - Email Automation Jotform
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="/bk/email-automation/">
+                                    <span class="" aria-hidden="true"></span> - Email Automation 
+                                </NavLink>
+                            }
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Admin, IT">
+                    <Authorized>
+
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" @onclick="()=>expandSubNavMtgs = !expandSubNavMtgs">
+                                <span class="oi oi-audio-spectrum" aria-hidden="true"></span> Meetings
+                            </NavLink>
+                            @if (expandSubNavMtgs)
+                            {
+
+                                <NavLink class="nav-link nav-sub-menu" href="meeting">
+                                    <span class="" aria-hidden="true"></span> - Schedules
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Calendar
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Agenda
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Invites
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu"  href="recordings">
+                                    <span class="" aria-hidden="true"></span> - Recording
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Transcription
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="meetingnotif">
+                                    <span class="" aria-hidden="true"></span> - Notification
+                                </NavLink>
+                            }
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
+
+
+                <AuthorizeView Roles="Admin">
+                    <Authorized>
+
+
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" @onclick="()=>expandSubNavReport = !expandSubNavReport">
+                                <span class="oi oi-audio-spectrum" aria-hidden="true"></span> Reporting
+                            </NavLink>
+                            @if (expandSubNavReport)
+                            {
+
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - SOW
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - BTA
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - WPS
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - CAT
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - Time
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu">
+                                    <span class="" aria-hidden="true"></span> - PRAQTICE
+                                </NavLink>
+                                <NavLink class="nav-link nav-sub-menu" href="staffreport">
+                                    <span class="" aria-hidden="true"></span> - Staffing Report
+                                </NavLink>
+                            }
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Admin, IT">
+
+                    <Authorized>
+
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="podiosync">
+                                <span class="oi oi-reload" aria-hidden="true"></span> Podio Sync Items
+                            </NavLink>
+                        </li>
+
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="clientuiprocess">
+                                <span class="oi oi-person" aria-hidden="true"></span>Client UI Process
+                            </NavLink>
+                        </li>
+
+                    </Authorized>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Admin">
+
+                    <Authorized>
+
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" @onclick="()=>expandSubNavAdmin = !expandSubNavAdmin">
+                                <span class="oi oi-cog" aria-hidden="true"></span> Admin
+                            </NavLink>
+                            @if (expandSubNavAdmin)
+                            {
+
+                                <NavLink class="nav-link nav-sub-menu" href="usersettings/50/1">
+                                    <span class="" aria-hidden="true"></span> - Access Controls
+                                </NavLink>
+
+                                <NavLink class="nav-link nav-sub-menu" href="rolesettings">
+                                    <span class="" aria-hidden="true"></span> - Roles
+                                </NavLink>
+
+                            }
+                        </li>
+                    </Authorized>
+
+                </AuthorizeView>
+
+            </ul>
+        </div>
+
+
+   
+
+    @code {
+        private bool expandSubNav;
+        private bool expandSubNavAcct;
+        private bool expandSubNavAdmin;
+        private bool expandSubNavMtgs;
+        private bool expandSubNavReport;
+        private bool collapseNavMenu = true;
+
+        private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+        private void ToggleNavMenu()
+        {
+            collapseNavMenu = !collapseNavMenu;
+        }
+
+        //[Inject] IJSRuntime JS { get; set; }
+
+        //bool navSubMenuOpenState;
+
+        async Task ClickMe()
+        {
+            await JSRuntime.InvokeAsync<object>("alert", "Successful OnClick!");
+        }
+
+
+    }

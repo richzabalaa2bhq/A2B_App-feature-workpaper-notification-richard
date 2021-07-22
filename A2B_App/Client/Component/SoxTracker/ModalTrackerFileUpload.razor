@@ -1,0 +1,119 @@
+﻿@using System.IO
+@using System.Net.Http.Headers
+@inject HttpClient Http
+
+@if (display)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Tracker Upload</p>
+                <button class="delete" aria-label="close" @onclick="Close"></button>
+            </header>
+
+            <section class="modal-card-body">
+                <div class="simple-form">
+
+                    <div class="form-group">
+                        <div class="col">
+                            <InputFile OnChange="HandleFileSelected" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col form-group">
+                            <p>@status</p>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <footer class="modal-card-foot">
+                <button class="button is-success" @onclick="StartUpload">Start Upload</button>
+                @*<button class="button" @onclick="Close">Cancel</button>*@
+            </footer>
+        </div>
+    </div>
+}
+
+
+
+@code {
+
+
+
+    private bool display = false;
+    private bool isLoading { get; set; } = false;
+    private string status { get; set; } = string.Empty;
+    private IFileListEntry file { get; set; }
+
+    public void Show()
+    {
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+    private async void StartUpload()
+    {
+        status = string.Empty;
+        isLoading = true;
+
+        if (file != null)
+        {
+            var ms = new MemoryStream();
+            await file.Data.CopyToAsync(ms);
+
+            //upload file and get response
+            var response = await UploadFileAsync(ms, file.Name, Http);
+
+            if (response.StatusCode.ToString() == "OK")
+            {
+                status = $"Data succesfully save";
+            }
+            else
+            {
+                status = $"Failed to save data";
+            }
+        }
+
+        isLoading = false;
+        this.StateHasChanged();
+    }
+
+    private void HandleFileSelected(IFileListEntry[] files)
+    {
+
+        this.StateHasChanged();
+        file = files.FirstOrDefault();
+
+    }
+
+
+
+
+    public async Task<HttpResponseMessage> UploadFileAsync(MemoryStream ms, string fileName, HttpClient Http)
+    {
+
+        var content = new MultipartFormDataContent();
+        content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data");
+        content.Add(new ByteArrayContent(ms.GetBuffer()), "file", fileName);
+
+        var response = await Http.PostAsync($"api/fileupload/upload", content);
+        System.Diagnostics.Debug.WriteLine(response.Content.ReadAsStringAsync().Result);
+        System.Diagnostics.Debug.WriteLine(response.StatusCode.ToString());
+
+        return response;
+
+    }
+
+
+
+}

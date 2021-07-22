@@ -1,0 +1,45 @@
+﻿@page "/rolesettings"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Shared
+@using A2B_App.Client.Component.Admin 
+@attribute [Authorize]
+@inject HttpClient Http
+
+@*<h3>Role</h3>*@
+
+<div class="columns">
+    <div class="column is-three-quarters">
+        <div class="card">
+            <RoleTableComponent></RoleTableComponent>
+        </div>
+    </div>
+</div>
+
+
+
+
+@code {
+
+    //private int pageSize = 50;
+    //private int pageNumber = 1;
+
+
+    protected override void OnInitialized()
+    {
+        GetRole();
+    }
+
+    private void GetRole()
+    {
+        try
+        {
+            //forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+}

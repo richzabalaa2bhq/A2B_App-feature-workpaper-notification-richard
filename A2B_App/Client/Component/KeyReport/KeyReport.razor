@@ -1,0 +1,161 @@
+
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using System.Text
+@using System.IO
+@using A2B_App.Shared.Sox
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@inject NavigationManager NavManager
+
+
+    <h3>Key Report</h3>
+
+
+<div class="border-top my-3"></div>
+
+<div class="tabs">
+
+    <ul>
+        <li class="@(tabUpdateControl ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(1); })">
+                <span class="icon is-small"><i class="oi oi-pencil" aria-hidden="true"></i></span>
+                <span>Key Report Update</span>
+            </a>
+        </li>
+        <li class="@(tabCandA ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(2); })">
+                <span class="icon is-small"><i class="oi oi-pencil" aria-hidden="true"></i></span>
+                <span>Key Report Procedure</span>
+            </a>
+        </li>
+        <li class="@(tabDownloadLeadsheet ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(3); })">
+                <span class="icon is-small"><i class="oi oi-data-transfer-download" aria-hidden="true"></i></span>
+                <span>Leadsheet </span>
+            </a>
+        </li>
+        <li class="@(tabDownloadTracker ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(4); })">
+                <span class="icon is-small"><i class="oi oi-data-transfer-download" aria-hidden="true"></i></span>
+                <span>Tracker</span>
+            </a>
+        </li>
+
+        <li class="@(tabUploadKeyReport ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(5); })">
+                <span class="icon is-small"><i class="oi oi-cloud-upload" aria-hidden="true"></i></span>
+                <span>Upload KeyReport</span>
+            </a>
+        </li>
+    </ul>
+
+</div>
+
+<div class="container is-fluid">
+    @if (tabCandA)
+    {
+        <div>
+            <KeyReportCAFields></KeyReportCAFields>
+        </div>
+    }
+
+    else if (tabUpdateControl)
+    {
+        <div>
+            <KeyReportTracker></KeyReportTracker>
+        </div>
+    }
+
+    else if (tabDownloadLeadsheet)
+    {
+
+        <div>
+            <KeyReportDownloadLeadsheet></KeyReportDownloadLeadsheet>
+        </div>
+    }
+    else if (tabDownloadTracker)
+    {
+        <div>
+            <KeyReportDownloadTracker></KeyReportDownloadTracker>
+        </div>
+    }
+    else if (tabUploadKeyReport)
+    {
+        <div>
+             <KeyReportUpload/>
+        </div>
+    }
+</div>
+
+
+
+@code {
+
+    public bool tabUpdateControl { get; set; } = false;
+    public bool tabCandA { get; set; } = false;
+    public bool tabDownloadLeadsheet { get; set; } = false;
+    public bool tabDownloadTracker { get; set; } = false;
+    public bool tabUploadKeyReport { get; set; } = false;
+
+    //on page initialization
+    protected override Task OnInitializedAsync()
+    {
+        // set tab new control to true and the rest false
+        tabUpdateControl = true;
+        tabDownloadLeadsheet = false;
+        tabDownloadTracker = false;
+        tabCandA = false;
+        tabUploadKeyReport = false;
+        Http.Timeout = TimeSpan.FromMinutes(30);
+        return base.OnInitializedAsync();
+    }
+
+    //handles tab control
+    private void TabControl(int activeControl)
+    {
+        switch (activeControl)
+        {
+            case 1:
+                tabUpdateControl = true;
+                tabDownloadLeadsheet = false;
+                tabDownloadTracker = false;
+                tabCandA = false;
+                tabUploadKeyReport = false;
+                break;
+            case 2:
+                tabCandA = true;
+                tabUpdateControl = false;
+                tabDownloadLeadsheet = false;
+                tabDownloadTracker = false;
+                tabUploadKeyReport = false;
+                break;
+            case 3:
+                tabCandA = false;
+                tabUpdateControl = false;
+                tabDownloadLeadsheet = true;
+                tabDownloadTracker = false;
+                tabUploadKeyReport = false;
+                break;
+            case 4:
+                tabCandA = false;
+                tabUpdateControl = false;
+                tabDownloadLeadsheet = false;
+                tabDownloadTracker = true;
+                tabUploadKeyReport = false;
+                break;
+            case 5:
+                tabCandA = false;
+                tabUpdateControl = false;
+                tabDownloadLeadsheet = false;
+                tabDownloadTracker = false;
+                tabUploadKeyReport = true;
+                break;
+            default:
+                break;
+        }
+        this.StateHasChanged();
+    }
+
+}

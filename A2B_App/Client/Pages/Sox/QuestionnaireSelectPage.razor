@@ -1,0 +1,605 @@
+﻿@*@page "/questionnaireselect"*@
+@page "/workpaper/{version}"
+@using BlazorDateRangePicker
+@using A2B_App.Client.Component.Questionnaire
+@using A2B_App.Client.Services
+@using A2B_App.Shared.Podio
+@using A2B_App.Shared.Sox
+@using Newtonsoft.Json
+@using Microsoft.AspNetCore.Authorization
+@using A2B_App.Client.Component.PodioSync
+@inject NavigationManager NavigationManager
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize(Roles = "Admin, IT, Accounting")]
+@inject HttpClient Http
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+@if (listDisplayRcm == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    //switch (version)
+    //{
+    //    case "sox":
+
+    //        break;
+    //    case "itgc":
+
+    //        break;
+    //}
+
+
+
+    <div class="container-fluid">
+
+        <br />
+        <div class="row">
+            <div class="col-6">
+                <button class="btn btn-primary" @onclick="(() => { GetRcm(RcmFilter);  })">Refresh</button>
+                <!--<button class="btn btn-primary" @onclick="(()=> { this.Modal.Show(); })">Filter</button><br />-->
+                <ModalFilter @ref="Modal" RcmFilter="RcmFilter" ListClient="ClientName" ListControlName="ControlName" ReturnValue="ReturnRcmFilter" Version="@version"></ModalFilter>
+            </div>
+            <div class="col-6">
+                <div class="float-right">
+                    <button class="btn btn-primary" @onclick="@(() =>
+                                               {
+                                                    title = "Questionnaire Field";
+                                                    modalField.Show();
+                                               })">
+                        Update Podio Workpaper
+                    </button>
+                    <button class="btn btn-primary" @onclick="@(() =>
+                                               {
+                                                    title = "RCM";
+                                                    modalSyncRcm.Show();
+                                               })">
+                        Update Podio RCM
+                    </button>
+                    @*<button class="btn btn-primary" @onclick="NewRCM">New RCM</button>*@
+                </div>
+            </div>
+        </div>
+        <br />
+        <label class="checkbox">
+            <input type="checkbox" @onchange="eventArgs => { isTestAndRev = !isTestAndRev; }">
+            Tester and Reviewer
+        </label>
+    </div>
+    @if(listDisplayRcm.Count > 0) {
+    <nav class="pagination" role="navigation" aria-label="pagination">
+        <button class="pagination-previous" disabled="@(current_page == 1 ? true : false)" @onclick="(() => { previousPage(); })">Previous</button>
+        <button class="pagination-next" disabled="@(current_page == total_pages ? true : false)" @onclick="(() => { nextPage(); })">Next page</button>
+        <ul class="pagination-list">
+           
+            
+            @for (int i = current_page - 1; i <= total_pages; i++)
+            {
+                int num = i;
+
+                int max = total_pages >= current_page + 4 ? current_page + 3 : total_pages;
+                if (num == 0)
+                    continue;   
+                if (num > max)
+                    break;
+                <li>
+                    <button class="pagination-link @(current_page == i ? "is-current" : string.Empty)" @onclick="(() => { changePage(num); })" aria-label="Page @i">@i</button>
+                </li>
+            }
+        </ul>
+    </nav>
+    }
+    <RcmListComponent Items="listDisplayRcm"
+                      ColumnsToExcludeCSV=""
+                      ReturnItemId="ReturnItemId"
+                      ReturnField="ItemId"
+                      tableClass="table table-striped table-sm table-hover"
+                      rowBodyClass="cursor-pointer"></RcmListComponent>
+
+    <ModalSyncByDate @ref="modalSyncRcm" ReturnValue="ReturnValueSycnRcm" title="@title"></ModalSyncByDate>
+    @*<ModalQuestionnaireFieldSync @ref="modalField" title="@title" listClient="listClientWithAppId" settings="@settings"></ModalQuestionnaireFieldSync>*@
+    <ModalSyncQuestionnaireField @ref="modalField" ReturnValue="ReturnValueSycnQuestionnaireField" title="@title"></ModalSyncQuestionnaireField>
+
+
+
+    @if (authState != null)
+    {
+
+        var user = authState.User;
+        <RoundSetSelect2 @ref="roundSetSelect2"
+                         title="Select Existing Workpaper or Create New"
+                         rcm="@rcm"
+                         email="@user.Identity.Name"></RoundSetSelect2>
+
+        <RoundSetSelect @ref="roundSetSelect"
+                        title="Select Existing Questionnaire or Create New"
+                        rcm="@rcm"
+                        version="@version"></RoundSetSelect>
+    }
+
+
+}
+
+@code {
+
+    [Parameter] public string version { get; set; }
+    private ModalFilter Modal;
+    private ModalSyncByDate modalSyncRcm;
+    private ModalSyncQuestionnaireField modalField;
+    private RoundSetSelect roundSetSelect;
+    private RoundSetSelect2 roundSetSelect2;
+    private string title;
+    private ClientSettings settings;
+    private List<RcmCta> listRcmCta = new List<RcmCta>();
+    private List<Rcm> listRcm = new List<Rcm>();
+    private List<Rcm> listRcm2 = new List<Rcm>();
+    private List<DisplayRcm> listDisplayRcm = new List<DisplayRcm>();
+    private RcmService RcmService;
+    private QuestionnaireService QuestionnaireService;
+    private RcmItemFilter RcmFilter = new RcmItemFilter();
+    private List<string> ClientName = new List<string>();
+    private List<string> ControlName = new List<string>();
+    private PodioSyncService podioSyncServices;
+    private List<string> listClientWithAppId = new List<string>();
+    private Rcm rcm = new Rcm();
+    //[Parameter] public RcmItemFilter RcmFilter { get; set; }
+    [Parameter] public List<string> ListClient { get; set; }
+    [Parameter] public List<string> ListControlName { get; set; }
+    [Parameter] public EventCallback<RcmItemFilter> ReturnValue { get; set; }
+
+    DateTimeOffset? StartDate1 { get; set; } = null;
+    DateTimeOffset? EndDate1 { get; set; } = null;
+    private bool displayDate { get; set; } = false;
+    //public List<string> ListClient { get; set; }
+
+    //private RcmService RcmService;
+    //private ClientSettings settings;
+    private int CountListClient { get; set; }
+
+    private AuthenticationState authState { get; set; }
+    private bool isTestAndRev { get; set; }
+
+    public int current_page { get; set; }
+    public int total_pages { get; set; }
+    //open();
+    //this.ModalFilter.show();
+    protected override async Task OnInitializedAsync()
+    {
+
+        authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        //WriteLog writeLog = new WriteLog();
+        //writeLog.Display(authState.User);
+
+        settings = await _getSettings;
+        RcmService = new RcmService(settings);
+    }
+    protected override void OnInitialized()
+    {
+
+        base.OnInitialized();
+
+        //Console.Write(ClientName);
+        //listRcmCta = new List<RcmCta> {
+        //    new RcmCta {
+        //        Id = 1,
+        //        ClientName = "KindredBio",
+        //        ClientCode = "KIN1002",
+        //        ControlId = "CTA 1.06",
+        //        PodioItemId = 123
+        //    }
+        //};
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        settings = await _getSettings;
+        RcmService = new RcmService(settings);
+        QuestionnaireService = new QuestionnaireService(settings);
+        RcmFilter = new RcmItemFilter();
+        podioSyncServices = new PodioSyncService(settings);
+
+        ClientName = new List<string>();
+        ControlName = new List<string>();
+        listDisplayRcm = new List<DisplayRcm>();
+
+        RcmFilter.ClientName = "All";
+        RcmFilter.ControlName = "All";
+        RcmFilter.Limit = 100000;
+        RcmFilter.Offset = 0;
+        RcmFilter.WorkpaperVersion = version;
+        GetRcm(RcmFilter);
+        GetListClient();
+        GetListControlName();
+        GetListClientWithAppId();
+        current_page = 1;
+        this.StateHasChanged();
+    }
+
+    private class DisplayRcm
+    {
+        public int ItemId { get; set; }
+        public string Fy { get; set; }
+        public string ClientName { get; set; }
+        public string ClientCode { get; set; }
+        public string ControlId { get; set; }
+        public string Created { get; set; }
+        public string StartDate { get; set; }
+        public string EndDate { get; set; }
+        public string AssignTo { get; set; }
+        public string Reviewer { get; set; }
+        public string Status { get; set; }
+        public string Duration { get; set; }
+    }
+
+    private void ReturnItemId(int value)
+    {
+        if (value != 0)
+        {
+            ////Old code 10-28-2020
+            ////navigate to questionnaire
+            //System.Diagnostics.Debug.WriteLine($"ReturnItemId: {value}");
+            //NavigationManager.NavigateTo($"questionnairegenerate/{value}/0/0");
+
+            ////New code - select round set if exists
+            rcm.PodioItemId = value;
+
+            if (isTestAndRev)
+                roundSetSelect2.Show();
+            else
+                roundSetSelect.Show();
+        }
+    }
+    private void changePage(int page_no)
+    {
+        current_page = page_no;
+
+        GetRcm(RcmFilter, 0);
+        this.StateHasChanged();
+    }
+
+    private void nextPage()
+    {
+        current_page++;
+        GetRcm(RcmFilter, 0);
+        this.StateHasChanged();
+    }
+
+    private void previousPage()
+    {
+        current_page--;
+
+        GetRcm(RcmFilter, 0);
+        this.StateHasChanged();
+    }
+
+    private void NavigateTo(string uri)
+    {
+        NavigationManager.NavigateTo($"{uri}");
+    }
+
+    private void ReturnRcmFilter(RcmItemFilter value)
+    {
+        if (value != null)
+        {
+            current_page = 1;
+            //Console.Write(value);
+            RcmFilter = value;
+            GetRcm(RcmFilter);
+        }
+    }
+
+    private async void GetRcm(RcmItemFilter rcmFilter, int initial = 1)
+    {
+        rcmFilter.Limit = 100000;
+        rcmFilter.Offset = 0;
+
+        var rcmResponse2 = await RcmService.GetRcmPodioFilterBy(rcmFilter, Http);
+        //var excelResponse = await SelectionService.SampleSelectionTest(sampleSelection);
+
+        if (rcmResponse2.StatusCode.ToString() == "OK")
+        {
+            if(initial == 1)
+            {
+                string result2 = rcmResponse2.Content.ReadAsStringAsync().Result.ToString();
+                //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+                listRcm2 = JsonConvert.DeserializeObject<List<Rcm>>(result2);
+
+                total_pages = listRcm2.Count / 10;
+                if (listRcm2.Count % 10 > 0)
+                {
+                    total_pages++;
+                }
+            }
+            rcmFilter.Limit = 10;
+            rcmFilter.Offset = (current_page - 1) * 10;
+            var rcmResponse = await RcmService.GetRcmPodioFilterBy(rcmFilter, Http);
+            if (rcmResponse.StatusCode.ToString() == "OK")
+            {
+                string result = rcmResponse.Content.ReadAsStringAsync().Result.ToString();
+                //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+                listRcm = JsonConvert.DeserializeObject<List<Rcm>>(result);
+
+                listDisplayRcm = new List<DisplayRcm>();
+                if (listRcm != null && listRcm.Count > 0)
+                {
+                    foreach (var item in listRcm)
+                    {
+                        DisplayRcm displayRcm = new DisplayRcm();
+                        displayRcm.ItemId = item.PodioItemId;
+                        displayRcm.Fy = item.FY;
+                        displayRcm.ClientName = item.ClientName;
+                        displayRcm.ClientCode = item.ClientCode;
+                        displayRcm.ControlId = item.ControlId;
+                        displayRcm.Created = item.CreatedOn.Value.DateTime.ToUniversalTime().ToString("MM-dd-yyyy");
+                        displayRcm.StartDate = (item.StartDate != null ? item.StartDate.Value.DateTime.ToString("MM-dd-yyyy") : string.Empty);
+                        displayRcm.EndDate = (item.EndDate != null ? item.EndDate.Value.DateTime.ToString("MM-dd-yyyy") : string.Empty);
+                        displayRcm.Duration = (item.Duration != null ? item.Duration.Value.ToString(@"hh\:mm\:ss") : string.Empty);
+                        displayRcm.AssignTo = item.AssignTo;
+                        displayRcm.Reviewer = item.Reviewer;
+                        displayRcm.Status = item.WorkpaperStatus;
+                        listDisplayRcm.Add(displayRcm);
+                        System.Diagnostics.Debug.WriteLine($"Added: {displayRcm.ItemId}");
+                    }
+                    //DisplayRcm displayRcm = new DisplayRcm();
+                    //displayRcm.ItemId = item.PodioItemId;
+                    //displayRcm.Fy = item.FY;
+                    //displayRcm.ClientName = item.ClientName;
+                    //displayRcm.ClientCode = item.ClientCode;
+                    //displayRcm.ControlId = item.ControlId;
+                    //displayRcm.Created = item.CreatedOn.DateTime.ToUniversalTime().ToString("MM-dd-yyyy");
+                    //displayRcm.StartDate = (item.StartDate != null ? item.StartDate.Value.DateTime.ToString("MM-dd-yyyy") : string.Empty);
+                    //displayRcm.EndDate = (item.EndDate != null ? item.EndDate.Value.DateTime.ToString("MM-dd-yyyy") : string.Empty);
+                    //displayRcm.Duration = (item.Duration != null ? item.Duration.Value.ToString(@"hh\:mm\:ss") : string.Empty);
+                    //displayRcm.AssignTo = item.AssignTo;
+                    //displayRcm.Reviewer = item.Reviewer;
+                    //listDisplayRcm.Add(displayRcm);
+                    //System.Diagnostics.Debug.WriteLine($"Added: {displayRcm.ItemId}");
+                }
+
+
+                this.StateHasChanged();
+            }
+        }
+        else
+        {
+            toastService.ShowError("Failed to get RCM data");
+        }
+
+    }
+
+    private void NewRCM()
+    {
+        NavigationManager.NavigateTo($"rcm");
+    }
+
+    private async void GetListClient()
+    {
+        ClientName.Add("All");
+        var listClientName = await RcmService.GetClient(Http);
+        if (listClientName != null)
+        {
+            ClientName.AddRange(listClientName);
+        }
+    }
+
+    private async void GetListControlName()
+    {
+        ControlName.Add("All");
+        var listControlName = await RcmService.GetControlName(Http);
+        if (listControlName != null)
+        {
+            switch (version)
+            {
+                case "sox":
+                    //remove all string contains ITGC
+                    listControlName.RemoveAll(s => s.ToLower().StartsWith("it"));
+                    break;
+                case "itgc":
+                    //remove all string if not contains ITGC
+                    listControlName.RemoveAll(s => !s.ToLower().StartsWith("it"));
+                    break;
+                default:
+                    break;
+            }
+            ControlName.AddRange(listControlName);
+        }
+    }
+
+    private async void ReturnValueSycnRcm(SyncDateRange syncDate)
+    {
+        if (syncDate.startDate != null && podioSyncServices != null)
+        {
+            var response = await podioSyncServices.SyncByDateAsync(syncDate, Http, title);
+
+            HttpResponseMessage httpResponse = response.Item1;
+            string retTitle = response.Item2;
+
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+                    GetRcm(RcmFilter);
+                    toastService.ShowSuccess($"Successfully Sync Podio Items - {retTitle}");
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError($"Failed Sync Podio Items - {title}");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError($"Failed Sync Podio Items - {title}");
+            }
+
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetListClientWithAppId()
+    {
+
+        var httpResponse = await QuestionnaireService.GetClientWithAppId(Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                listClientWithAppId = JsonConvert.DeserializeObject<List<string>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                //toastService.ShowSuccess($"Successfully Loaded Client With App Id");
+                this.StateHasChanged();
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to Load Client With App Id");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to Client With App Id");
+        }
+
+    }
+
+    private async void ReturnValueSycnQuestionnaireField(QuestionnaireFieldParam questionnaireField)
+    {
+        if (questionnaireField != null && podioSyncServices != null)
+        {
+
+            var httpResponse = await podioSyncServices.SyncPodioQuestionnaireFieldAsync(questionnaireField, Http, title);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+                    toastService.ShowSuccess($"Successfully Sync Podio Fields - {title}");
+
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError($"Failed Sync Podio Fields - {title}");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError($"Failed Sync Podio Fields - {title}");
+            }
+
+            this.StateHasChanged();
+        }
+
+
+    }
+    protected override void OnParametersSet()
+    {
+
+        if (RcmFilter.ClientName != null)
+        {
+            //System.Diagnostics.Debug.WriteLine($"RcmFilter.ClientName: {RcmFilter.ClientName}");
+            //await JSRuntime.InvokeAsync<object>("SetCategoryElementById2", "client", RcmFilter.ClientName);
+            //SetCategoryClientName();
+            //System.Diagnostics.Debug.WriteLine($"RcmFilter.ClientName: {RcmFilter.ClientName}");
+
+
+            //ChangeEventArgs clientEventArgs = new ChangeEventArgs();
+            //clientEventArgs.Value = value;
+            //SetCategoryClientName(clientEventArgs);
+            //await JSRuntime.InvokeAsync<object>("SetModalClient", RcmFilter.ClientName);
+            this.StateHasChanged();
+        }
+
+    }
+
+    //private bool display = false;
+
+    public void Show()
+    {
+        //this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        //this.display = false;
+        this.StateHasChanged();
+    }
+
+    private void SetReturnValue(RcmItemFilter RcmFilter)
+    {
+        //Console.Write(RcmFilter);
+        //Console.Write("testinggggggggg");
+        ReturnValue.InvokeAsync(RcmFilter);
+        Close();
+    }
+
+    public void OnRangeSelect1(DateRange range)
+    {
+        //Use range.Start and range.End here
+        //events.Add($"Range {range.Start} - {range.End} selected");
+        RcmFilter.StartDate = range.Start.Date;
+        RcmFilter.EndDate = range.End.Date;
+    }
+
+    private void EventCategoryClientName(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"Selected ClientName: {e.Value}");
+            RcmFilter.ClientName = e.Value.ToString();
+        }
+
+    }
+
+    private void EventControlName(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"Selected ControlName: {e.Value}");
+            RcmFilter.ControlName = e.Value.ToString();
+        }
+
+    }
+
+    private string ClientNameSelected
+    {
+        get
+        {
+            return RcmFilter.ClientName;
+        }
+        set
+        {
+
+            ChangeEventArgs clientEventArgs = new ChangeEventArgs();
+            clientEventArgs.Value = value;
+            EventCategoryClientName(clientEventArgs);
+            //RcmFilter.ClientName = value;
+        }
+    }
+
+    private string ControlNameSelected
+    {
+        get
+        {
+            return RcmFilter.ControlName;
+        }
+        set
+        {
+
+            ChangeEventArgs controlEventArgs = new ChangeEventArgs();
+            controlEventArgs.Value = value;
+            EventControlName(controlEventArgs);
+            //RcmFilter.ClientName = value;
+        }
+    }
+
+
+}

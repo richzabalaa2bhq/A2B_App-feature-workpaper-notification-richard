@@ -1,0 +1,142 @@
+﻿@page "/usersettings"
+@page "/usersettings/{pageSize:int}/{pageNumber:int}"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Shared.User
+@using A2B_App.Client.Services
+@using A2B_App.Client.Component.Admin 
+@using Newtonsoft.Json
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient Http
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+
+    <div class="container">
+        <h3>User</h3>
+        <button class="btn btn-primary float-right"  @onclick="@(() => {
+                                                                     title = "Add User";
+                                                                     email = string.Empty;
+                                                                     newUser.Show(); })">New User</button>
+        <br />
+
+        <TableTemplate Items="listUser">
+            <TableHeader>
+                <th>Email</th>
+                <th>Manage</th>
+            </TableHeader>
+            <RowTemplate>
+                <td style="width: 80%;">@context.Email</td>
+                <td style="width: 20%;">
+                    <button class="btn btn-sm btn-outline-dark" @onclick="@(()=> {
+                                                                    title = "Role Management";
+                                                                    email = context.Email;
+                                                                    roleMgmt.Show();
+                                                                })">
+                        Roles (@(context.ListAppRole != null ? context.ListAppRole.Count() : 0))
+                    </button>
+                    <button class="btn btn-warning btn-sm" @onclick="@(()=> {
+                                                                    title = "Update User";
+                                                                    email = context.Email;
+                                                                    newUser.Show();
+                                                                })">
+                        Update
+                    </button>
+                    <button class="btn btn-danger btn-sm" @onclick="@(()=> {
+                                                                   title = "Delete User";
+                                                                   email = context.Email;
+                                                                   deleteUser.Show(); })">
+                        Delete
+                    </button>
+                </td>
+            </RowTemplate>
+        </TableTemplate>
+
+    </div>
+
+<NewUserComponent title="@title" @ref="newUser" ReturnValue="ReturnValue" email="@email"></NewUserComponent>
+<DeleteUserComponent title="@title" email="@email" @ref="deleteUser" ReturnValue="ReturnValue" ></DeleteUserComponent>
+<RoleMgmtComponent title="@title" email="@email" @ref="roleMgmt" ReturnValue="ReturnValue"></RoleMgmtComponent>
+
+@code {
+
+    [Parameter] public int? pageSize { get; set; }
+    [Parameter] public int? pageNumber { get; set; }
+
+    private NewUserComponent newUser;
+    private DeleteUserComponent deleteUser;
+    private RoleMgmtComponent roleMgmt;
+    private PageTableFilter pageFilter { get; set; }
+    private List<AppUser> listUser { get; set; }
+    private AdminService adminService;
+    private ClientSettings settings;
+    private string title { get; set; }
+    private string email { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+
+        return base.OnInitializedAsync();
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        if (pageSize != 0 && pageNumber != 0)
+            GetUser();
+
+        return base.OnParametersSetAsync();
+    }
+
+    private void ReturnValue(bool result)
+    {
+        if(result)
+        {
+            if (pageSize != 0 && pageNumber != 0)
+                GetUser();
+        }
+    }
+
+    private async void GetUser()
+    {
+        try
+        {
+            pageFilter = new PageTableFilter();
+            pageFilter.PageNumber = pageNumber.Value;
+            pageFilter.PageSize = pageSize.Value;
+            settings = await _getSettings;
+            adminService = new AdminService(settings);
+
+            var httpResponse = await adminService.GetUser(pageFilter, Http);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+                    string result = httpResponse.Content.ReadAsStringAsync().Result.ToString();
+                    listUser = JsonConvert.DeserializeObject<List<AppUser>>(result);
+
+                    //toastService.ShowSuccess($"Successfully Load List of Users");
+
+                }
+                catch (Exception ex)
+                {
+                    toastService.ShowError($"Failed to Load List of Users ${ex}");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError($"Failed to Load List of Users");
+            }
+
+            this.StateHasChanged();
+
+
+            //user = await Http.GetFromJsonAsync<AppUser[]>("Admin/user");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+}

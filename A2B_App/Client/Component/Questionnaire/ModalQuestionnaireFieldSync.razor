@@ -1,0 +1,261 @@
+﻿@using BlazorDateRangePicker
+@using A2B_App.Client.Services
+@using A2B_App.Shared.Sox
+@inject Task<ClientSettings> _getSettings
+@using Newtonsoft.Json
+@inject IToastService toastService
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+
+
+@if (display && listClient != null)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">@title</p>
+                <button class="delete" aria-label="close" @onclick="@(() => {
+                                                       processing = false;
+                                                       Close();  })"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="simple-form">
+                    <div class="form-group">
+                        <label for="client">Client Name</label>
+                        <select id="client" class="form-control" disabled="@(processing)" @bind="ClientNameSelected">
+                            <option value=""></option>
+                            @if (listClient.Count > 0)
+                            {
+                                foreach (var item in listClient)
+                                {
+                                    <option value="@item">@item</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <br />
+                @if (maxProgress > 0)
+                {
+                    <div>
+
+                        <nav class="level">
+                            <div class="level-item has-text-centered">
+                                <div>
+                                    <p class="heading">Process</p>
+                                    <p class="title">@minProgress / @maxProgress</p>
+                                </div>
+                            </div>
+                            <div class="level-item has-text-centered">
+                                <div>
+                                    <p class="heading">Success</p>
+                                    <p class="title">@syncSuccess</p>
+                                </div>
+                            </div>
+                            <div class="level-item has-text-centered">
+                                <div>
+                                    <p class="heading">Failed</p>
+                                    <p class="title">@syncFailed</p>
+                                </div>
+                            </div>
+                        </nav>
+
+                        <progress class="progress is-info is-medium" value="@minProgress" max="@(maxProgress)">@minProgress</progress>
+                    </div>
+                }
+
+
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success" @onclick="@(() => { GetControls(); })" disabled="@(processing)">Start Syncing Process</button>
+                <button class="button" @onclick="@(() => {
+                                                       processing = false;
+                                                       Close();  })">
+                    Close
+                </button>
+            </footer>
+        </div>
+    </div>
+}
+
+
+@code {
+
+    [Parameter] public string title { get; set; }
+    [Parameter] public List<string> listClient { get; set; }
+    [Parameter] public ClientSettings settings { get; set; }
+    private List<QuestionnaireFieldParam> listFieldParam { get; set; }
+    private PodioSyncService podioSyncServices { get; set; }
+    private QuestionnaireService questionnaireService { get; set; }
+    private string clientName { get; set; }
+    private int minProgress { get; set; }
+    private int maxProgress { get; set; }
+    private int syncSuccess { get; set; }
+    private int syncFailed { get; set; }
+    private bool processing { get; set; } = false;
+
+    protected override void OnParametersSet()
+    {
+        podioSyncServices = new PodioSyncService(settings);
+        questionnaireService = new QuestionnaireService(settings);
+        base.OnParametersSet();
+    }
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.display = true;
+        minProgress = 0;
+        maxProgress = 0;
+        syncSuccess = 0;
+        syncFailed = 0;
+        processing = false;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+    private void GetControls()
+    {
+        if (clientName != string.Empty)
+        {
+            processing = true;
+            minProgress = 0;
+            maxProgress = 0;
+            syncSuccess = 0;
+            syncFailed = 0;
+            HandleFetch();
+        }
+
+    }
+
+    private async void HandleFetch()
+    {
+        if (await GetClientListParam(clientName))
+        {
+            if (listFieldParam.Count > 0)
+            {
+                foreach (var item in listFieldParam)
+                {
+                    if (processing)
+                    {
+                        minProgress++;
+                        //await Task.Delay(1000);
+
+                        var httpResponse = await podioSyncServices.SyncPodioQuestionnaireFieldAsync(item, Http, title);
+                        if (httpResponse.StatusCode.ToString() == "OK")
+                        {
+                            try
+                            {
+                                syncSuccess++;
+                            }
+                            catch (Exception)
+                            {
+                                syncFailed++;
+                            }
+
+                        }
+                        else
+                        {
+                            syncFailed++;
+                        }
+
+                        this.StateHasChanged();
+                    }
+                    else
+                        break;
+
+                }
+            }
+
+
+            //for (minProgress = 0; minProgress < maxProgress; minProgress++)
+            //{
+            //    if (processing)
+            //    {
+            //        await Task.Delay(1000);
+            //        this.StateHasChanged();
+            //    }
+            //    else
+            //    {
+            //        break;
+            //    }
+            //}
+
+
+        }
+
+
+
+        processing = false;
+        this.StateHasChanged();
+
+    }
+
+    private string ClientNameSelected
+    {
+        get
+        {
+            return clientName;
+        }
+        set
+        {
+
+            ChangeEventArgs clientEventArgs = new ChangeEventArgs();
+            clientEventArgs.Value = value;
+            EventCategoryClientName(clientEventArgs);
+            //RcmFilter.ClientName = value;
+        }
+    }
+
+    private void EventCategoryClientName(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"Selected ClientName: {e.Value}");
+            clientName = e.Value.ToString();
+        }
+
+    }
+
+    private async Task<bool> GetClientListParam(string ClientName)
+    {
+
+        bool isSuccess = false;
+        var httpResponse = await questionnaireService.GetClientListParam(clientName, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                listFieldParam = JsonConvert.DeserializeObject<List<QuestionnaireFieldParam>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                if (listFieldParam != null && listFieldParam.Count > 0)
+                {
+                    maxProgress = listFieldParam.Count();
+                    System.Diagnostics.Debug.WriteLine($"total items {listFieldParam.Count()}");
+                    isSuccess = true;
+                }
+                this.StateHasChanged();
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to Load IUCNonSystem Question");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to Load IUCNonSystem Question");
+        }
+
+        return isSuccess;
+
+    }
+
+}

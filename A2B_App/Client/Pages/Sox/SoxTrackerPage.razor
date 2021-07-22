@@ -1,0 +1,39 @@
+﻿@page "/soxtracker/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Client.Component.SoxTracker
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize(Roles = "Admin, IT, Accounting")]
+<!-- 1:1 aspect ratio -->
+@*<div class="embed-responsive embed-responsive-1by1">
+        <iframe class="embed-responsive-item" src="@soxTracker" frameborder="0" allowfullscreen></iframe>
+    </div>*@
+
+@*<div class="is-pulled-left is-sticky">
+        <div class="is-fixed-import-tracker">
+            <button class="button is-success" @onclick="@(() =>
+                                                   {
+                                                        modalTracker.Show();
+                                                   })">Import Tracker</button>
+        </div>
+    </div>
+    <div class="is-clearfix"></div>*@
+
+<SoxTracker></SoxTracker>
+
+@code {
+
+
+
+    private string soxTracker { get; set; }
+    private ClientSettings settings;
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await _getSettings;
+        //ClientSettings settings = new ClientSettings();
+        soxTracker = settings.GetSoxTrackerUri();
+    }
+
+
+
+}

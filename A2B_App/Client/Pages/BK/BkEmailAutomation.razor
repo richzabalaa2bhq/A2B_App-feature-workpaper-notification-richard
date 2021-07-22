@@ -1,0 +1,32 @@
+﻿@page "/bk/email-automation/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Client.Component.Client
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize]
+
+
+<div>
+
+    <iframe 
+            title="Bk Email Automation"
+            onload="window.parent.scrollTo(0,0)"
+            allowtransparency="true"
+            allowfullscreen="true"
+            allow="geolocation; microphone; camera"
+            src="https://sjo6-meteor.ngrok.io/bk-wps"
+            frameborder="0"
+            style="
+              min-width: 100%;
+              height:1000px;
+              border:none;"
+            scrolling="yes">
+    </iframe>
+
+</div>
+
+
+
+@code {
+
+}

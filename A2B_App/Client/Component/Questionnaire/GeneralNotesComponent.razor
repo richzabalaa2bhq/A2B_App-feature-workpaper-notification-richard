@@ -1,0 +1,64 @@
+﻿@using A2B_App.Shared.Sox
+@*<div class="row">
+    <div class="col-6">
+        <div class="form-group">
+            
+        </div>
+    </div>
+</div>*@
+
+<button class="btn @(btnColor)" @onclick="NoteEventHandler">@btnText</button>
+
+@code {
+    [Parameter] public GeneralNote generalNote { get; set; }
+    [Parameter] public EventCallback<GeneralNote> ReturnGenNote { get; set; }
+    private string btnText { get; set; }
+    private string btnColor { get; set; }
+
+    private void NoteEventHandler()
+    {
+        generalNote.Display = !generalNote.Display;
+        ChangeButtonText();
+        System.Diagnostics.Debug.WriteLine($"Display Gen Notes: {generalNote.Display}");
+        ReturnGenNote.InvokeAsync(generalNote);
+        this.StateHasChanged();
+    }
+
+
+
+    protected override Task OnInitializedAsync()
+    {
+
+
+        return base.OnInitializedAsync();
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (generalNote != null)
+        {
+            ChangeButtonText();
+        }
+        this.StateHasChanged();
+        return base.OnParametersSetAsync();
+    }
+
+    private void ChangeButtonText()
+    {
+        if (generalNote.Display)
+        {
+            btnText = "Remove General Note";
+            btnColor = "btn-danger";
+        }
+        else
+        {
+            btnText = "Add General Note";
+            btnColor = "btn-primary";
+        }
+
+
+
+        this.StateHasChanged();
+    }
+
+}

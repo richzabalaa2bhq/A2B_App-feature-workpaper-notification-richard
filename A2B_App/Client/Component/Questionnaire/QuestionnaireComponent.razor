@@ -1,0 +1,1968 @@
+﻿
+@using BlazorDateRangePicker
+@using A2B_App.Client.Services;
+@using A2B_App.Shared.Sox
+@using Newtonsoft.Json
+@using A2B_App.Client.Component.SampleSelection
+@using System.Text
+@inject NavigationManager NavigationManager
+@inject IToastService toastService
+@inject IJSRuntime JSRuntime
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+
+@if (userInput != null && listQuestion != null)
+{
+    <QuestionnaireElapsedTimeComponent startTimer="@startTimer" ReturnTimeValue="ReturnTimeValue"></QuestionnaireElapsedTimeComponent>
+    var lastElementIndex = listQuestion.LastOrDefault();
+    @foreach (var item in listQuestion)
+    {
+
+        if (item.Type == "text"
+            && !item.QuestionString.Contains("(RT)")
+            && !item.QuestionString.Contains("(RT2)")
+            && !item.QuestionString.Contains("(RT3)"))
+        {
+
+            //System.Diagnostics.Debug.WriteLine($"Description = {item.Description}");
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="@($"{item.ClientName}{item.Id}{item.AppId}")">@(RemoveRT(item.QuestionString))</label>
+                        @*<input type="text" class="form-control" id="@($"{item.ClientName}{item.Id}{item.AppId}")" @bind-value="userInput[item.Position - 1].StrAnswer">*@
+
+                        <div class="field">
+                            <div class="control is-expanded">
+                                @if (item.DtEndRequire != "large")
+                                {
+
+                                    @if (item.QuestionString.Contains("How many IUC System Generated?"))
+                                    {
+                                        <input type="tel" class="input" id="@($"{item.ClientName}{item.Id}{item.AppId}")" @onchange="@((e) => {
+                                                                                                                                           userInput[item.Position - 1].StrAnswer = e.Value.ToString();
+                                                                                                                                           System.Diagnostics.Debug.WriteLine($"IUCSystemGen ANSWER: {e.Value.ToString()}");
+                                                                                                                                           //var isSuccess = int.TryParse(e.Value.ToString(), out int temptIUCSystemGen);
+                                                                                                                                           if(int.TryParse(e.Value.ToString(), out int temptIUCSystemGen))
+                                                                                                                                           {
+
+                                                                                                                                               countIUCSystemGen = temptIUCSystemGen;
+                                                                                                                                               System.Diagnostics.Debug.WriteLine($"countIUCSystemGen: {countIUCSystemGen}");
+                                                                                                                                               if(countIUCSystemGen > 0)
+                                                                                                                                               {
+                                                                                                                                                   SetIUCSystemGen();
+                                                                                                                                               }
+                                                                                                                                               else
+                                                                                                                                               {
+                                                                                                                                                   listIUCSystemGen = new List<IUCSystemGenAnswer>();
+                                                                                                                                               }
+                                                                                                                                           }
+                                                                                                                                           this.StateHasChanged();
+                                                                                                                                       })">
+                                    }
+                                    else if (item.QuestionString.Contains("How many IUC Non System Generated?"))
+                                    {
+                                        <input type="tel" class="input" id="@($"{item.ClientName}{item.Id}{item.AppId}")" @onchange="@((e) => {
+                                                                                                                                           userInput[item.Position - 1].StrAnswer = e.Value.ToString();
+                                                                                                                                           //var isSuccess = int.TryParse(e.Value.ToString(), out int temptIUCNonSystemGen);
+                                                                                                                                           System.Diagnostics.Debug.WriteLine($"IUCNonSystemGen ANSWER: {e.Value.ToString()}");
+                                                                                                                                           if(int.TryParse(e.Value.ToString(), out int temptIUCNonSystemGen))
+                                                                                                                                           {
+                                                                                                                                               countIUCNonSystemGen = temptIUCNonSystemGen;
+                                                                                                                                               System.Diagnostics.Debug.WriteLine($"countIUCNonSystemGen: {countIUCNonSystemGen}");
+
+                                                                                                                                               if(countIUCNonSystemGen > 0)
+                                                                                                                                               {
+                                                                                                                                                   SetIUCNonSystemGen();
+                                                                                                                                               }
+                                                                                                                                               else
+                                                                                                                                               {
+                                                                                                                                                   listIUCNonSystemGen = new List<IUCNonSystemGenAnswer>();
+                                                                                                                                               }
+                                                                                                                                           }
+                                                                                                                                           this.StateHasChanged();
+                                                                                                                                       })">
+                                    }
+                                   
+                                    else
+                                    {
+                                        //if not multiline then we set as input field
+                                        <input type="text" class="input" id="@($"{item.ClientName}{item.Id}{item.AppId}")" @bind-value="userInput[item.Position - 1].StrAnswer">
+                                    }
+
+                                }
+                                else
+                                {
+                                    //if multi line then we set as textarea
+                                    <textarea rows="4" class="textarea" id="@($"{item.ClientName}{item.Id}{item.AppId}")" @bind="userInput[item.Position - 1].StrAnswer"></textarea>
+                                }
+
+
+                            </div>
+                            @if (item.Description != null && item.Description != string.Empty)
+                            {
+                                <p class="is-size-7 has-text-left has-text-grey-light">@userInput[item.Position - 1].Description</p>
+                                @*<ButtonHelpGuideComponent description="@(userInput[item.Position - 1].Description)"></ButtonHelpGuideComponent>*@
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        }
+
+        else if (item.Type == "date" && !item.QuestionString.Contains("(RT)"))
+        {
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label>@(item.QuestionString)</label>
+                        @*<label class="label">@(item.QuestionString)</label>*@
+                        <QuestionnaireDateFieldComponent position="@(item.Position - 1)"
+                                                         OnDateChanged="GetDate"
+                                                         answer1="@userInput[item.Position - 1].StrAnswer"
+                                                         answer2="@userInput[item.Position - 1].StrAnswer2"
+                                                         isDateRange="@(item.DtEndRequire == "enabled" ? false : true)"
+                                                         enabled="true">
+                        </QuestionnaireDateFieldComponent>
+
+                        @if (item.Description != null && item.Description != string.Empty)
+                        {
+                            <p class="is-size-7 has-text-left has-text-grey-light">@userInput[item.Position - 1].Description</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        else if (item.Type == "category" && !item.QuestionString.Contains("(RT)"))
+        {
+            @* Sample selection button*@
+
+            if (item.Position == 12 && userInput[11].StrAnswer == "Yes")
+            {
+                <div class="row">
+                    <div class="col-4">
+                        <div class="form-group">
+                            <label for="populationRequired">Population File Required?</label>
+                            <select class="form-control" id="populationRequired" @onchange="@((e) => {
+                                                                                                  if(e.Value.ToString() != string.Empty)
+                                                                                                  {
+                                                                                                      rcm.PopulationFileRequired = e.Value.ToString();
+                                                                                                      if (rcm.PopulationFileRequired == "Yes")
+                                                                                                          version = "3";
+
+                                                                                                      else
+                                                                                                          version = "1";
+                                                                                                  }
+                                                                                              })">
+                                <option value=""></option>
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                            @if (item.Description != null && item.Description != string.Empty)
+                            {
+                                <p class="is-size-7 has-text-left has-text-grey-light">@userInput[item.Position - 1].Description</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <button class="btn btn-primary" @onclick="(() =>
+                                                                          {
+                                                                              sampleSelection = new SampleSelection();
+                                                                              this.Modal.Show();
+                                                                          })">
+                                Run Sample Selection
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+            }
+
+            switch (item.QuestionString.ToLower())
+            {
+                //create special condition for this question field
+                case string s when s.Contains("how often does this control happen"):
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="form-group">
+                                <label for="@($"{item.ClientName}{item.Id}{item.AppId}")">@(item.QuestionString) </label>
+                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                <select class="form-control" @bind="FrequencySelected" id="@($"{item.ClientName}{item.Id}{item.AppId}")">
+                                    @if (item.Options.Count > 0)
+                                    {
+                                        @(frequencyPosition = item.Position - 1);
+                                        <option value=""></option>
+                                        foreach (var option in item.Options)
+                                        {
+                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                        }
+                                    }
+                                </select>
+                                @if (item.Description != null && item.Description != string.Empty)
+                                {
+                                    <p class="is-size-7 has-text-left has-text-grey-light">@userInput[item.Position - 1].Description</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    break;
+
+                case string s when s.Contains("what is the level of risk for the control"):
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="form-group">
+                                <label for="@($"{item.ClientName}{item.Id}{item.AppId}")">@(item.QuestionString) </label>
+                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                <select class="form-control" @bind="RiskSelected" id="@($"{item.ClientName}{item.Id}{item.AppId}")">
+                                    @if (item.Options.Count > 0)
+                                    {
+                                        @(riskPostion = item.Position - 1);
+                                        <option value=""></option>
+                                        foreach (var option in item.Options)
+                                        {
+                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                        }
+                                    }
+                                </select>
+                                @if (item.Description != null && item.Description != string.Empty)
+                                {
+                                    <p class="is-size-7 has-text-left has-text-grey-light">@userInput[item.Position - 1].Description</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    break;
+
+                default:
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="form-group">
+                                <label for="@($"{item.ClientName}{item.Id}{item.AppId}")">@(item.QuestionString)</label>
+                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                <select class="form-control" id="@($"{item.ClientName}{item.Id}{item.AppId}")"
+                                        @onchange="@((e) => {
+	                                        if(e.Value.ToString() != string.Empty)
+	                                        {
+		                                        userInput[item.Position - 1].StrAnswer = e.Value.ToString();
+                                                this.StateHasChanged();
+	                                        }
+                                        })">
+                                    @if (item.Options.Count > 0)
+                                    {
+                                        <option value=""></option>
+                                        foreach (var option in item.Options)
+                                        {
+                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                        }
+                                    }
+                                </select>
+                                @if (item.Description != null && item.Description != string.Empty)
+                                {
+                                    <p class="is-size-7 has-text-left has-text-grey-light">@userInput[item.Position - 1].Description</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    break;
+            }
+
+        }
+
+        else if (item.Type == "text" && item.QuestionString.Contains("(RT)"))
+        {
+
+            System.Diagnostics.Debug.WriteLine($"Sample Selection : {sampleSelection}");
+            if (item.Position == roundTablePosition)
+            {
+                if (roundTablePosition2 == 0)
+                {
+                    <TestRoundComponent listRoundItem="@listRoundItem"
+                                        templistRoundQuestion1="@templistRoundQuestion1"
+                                        listUniqueNotes="@listUniqueNotes"
+                                        listAddOnUniqueNotes="null"
+                                        listAddOnUniqueNotes2="null"
+                                        generalNote="@generalNote"
+                                        isManageRow="@lockManageRow"
+                                        listHeaderNote="@listHeaderNote"
+                                        userInputPolicyChange="@userInputPolicyChange"
+                                        listPolicyChanges="@listPolicyChanges"
+                                        displayGeneralNote="true"
+                                        displayUniqueNote="true"
+                                        ReturnNotesItem="@((e) => { ReturnUniqueNote1(e); })"
+                                        ReturnAddRound="ReturnAddRound"></TestRoundComponent>
+                }
+                else
+                {
+                    <TestRoundComponent listRoundItem="@listRoundItem"
+                                        templistRoundQuestion1="@templistRoundQuestion1"
+                                        listUniqueNotes="@listUniqueNotes"
+                                        listAddOnUniqueNotes="null"
+                                        listAddOnUniqueNotes2="null"
+                                        generalNote="@generalNote"
+                                        isManageRow="@lockManageRow"
+                                        listHeaderNote="@listHeaderNote"
+                                        userInputPolicyChange="@userInputPolicyChange"
+                                        listPolicyChanges="@listPolicyChanges"
+                                        displayGeneralNote="false"
+                                        displayUniqueNote="false"
+                                        ReturnNotesItem="@((e) => { ReturnUniqueNote1(e); })"
+                                        ReturnAddRound="ReturnAddRound"></TestRoundComponent>
+                }
+
+
+            }
+
+        }
+
+        else if (item.Type == "text" && item.QuestionString.Contains("(RT2)"))
+        {
+
+            System.Diagnostics.Debug.WriteLine($"(RT2) detected");
+            if (item.Position == roundTablePosition2)
+            {
+                if (roundTablePosition3 == 0)
+                {
+                    <TestRoundComponent listRoundItem="@listRoundItem2"
+                                        templistRoundQuestion1="@templistRoundQuestion2"
+                                        listUniqueNotes="@listUniqueNotes2"
+                                        listAddOnUniqueNotes="@listUniqueNotes"
+                                        listAddOnUniqueNotes2="null"
+                                        generalNote="@generalNote"
+                                        isManageRow="@lockManageRow"
+                                        listHeaderNote="@listHeaderNote2"
+                                        userInputPolicyChange="null"
+                                        listPolicyChanges="null"
+                                        displayGeneralNote="true"
+                                        displayUniqueNote="true"
+                                        ReturnNotesItem="@((e) => { ReturnUniqueNote2(e); })"
+                                        ReturnAddRound="ReturnAddRound2"></TestRoundComponent>
+                }
+                else
+                {
+                    <TestRoundComponent listRoundItem="@listRoundItem2"
+                                        templistRoundQuestion1="@templistRoundQuestion2"
+                                        listUniqueNotes="@listUniqueNotes2"
+                                        listAddOnUniqueNotes="null"
+                                        listAddOnUniqueNotes2="null"
+                                        generalNote="@generalNote"
+                                        isManageRow="@lockManageRow"
+                                        listHeaderNote="@listHeaderNote2"
+                                        userInputPolicyChange="null"
+                                        listPolicyChanges="null"
+                                        displayGeneralNote="false"
+                                        displayUniqueNote="false"
+                                        ReturnNotesItem="@((e) => { ReturnUniqueNote2(e); })"
+                                        ReturnAddRound="ReturnAddRound2"></TestRoundComponent>
+                }
+
+
+            }
+
+
+
+        }
+
+        else if (item.Type == "text" && item.QuestionString.Contains("(RT3)"))
+        {
+
+            //System.Diagnostics.Debug.WriteLine($"(RT3) detected");
+            if (item.Position == roundTablePosition3)
+            {
+
+                <TestRoundComponent listRoundItem="@listRoundItem3"
+                                    templistRoundQuestion1="@templistRoundQuestion3"
+                                    listUniqueNotes="@listUniqueNotes3"
+                                    listAddOnUniqueNotes="@listUniqueNotes"
+                                    listAddOnUniqueNotes2="@listUniqueNotes2"
+                                    generalNote="@generalNote"
+                                    isManageRow="@lockManageRow"
+                                    listHeaderNote="@listHeaderNote3"
+                                    userInputPolicyChange="null"
+                                    listPolicyChanges="null"
+                                    displayGeneralNote="true"
+                                    displayUniqueNote="true"
+                                    ReturnNotesItem="@((e) => { ReturnUniqueNote3(e); })"
+                                    ReturnAddRound="ReturnAddRound3"></TestRoundComponent>
+
+            }
+
+        }
+
+        if (item.Position == lastElementIndex.Position)
+        {
+
+            <IUCSystemComponent listIUCSystemGen="listIUCSystemGen"
+                                ReturnIUCSystem="@((e) => { ReturnIUCSystem(e); })">
+            </IUCSystemComponent>
+
+            <IUCNonSystemComponent listIUCNonSystemGen="listIUCNonSystemGen"
+                                   ReturnIUCNonSystem="@((e) => { ReturnIUCNonSystem(e); })">
+            </IUCNonSystemComponent>
+
+            isRenderComplete = true;
+        }
+
+    }
+
+    @*</form>*@
+
+    @if (isRenderComplete)
+    {
+        <br />
+        <div class="row mb-4">
+            <div class="col-6">
+                <div class="form-group">
+                    <button class="btn btn-success" @onclick="InitSave">Save Questionnaire</button>
+                    @*<button class="btn btn-primary has-text-white @(fileName != "" ? "" : "hidden-field")" @onclick="DownloadFile">Download File</button>*@
+                    <a class="btn btn-primary has-text-white @(fileName != "" ? "" : "hidden-field")" target="_top" download="@fileName" href="@DownloadFile2(fileName)">Download File</a>
+                </div>
+            </div>
+        </div>
+
+    }
+
+    <SampleSelectionComponent @ref="Modal"
+                              version="@version"
+                              rcm="@rcm"
+                              sampleSelection="@sampleSelection"
+                              ReturnSampleSelection="ReturnSampleSelection"
+                              roundName="All"></SampleSelectionComponent>
+
+
+}
+
+
+@code {
+
+    [Parameter] public List<QuestionnaireQuestion> listQuestion { get; set; }
+    [Parameter] public Rcm rcm { get; set; }
+    [Parameter] public SampleSelection sampleSelection { get; set; }
+    [Parameter] public IUCSystemGen objIUCSystemGen { get; set; }
+    [Parameter] public IUCNonSystemGen objIUCNonSystemGen { get; set; }
+    [Parameter] public string percentRound1 { get; set; }
+    [Parameter] public string percentRound2 { get; set; }
+
+    #region Local Variables
+    private SampleSelectionComponent Modal;
+    private List<QuestionnaireUserInput> userInput = null;
+    private List<QuestionnaireUserInput> userInputPolicyChange = null;
+    private List<RoundItem> listRoundItem, listRoundItem2, listRoundItem3 = null;
+    private List<NotesItem> listUniqueNotes = new List<NotesItem>();
+    private List<NotesItem> listUniqueNotes2 { get; set; }
+    private List<NotesItem> listUniqueNotes3 { get; set; }
+    private List<RoundQA> templistRoundQuestion1, templistRoundQuestion2, templistRoundQuestion3 = null;
+    private RoundItem roundItem = null;
+    private bool isRenderComplete { get; set; }
+    private QuestionnaireService QuestionnaireService;
+    //private SampleSelectionService SampleSelectionService;
+    private ClientSettings settings;
+    private int totalQuestion { get; set; }
+    private int riskPostion { get; set; }
+    private int populationPosition { get; set; }
+    private int sampleSizePosition { get; set; }
+    private int frequencyPosition { get; set; }
+    private string fileName { get; set; }
+    private string populationFileRequired { get; set; }
+    private string version { get; set; }
+    private string rcmId { get; set; }
+    private bool startTimer { get; set; }
+    private string elapsedTime { get; set; }
+    private int posTime { get; set; }
+    private int sampleRound1, sampleRound2, sampleRound3;
+
+    //private ModalGuide modalGuide;
+    private string message { get; set; }
+    private GeneralNote generalNote { get; set; } //general note object
+    private bool lockManageRow { get; set; } //disable add row if sample selection is run
+    private int roundTablePosition { get; set; } //set position for the first question that contains "(RT)" - Testing Attributes
+    private int roundTablePosition2 { get; set; } //set position for the first question that contains "(RT2)" - Testing Attributes for ERI HRP 2.1
+    private int roundTablePosition3 { get; set; } //set position for the first question that contains "(RT3)" - Testing Attributes for ERI HRP 2.1
+    private List<HeaderNote> listHeaderNote { get; set; } //list notes header for "(RT)" - Testing Attributes
+    private List<HeaderNote> listHeaderNote2 { get; set; } //list notes header for "(RT2)" - Testing Attributes
+    private List<HeaderNote> listHeaderNote3 { get; set; } //list notes header for "(RT3)" - Testing Attributes
+    private List<PolicyChanges> listPolicyChanges { get; set; }//list notes policy for ERI ELC 2.1
+    private List<IUCSystemGenAnswer> listIUCSystemGen { get; set; } //list of IUCSystemGen question and answer
+    private List<IUCNonSystemGenAnswer> listIUCNonSystemGen { get; set; } //list of IUCNonSystemGen question and answer
+    private List<IUCNonSystemGenIndexOf> listIUCNonSystemGenIndexOf { get; set; } //list of IUCNonSystemGen question and answer with index
+    private List<IUCSystemGenIndexOf> listIUCSystemGenIndexOf { get; set; } //list of IUCSystemGen question and answer with index
+    private int countIUCSystemGen { get; set; } //counter for IUC system generated
+    private int countIUCNonSystemGen { get; set; } //counter for IUC non system generated
+    private DateTimeOffset? startDate { get; set; } = null;
+    private DateTimeOffset? endDate { get; set; } = null;
+    private int dtRangeSampleSelectedPosition { get; set; } //integer position for question "When was the control first put in place?" in questionnaire
+    private int populationSizeSampleSelectedPosition { get; set; } //integer position for population size in questionnaire
+    private int sizeDerivationSizeSampleSelectedPosition { get; set; } //integer position for sample size derivation in questionnaire
+    private string elapseTime { get; set; }
+    //List<DropDown> listDropDown { get; set; }
+
+    #endregion
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Initialize();
+
+        this.StateHasChanged();
+
+        base.OnParametersSet();
+    }
+
+    private void NavigateToSampleSelection()
+    {
+
+        if (rcm != null)
+        {
+            rcm.PopulationFileRequired = populationFileRequired;
+            if (rcm.PopulationFileRequired == "Yes")
+                NavigationManager.NavigateTo($"sampleselectionpage/3/{rcm.PodioItemId}/0");
+            else
+                NavigationManager.NavigateTo($"sampleselectionpage/1/{rcm.PodioItemId}/0");
+        }
+
+    }
+
+    private void InitSave()
+    {
+        if (startTimer)
+        {
+            startTimer = false;
+        }
+        else
+        {
+            Save();
+        }
+    }
+
+    private async void Save()
+    {
+
+        //create notes in Podio
+        #region Create Notes in Podio
+        List<NotesItem> listNotesCreated = new List<NotesItem>();
+        if (listUniqueNotes3 != null && listUniqueNotes3.Count > 0)
+        {
+            var httpResponse = await QuestionnaireService.CreateQuestionnaireNotesAsync(listUniqueNotes3, Http);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+
+                    listNotesCreated = JsonConvert.DeserializeObject<List<NotesItem>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                    userInput.Where(x => x.StrQuestion.Equals("Unique Notes Reference")).Select(d => { d.ListNoteItem = listNotesCreated; return d; }).ToList();
+                    toastService.ShowSuccess($"Successfully created notes in Podio");
+                    this.StateHasChanged();
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError("Failed to create notes");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError("Failed to create notes");
+            }
+        }
+        else if (listUniqueNotes2 != null && listUniqueNotes2.Count > 0)
+        {
+            var httpResponse = await QuestionnaireService.CreateQuestionnaireNotesAsync(listUniqueNotes2, Http);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+
+                    listNotesCreated = JsonConvert.DeserializeObject<List<NotesItem>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                    userInput.Where(x => x.StrQuestion.Equals("Unique Notes Reference")).Select(d => { d.ListNoteItem = listNotesCreated; return d; }).ToList();
+                    toastService.ShowSuccess($"Successfully created notes in Podio");
+                    this.StateHasChanged();
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError("Failed to create notes");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError("Failed to create notes");
+            }
+        }
+        else if (listUniqueNotes != null && listUniqueNotes.Count > 0)
+        {
+            var httpResponse = await QuestionnaireService.CreateQuestionnaireNotesAsync(listUniqueNotes, Http);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+
+                    listNotesCreated = JsonConvert.DeserializeObject<List<NotesItem>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                    userInput.Where(x => x.StrQuestion.Equals("Unique Notes Reference")).Select(d => { d.ListNoteItem = listNotesCreated; return d; }).ToList();
+                    toastService.ShowSuccess($"Successfully created notes in Podio");
+                    this.StateHasChanged();
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError("Failed to create notes");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError("Failed to create notes");
+            }
+        }
+        #endregion
+
+        //create test round in Podio
+        #region Create Test Round in Podio
+        List<RoundItem> listRoundCreated = new List<RoundItem>();
+        if (listRoundItem != null && listRoundItem.Count > 0)
+        {
+
+            var roundCreated = await HttpRequestAddTestRound(listRoundItem);
+            if (roundCreated != null && roundCreated.Count() > 0)
+            {
+                //listRoundCreated.AddRange(roundCreated);
+                userInput.Where(x => x.StrQuestion.Equals("Round Reference")).Select(d => { d.ListRoundItem = roundCreated; return d; }).ToList();
+            }
+
+
+            //var httpResponse = await QuestionnaireService.CreateQuestionnaireRoundsAsync(listRoundItem);
+            //if (httpResponse.StatusCode.ToString() == "OK")
+            //{
+            //    try
+            //    {
+
+            //        listRoundCreated = JsonConvert.DeserializeObject<List<RoundItem>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+            //        userInput.Where(x => x.StrQuestion.Equals("Round Reference")).Select(d => { d.ListRoundItem = listRoundCreated; return d; }).ToList();
+            //        toastService.ShowSuccess($"Successfully created test round in Podio");
+            //        this.StateHasChanged();
+            //    }
+            //    catch (Exception)
+            //    {
+            //        toastService.ShowError("Failed to create test round");
+            //    }
+
+            //}
+            //else
+            //{
+            //    toastService.ShowError("Failed to create test round");
+            //}
+        }
+        if (listRoundItem2 != null && listRoundItem2.Count > 0)
+        {
+            var roundCreated = await HttpRequestAddTestRound(listRoundItem2);
+            if (roundCreated != null && roundCreated.Count() > 0)
+            {
+                //listRoundCreated.AddRange(roundCreated);
+                userInput.Where(x => x.StrQuestion.Equals("Round Reference")).Select(d => { d.ListRoundItem2 = roundCreated; return d; }).ToList();
+            }
+        }
+        if (listRoundItem3 != null && listRoundItem3.Count > 0)
+        {
+            var roundCreated = await HttpRequestAddTestRound(listRoundItem3);
+            if (roundCreated != null && roundCreated.Count() > 0)
+            {
+                //listRoundCreated.AddRange(roundCreated);
+                userInput.Where(x => x.StrQuestion.Equals("Round Reference")).Select(d => { d.ListRoundItem3 = roundCreated; return d; }).ToList();
+            }
+        }
+        //if(listRoundCreated.Count > 0)
+        //{
+        //    userInput.Where(x => x.StrQuestion.Equals("Round Reference")).Select(d => { d.ListRoundItem = listRoundCreated; return d; }).ToList();
+        //}
+        #endregion
+
+        #region Create Podio IUC System Gen
+        if (listIUCSystemGen != null && listIUCSystemGen.Count > 0)
+        {
+            var httpResponse = await QuestionnaireService.CreateQuestionnaireIUCSystemGenAsync(listIUCSystemGen, Http);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+
+                    listIUCSystemGen = JsonConvert.DeserializeObject<List<IUCSystemGenAnswer>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                    userInput.Where(x => x.StrQuestion.Equals("IUC System Generated")).Select(d => { d.ListIUCSystemGen = listIUCSystemGen; return d; }).ToList();
+                    toastService.ShowSuccess($"Successfully Created IUC System Generated in Podio");
+                    this.StateHasChanged();
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError("Failed to Create IUC System Generated in Podio");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError("Failed to Create IUC System Generated in Podio");
+            }
+        }
+        #endregion
+
+        #region Create Podio IUC Non System Gen
+        if (listIUCSystemGen != null && listIUCSystemGen.Count > 0)
+        {
+            var httpResponse = await QuestionnaireService.CreateQuestionnaireIUCNonSystemGenAsync(listIUCNonSystemGen, Http);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+
+                    listIUCNonSystemGen = JsonConvert.DeserializeObject<List<IUCNonSystemGenAnswer>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                    userInput.Where(x => x.StrQuestion.Equals("IUC Non System Generated")).Select(d => { d.ListIUCNonSystemGen = listIUCNonSystemGen; return d; }).ToList();
+                    toastService.ShowSuccess($"Successfully Created IUC Non System Generated in Podio");
+                    this.StateHasChanged();
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError("Failed to Create IUC Non System Generated in Podio");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError("Failed to Create IUC Non System Generated in Podio");
+            }
+        }
+        #endregion
+
+        var jsonData1 = Newtonsoft.Json.JsonConvert.SerializeObject(userInput);
+        System.Diagnostics.Debug.WriteLine(jsonData1);
+
+        //create questionnaire in Podio
+        List<QuestionnaireUserInput> listUserInputCreated = new List<QuestionnaireUserInput>();
+        if (userInput != null && userInput.Count > 0)
+        {
+            if (userInputPolicyChange != null && userInputPolicyChange.Count > 0)
+                userInput.AddRange(userInputPolicyChange);
+
+            var httpResponse = await QuestionnaireService.CreateQuestionnaireAsync2(userInput, Http);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+                    listUserInputCreated = JsonConvert.DeserializeObject<List<QuestionnaireUserInput>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                    toastService.ShowSuccess($"Successfully created questionnaire in Podio");
+                    this.StateHasChanged();
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError("Failed to create questionnaire");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError("Failed to create questionnaire");
+            }
+        }
+
+
+        QuestionnaireExcelData questionnaireXlsData = new QuestionnaireExcelData();
+        questionnaireXlsData.ListUserInputItem = userInput;
+        if (sampleSelection != null)
+            questionnaireXlsData.SampleSelection = sampleSelection; //pass sample selection data for excel processing
+        if (rcm != null)
+            questionnaireXlsData.Rcm = rcm; //pass rcm data for excel processing
+        if (generalNote != null)
+            questionnaireXlsData.GeneralNote = generalNote; //general notes
+        if (listHeaderNote != null)
+            questionnaireXlsData.ListHeaderNote = listHeaderNote; //header for table 1
+        if (listHeaderNote2 != null)
+            questionnaireXlsData.ListHeaderNote2 = listHeaderNote2; //header for table 2
+        if (listHeaderNote3 != null)
+            questionnaireXlsData.ListHeaderNote3 = listHeaderNote3; //header for table 3
+        if (listPolicyChanges != null)
+            questionnaireXlsData.ListPolicyNote = listPolicyChanges;
+        if (listIUCSystemGen != null)
+            questionnaireXlsData.ListIUCSystemGen = listIUCSystemGen; //pass list of IUC system generated for excel processing
+        if (listIUCNonSystemGen != null)
+            questionnaireXlsData.ListIUCNonSystemGen = listIUCNonSystemGen; //pass list of IUC Non system generated for excel processing
+
+
+        var jsonData4 = Newtonsoft.Json.JsonConvert.SerializeObject(questionnaireXlsData);
+        System.Diagnostics.Debug.WriteLine(jsonData4);
+
+
+        //var trackResponse = await QuestionnaireService.CreateSOXTrackerData(questionnaireXlsData, Http);
+        //if (trackResponse.StatusCode.ToString() == "OK")
+        //{
+        //    toastService.ShowSuccess($"Successfully created sox tracker");
+        //    this.StateHasChanged();
+
+        //}
+        //else
+        //{
+        //    toastService.ShowError("Failed to create sox tracker");
+        //}
+
+        var excelResponse = await QuestionnaireService.CreateExcelAsync2(questionnaireXlsData, Http);
+        if (excelResponse.StatusCode.ToString() == "OK")
+        {
+            fileName = excelResponse.Content.ReadAsStringAsync().Result.ToString();
+
+            toastService.ShowSuccess($"Successfully created excel output - {fileName}");
+            this.StateHasChanged();
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to create excel output");
+        }
+
+    }
+
+    private void DownloadFile()
+    {
+        try
+        {
+            if (fileName != string.Empty && fileName != null)
+            {
+                //ClientSettings settings = new ClientSettings();
+                JSRuntime.InvokeAsync<object>("DownloadFile", $"api/Questionnaire/download/" + fileName);
+                //JSRuntime.InvokeAsync<object>("DownloadFile", $"SampleSelection/download/" + fileName);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(ex);
+        }
+    }
+
+    private string DownloadFile2(string fileName)
+    {
+        return $"{NavigationManager.BaseUri}api/Questionnaire/download/{fileName}";
+    }
+
+    private async void Initialize()
+    {
+        settings = await _getSettings;
+        QuestionnaireService = new QuestionnaireService(settings);
+
+        if (listQuestion != null)
+        {
+            elapseTime = string.Empty;
+            lockManageRow = false;
+            startTimer = true;
+            fileName = string.Empty;
+            totalQuestion = 0;
+            isRenderComplete = false;
+            userInput = new List<QuestionnaireUserInput>();
+            userInputPolicyChange = new List<QuestionnaireUserInput>();
+            int count = 0;
+            int countRoundQuestion = 0;
+            int countRoundQuestion2 = 0;
+            int countRoundQuestion3 = 0;
+            int countHeader = 0;
+            int countHeader2 = 0;
+            int countHeader3 = 0;
+            int countPolicyChange = 0;
+            dtRangeSampleSelectedPosition = 0;
+            populationSizeSampleSelectedPosition = 0;
+            sizeDerivationSizeSampleSelectedPosition = 0;
+            countIUCSystemGen = 0;
+            countIUCNonSystemGen = 0;
+            roundTablePosition = 0;
+            roundTablePosition2 = 0;
+            roundTablePosition3 = 0;
+            listUniqueNotes = new List<NotesItem>();
+            listUniqueNotes2 = new List<NotesItem>();
+            listUniqueNotes3 = new List<NotesItem>();
+
+            templistRoundQuestion1 = new List<RoundQA>();
+            templistRoundQuestion2 = new List<RoundQA>();
+            templistRoundQuestion3 = new List<RoundQA>();
+            generalNote = new GeneralNote();
+            generalNote.Display = false;
+            generalNote.GeneralNoteText = "General Note";
+            listHeaderNote = new List<HeaderNote>();
+            listHeaderNote2 = new List<HeaderNote>();
+            listHeaderNote3 = new List<HeaderNote>();
+            listPolicyChanges = new List<PolicyChanges>();
+            listRoundItem = new List<RoundItem>();
+            listRoundItem2 = new List<RoundItem>();
+            listRoundItem3 = new List<RoundItem>();
+
+            listIUCSystemGen = new List<IUCSystemGenAnswer>();
+            listIUCNonSystemGen = new List<IUCNonSystemGenAnswer>();
+            listIUCNonSystemGenIndexOf = new List<IUCNonSystemGenIndexOf>();
+            listIUCSystemGenIndexOf = new List<IUCSystemGenIndexOf>();
+
+            foreach (var item in listQuestion)
+            {
+                QuestionnaireUserInput questionnaireInput = new QuestionnaireUserInput();
+                questionnaireInput.StrQuestion = item.QuestionString;
+                questionnaireInput.StrAnswer = string.Empty;
+                questionnaireInput.FieldId = item.FieldId;
+                questionnaireInput.Position = item.Position;
+                questionnaireInput.AppId = item.AppId;
+                questionnaireInput.Type = item.Type;
+                questionnaireInput.CreatedOn = DateTime.Now;
+                questionnaireInput.UpdatedOn = DateTime.Now;
+                questionnaireInput.Description = item.Description;
+                questionnaireInput.DtEndRequire = item.DtEndRequire;
+
+                //System.Diagnostics.Debug.WriteLine($"Found Description = {item.Description}");
+                System.Diagnostics.Debug.WriteLine($"Found Question Text = {item.QuestionString}");
+
+                #region Populate RCM fields if not null
+                switch (item.QuestionString.ToLower())
+                {
+                    case string s when s.Contains("round reference"):
+                        questionnaireInput.ListRoundItem = listRoundItem;
+                        break;
+                    case string s when s.Contains("unique notes reference"):
+                        questionnaireInput.ListNoteItem = listUniqueNotes;
+                        break;
+                    case string s when s.Contains("1. what is the client name?"):
+                        if (rcm != null && rcm.ClientName != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = rcm.ClientName;
+                        }
+                        break;
+                    case string s when s.Contains("what is the purpose of this control?"):
+                        if (rcm != null && rcm.SpecificRisk != string.Empty)
+                        {
+                            //questionnaireInput.StrAnswer = rcm.Subprocess;
+                            questionnaireInput.StrAnswer = rcm.SpecificRisk;
+                        }
+                        break;
+                    case string s when s.Contains("what is the control id?"):
+                        if (rcm != null && rcm.ControlId != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = rcm.ControlId;
+                        }
+                        break;
+                    case string s when s.Contains("what is the control activity?"):
+                        if (rcm != null && rcm.ControlActivityFy19 != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = rcm.ControlActivityFy19;
+                        }
+                        break;
+                    case string s when s.Contains("who is the control owner?"):
+                        if (rcm != null && rcm.ControlOwner != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = rcm.ControlOwner;
+                        }
+                        break;
+                    case string s when
+                        s.Contains("what are the procedures to test this control") ||
+                        s.Contains("what are the procedures to test control"):
+                        if (rcm != null && rcm.TestProc != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = rcm.TestProc;
+                        }
+                        break;
+                    case string s when s.Contains("what procedures did you use to select the samples"):
+                        if (rcm != null && rcm.NatureProc != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = rcm.NatureProc;
+                        }
+                        break;
+                    case string s when s.Contains("when was the control first put in place?"):
+                        if (rcm != null && rcm.ControlPlaceDate != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = rcm.ControlPlaceDate;
+                        }
+                        break;
+                    case string s when s.Contains("what is the date range you are testing?"):
+                        if (rcm != null && rcm.TestingPeriod != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = rcm.TestingPeriod;
+                        }
+                        break;
+                    case string s when s.Contains("what is the level of risk for the control?"):
+                        if (rcm != null && rcm.RiskLvl != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = rcm.RiskLvl;
+                        }
+                        break;
+                    case string s when s.Contains("how often does this control happen?"):
+                        if (rcm != null && rcm.ControlFrequency != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = rcm.ControlFrequency;
+                        }
+                        break;
+                    case string s when s.Contains("what date ranges are you selecting samples"):
+                        dtRangeSampleSelectedPosition = item.Position;
+                        break;
+                    case string s when s.Contains("what is the population size"):
+                        populationSizeSampleSelectedPosition = item.Position;
+                        break;
+                    /*
+                    case string s when s.Contains("what is the sample/sub sample size?") ||
+                        s.Contains("what is the sub-sample size? enter a number"):
+                        sizeDerivationSizeSampleSelectedPosition = item.Position;
+                        break;
+                    */
+
+                    case string s when s.Contains("what is the sample/sub sample size?") ||
+                        s.Contains("what is the sample size?") ||
+                        s.Contains("what is the sub-sample size? enter a number"):
+                        sizeDerivationSizeSampleSelectedPosition = item.Position;
+                        break;
+                }
+                #endregion
+
+                //System.Diagnostics.Debug.WriteLine($"Question String: {item.QuestionString}");
+                #region Time duration get position
+                if (item.QuestionString.ToLower().Contains("time duration"))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Time Duration Postion: {item.Position}");
+                    posTime = item.Position;
+                }
+                #endregion
+
+                #region Populate Sample Selection Round
+
+                //check if question string contains (RT) - Round Table
+                if (item.QuestionString.Contains("(RT)") &&
+                    !item.QuestionString.Contains("Policy Changes? (R1)") &&
+                    !item.QuestionString.Contains("Policy Changes? (R2)") &&
+                    !item.QuestionString.Contains("Policy Changes? (R3)"))
+                {
+                    if (roundTablePosition == 0)
+                        roundTablePosition = item.Position;
+
+                    var checkRoundQAExists = templistRoundQuestion1.Where(x => x.Question.Equals(item.QuestionString)).FirstOrDefault();
+                    if (checkRoundQAExists == null)
+                    {
+                        countRoundQuestion++;
+                        RoundQA roundQA = new RoundQA();
+                        roundQA.Question = item.QuestionString;
+                        roundQA.Position = countRoundQuestion.ToString();
+                        System.Diagnostics.Debug.WriteLine($"Added: {roundQA.Question} | {roundQA.Position}");
+                        templistRoundQuestion1.Add(roundQA);
+                    }
+
+                    //header note
+                    listHeaderNote.Add(new HeaderNote { HeaderNoteText = string.Empty, Description = string.Empty, Position = countHeader });
+                    countHeader++;
+
+
+                }
+
+                //this is specific for ERI ELC 1.1 that needs policy changes input
+                else if (item.QuestionString.Contains("(RT)") &&
+                    (item.QuestionString.Contains("Policy Changes? (R1)") ||
+                    item.QuestionString.Contains("Policy Changes? (R2)") ||
+                    item.QuestionString.Contains("Policy Changes? (R3)")))
+                {
+                    //System.Diagnostics.Debug.WriteLine($"Found Policy Changes: {questionnaireInput}");
+                    questionnaireInput.Position = countPolicyChange;
+                    userInputPolicyChange.Add(questionnaireInput);
+                    listPolicyChanges.Add(new PolicyChanges { NoteText = string.Empty, Description = string.Empty, Position = countPolicyChange });
+                    countPolicyChange++;
+                }
+
+                else if (item.QuestionString.Contains("(RT2)"))
+                {
+                    //System.Diagnostics.Debug.WriteLine($"(RT2) Detected");
+                    if (roundTablePosition2 == 0)
+                        roundTablePosition2 = item.Position;
+
+                    var checkRoundQAExists = templistRoundQuestion2.Where(x => x.Question.Equals(item.QuestionString)).FirstOrDefault();
+                    if (checkRoundQAExists == null)
+                    {
+                        countRoundQuestion2++;
+                        RoundQA roundQA = new RoundQA();
+                        roundQA.Question = item.QuestionString;
+                        roundQA.Position = countRoundQuestion2.ToString();
+                        System.Diagnostics.Debug.WriteLine($"Added (RT2): {roundQA.Question} | {roundQA.Position}");
+                        templistRoundQuestion2.Add(roundQA);
+                    }
+
+                    //header note
+                    listHeaderNote2.Add(new HeaderNote { HeaderNoteText = string.Empty, Description = string.Empty, Position = countHeader2 });
+                    countHeader2++;
+                }
+
+                else if (item.QuestionString.Contains("(RT3)"))
+                {
+                    //System.Diagnostics.Debug.WriteLine($"(RT3) Detected");
+                    if (roundTablePosition3 == 0)
+                        roundTablePosition3 = item.Position;
+
+                    var checkRoundQAExists = templistRoundQuestion3.Where(x => x.Question.Equals(item.QuestionString)).FirstOrDefault();
+                    if (checkRoundQAExists == null)
+                    {
+                        countRoundQuestion3++;
+                        RoundQA roundQA = new RoundQA();
+                        roundQA.Question = item.QuestionString;
+                        roundQA.Position = countRoundQuestion3.ToString();
+                        System.Diagnostics.Debug.WriteLine($"Added (RT3): {roundQA.Question} | {roundQA.Position}");
+                        templistRoundQuestion3.Add(roundQA);
+                    }
+
+                    //header note
+                    listHeaderNote3.Add(new HeaderNote { HeaderNoteText = string.Empty, Description = string.Empty, Position = countHeader3 });
+                    countHeader3++;
+
+                }
+
+                #endregion
+
+                userInput.Add(questionnaireInput);
+                count++;
+            }
+
+            LoadSampleSelection();
+
+            SetPopulationSize();
+
+            SetAnnualDerivation();
+        }
+
+        if (rcm != null)
+        {
+            rcmId = rcm.PodioItemId.ToString();
+            if (rcm.PopulationFileRequired == "Yes")
+                version = "3";
+
+            else
+                version = "1";
+
+            System.Diagnostics.Debug.WriteLine($"version: {version}");
+        }
+    }
+
+    private void LoadSampleSelection()
+    {
+        if (sampleSelection != null)
+        {
+            System.Diagnostics.Debug.WriteLine($"------------------------------AFTER------------------------------");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound: {sampleSelection.ListTestRound.Count}");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound2: {sampleSelection.ListTestRound2.Count}");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound3: {sampleSelection.ListTestRound3.Count}");
+            System.Diagnostics.Debug.WriteLine($"-----------------------------------------------------------------");
+
+            if (sampleSelection.ListTestRound != null && sampleSelection.ListTestRound.Count > 0)
+            {
+                //listRoundItem.Clear();
+                foreach (var item in sampleSelection.ListTestRound)
+                {
+                    roundItem = new RoundItem();
+                    roundItem.AppId = listQuestion.Select(x => x.AppId).FirstOrDefault();
+                    //roundItem.RoundQA = templistRoundQuestion1;
+                    roundItem.A2Q2Samples = item.A2Q2Samples;
+                    roundItem.RoundName = item.TestingRound;
+                    roundItem.Position = item.A2Q2Samples;
+
+                    #region Round Question
+
+                    roundItem = RoundQuestionPopulate(roundItem, templistRoundQuestion1);
+
+                    #endregion
+
+                    listRoundItem.Add(roundItem);
+                }
+            }
+
+            //check if (RT2) is found
+            if (roundTablePosition2 > 0)
+            {
+                if (sampleSelection.ListTestRound2 != null && sampleSelection.ListTestRound2.Count > 0)
+                {
+                    //listRoundItem2 = new List<RoundItem>();
+                    listRoundItem2.Clear();
+                    foreach (var item in sampleSelection.ListTestRound2)
+                    {
+                        roundItem = new RoundItem();
+                        roundItem.AppId = listQuestion.Select(x => x.AppId).FirstOrDefault();
+                        //roundItem.RoundQA = templistRoundQuestion1;
+                        roundItem.A2Q2Samples = item.A2Q2Samples;
+                        roundItem.RoundName = item.TestingRound;
+                        roundItem.Position = item.A2Q2Samples;
+
+                        #region Round Question
+
+                        roundItem = RoundQuestionPopulate(roundItem, templistRoundQuestion2);
+
+                        #endregion
+
+                        listRoundItem2.Add(roundItem);
+                    }
+                }
+
+            }
+
+            //check if (RT3) is found
+            if (roundTablePosition3 > 0)
+            {
+                if (sampleSelection.ListTestRound3 != null && sampleSelection.ListTestRound3.Count > 0)
+                {
+                    //listRoundItem3 = new List<RoundItem>();
+                    listRoundItem3.Clear();
+                    foreach (var item in sampleSelection.ListTestRound3)
+                    {
+                        roundItem = new RoundItem();
+                        roundItem.AppId = listQuestion.Select(x => x.AppId).FirstOrDefault();
+                        //roundItem.RoundQA = templistRoundQuestion1;
+                        roundItem.A2Q2Samples = item.A2Q2Samples;
+                        roundItem.RoundName = item.TestingRound;
+                        roundItem.Position = item.A2Q2Samples;
+
+                        #region Round Question
+
+                        roundItem = RoundQuestionPopulate(roundItem, templistRoundQuestion3);
+
+                        #endregion
+
+                        listRoundItem3.Add(roundItem);
+                    }
+                }
+
+            }
+
+        }
+
+        this.StateHasChanged();
+    }
+
+    private void ReturnSampleSelection(SampleSelection retSampleSelection)
+    {
+        if (retSampleSelection != null)
+        {
+            sampleSelection = retSampleSelection;
+
+            //set question 12 answer
+            if (dtRangeSampleSelectedPosition > 0)
+            {
+                if (sampleSelection.Round1Start != null && sampleSelection.Round1End != null)
+                {
+                    //questionnaireInput[dtRangeSampleSelectedPosition].StrAnswer = rcm.ControlPlaceDate;
+                    userInput[dtRangeSampleSelectedPosition - 1].StrAnswer = sampleSelection.Round1Start.Value.ToString("MM/dd/yyyy");
+                    userInput[dtRangeSampleSelectedPosition - 1].StrAnswer2 = sampleSelection.Round1End.Value.ToString("MM/dd/yyyy");
+                }
+                else if (sampleSelection.Round2Start != null && sampleSelection.Round2End != null)
+                {
+                    userInput[dtRangeSampleSelectedPosition - 1].StrAnswer = sampleSelection.Round2Start.Value.ToString("MM/dd/yyyy");
+                    userInput[dtRangeSampleSelectedPosition - 1].StrAnswer2 = sampleSelection.Round2End.Value.ToString("MM/dd/yyyy");
+                }
+                else if (sampleSelection.Round3Start != null && sampleSelection.Round3End != null)
+                {
+                    userInput[dtRangeSampleSelectedPosition - 1].StrAnswer = sampleSelection.Round3Start.Value.ToString("MM/dd/yyyy");
+                    userInput[dtRangeSampleSelectedPosition - 1].StrAnswer2 = sampleSelection.Round3End.Value.ToString("MM/dd/yyyy");
+                }
+
+            }
+
+            //Set Population Size 
+            SetPopulationSize();
+
+            //Set Annual Derivation
+            SetAnnualDerivation();
+
+            //Disable add row in table testing attributes
+            lockManageRow = true;
+            LoadSampleSelection();
+        }
+        else
+        {
+            //Enable add row in table testing attributes
+            lockManageRow = false;
+        }
+    }
+
+    private string FrequencySelected
+    {
+        get
+        {
+            return rcm.ControlFrequency;
+        }
+        set
+        {
+
+            ChangeEventArgs clientEventArgs = new ChangeEventArgs();
+            clientEventArgs.Value = value;
+            EventFrequencySelected(clientEventArgs);
+            //RcmFilter.ClientName = value;
+        }
+    }
+
+    private void EventFrequencySelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"Selected Frequency: {e.Value}");
+            userInput[frequencyPosition].StrAnswer = e.Value.ToString();
+            rcm.ControlFrequency = e.Value.ToString();
+            SetPopulationSize();
+            SetAnnualDerivation();
+        }
+
+    }
+
+    private string RiskSelected
+    {
+        get
+        {
+            return rcm.RiskLvl;
+        }
+        set
+        {
+
+            ChangeEventArgs clientEventArgs = new ChangeEventArgs();
+            clientEventArgs.Value = value;
+            EventRiskSelected(clientEventArgs);
+            //RcmFilter.ClientName = value;
+        }
+    }
+
+    private void EventRiskSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"Selected Risk: {e.Value}");
+            rcm.RiskLvl = e.Value.ToString();
+            userInput[riskPostion].StrAnswer = e.Value.ToString();
+            SetPopulationSize();
+            SetAnnualDerivation();
+        }
+
+    }
+
+    private void GetDate(DtQuestionnaire dtQuestionnaire)
+    {
+        if (dtQuestionnaire != null && dtQuestionnaire.startDate.HasValue)
+        {
+            System.Diagnostics.Debug.WriteLine($"Return Start Date: {dtQuestionnaire.startDate.Value.ToString()}");
+            System.Diagnostics.Debug.WriteLine($"Return Position: {dtQuestionnaire.position.ToString()}");
+            userInput[dtQuestionnaire.position].StrAnswer = dtQuestionnaire.startDate.Value.DateTime.ToString();
+
+        }
+        if (dtQuestionnaire != null && dtQuestionnaire.endDate.HasValue)
+        {
+            System.Diagnostics.Debug.WriteLine($"Return End Date: {dtQuestionnaire.endDate.Value.ToString()}");
+            System.Diagnostics.Debug.WriteLine($"Return Position: {dtQuestionnaire.position.ToString()}");
+            userInput[dtQuestionnaire.position].StrAnswer2 = dtQuestionnaire.endDate.Value.DateTime.ToString();
+        }
+        this.StateHasChanged();
+    }
+
+    private void ReturnTimeValue(string value)
+    {
+        if (value != string.Empty && posTime > 0)
+        {
+            //userInput.Where(x => x.StrQuestion.ToLower().Contains("time duration")).ToList().ForEach(x => x.StrAnswer = value);
+            userInput[posTime - 1].StrAnswer = value;
+            elapseTime = value;
+            System.Diagnostics.Debug.WriteLine($"Time Return: {value}");
+            Save();
+
+            //var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(listIUCNonSystemGen);
+            //System.Diagnostics.Debug.WriteLine(jsonData);
+
+            this.StateHasChanged();
+        }
+    }
+
+    //add row in round table 1 or testing attributes 1st table
+    private void ReturnAddRound(string roundNum)
+    {
+        if (roundNum != string.Empty)
+        {
+            int roundVal = 0;
+            int.TryParse(roundNum.Replace("Round ", ""), out roundVal);
+
+            System.Diagnostics.Debug.WriteLine($"------------------------------BEFORE------------------------------");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound: {sampleSelection.ListTestRound.Count}");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound2: {sampleSelection.ListTestRound2.Count}");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound3: {sampleSelection.ListTestRound3.Count}");
+            System.Diagnostics.Debug.WriteLine($"-----------------------------------------------------------------");
+
+
+            var lastElementAdded = sampleSelection.ListTestRound.OrderByDescending(x => x.Id).Select(x => x.A2Q2Samples).FirstOrDefault();
+            var listTestRoundToDelete = sampleSelection.ListTestRound.Where(x => x.TestingRound.Equals(roundNum.Replace("-", ""))).OrderByDescending(x => x.Id).FirstOrDefault();
+            var listRoundItemToDelete = listRoundItem.Where(x => x.RoundName.Equals(roundNum.Replace("-", ""))).OrderByDescending(x => x.Id).FirstOrDefault();
+            if (lastElementAdded != null)
+            {
+                int a2q2Sample = 0;
+
+                int.TryParse(lastElementAdded, out a2q2Sample);
+                //int.TryParse(lastRoundElement., out elementToDelete);
+                if (a2q2Sample > 0)
+                {
+
+                    if (roundVal < 0)
+                    {
+                        if (sampleSelection.ListTestRound.Any() && listTestRoundToDelete != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"------------------------------------------------------");
+                            var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(listTestRoundToDelete);
+                            System.Diagnostics.Debug.WriteLine(jsonData);
+                            System.Diagnostics.Debug.WriteLine($"------------------------------------------------------");
+
+                            //sampleSelection.ListTestRound.Remove(sampleSelection.ListTestRound.ElementAt(elementToDelete));
+                            //sampleSelection.ListTestRound.ElementAt(elementToDelete);
+                            sampleSelection.ListTestRound.Remove(listTestRoundToDelete);
+                        }
+                        if (listRoundItem.Any() && listRoundItemToDelete != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"------------------------------------------------------");
+                            var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(listRoundItemToDelete);
+                            System.Diagnostics.Debug.WriteLine(jsonData);
+                            System.Diagnostics.Debug.WriteLine($"------------------------------------------------------");
+
+                            listRoundItem.Remove(listRoundItemToDelete);
+                        }
+                    }
+                    else
+                    {
+                        a2q2Sample++;
+                        TestRound testRound = new TestRound();
+                        testRound.TestingRound = roundNum;
+                        testRound.A2Q2Samples = a2q2Sample.ToString();
+                        testRound.Id = a2q2Sample;
+                        sampleSelection.ListTestRound.Add(testRound);
+
+                        System.Diagnostics.Debug.WriteLine($"------------------------------AFTER1------------------------------");
+                        System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound: {sampleSelection.ListTestRound.Count}");
+                        System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound2: {sampleSelection.ListTestRound2.Count}");
+                        System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound3: {sampleSelection.ListTestRound3.Count}");
+                        System.Diagnostics.Debug.WriteLine($"-----------------------------------------------------------------");
+
+                        roundItem = new RoundItem();
+                        roundItem.AppId = listQuestion.Select(x => x.AppId).FirstOrDefault();
+                        roundItem.A2Q2Samples = a2q2Sample.ToString();
+                        roundItem.RoundName = roundNum;
+                        roundItem.Position = a2q2Sample.ToString();
+                        roundItem.Id = a2q2Sample;
+
+                        roundItem = RoundQuestionPopulate(roundItem, templistRoundQuestion1);
+
+                        listRoundItem.Add(roundItem);
+
+                        //LoadSampleSelection();
+                    }
+
+                }
+            }
+            this.StateHasChanged();
+
+        }
+    }
+
+    //add row in round table 2 or testing attributes 2nd table
+    private void ReturnAddRound2(string roundNum)
+    {
+        if (roundNum != string.Empty)
+        {
+            int roundVal = 0;
+            int.TryParse(roundNum.Replace("Round ", ""), out roundVal);
+
+            System.Diagnostics.Debug.WriteLine($"------------------------------BEFORE------------------------------");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound: {sampleSelection.ListTestRound.Count}");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound2: {sampleSelection.ListTestRound2.Count}");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound3: {sampleSelection.ListTestRound3.Count}");
+            System.Diagnostics.Debug.WriteLine($"-----------------------------------------------------------------");
+
+            //var lastElement = sampleSelection.ListTestRound2.OrderByDescending(x => x.Id).Select(x => x.A2Q2Samples).FirstOrDefault();
+            var lastElementAdded = sampleSelection.ListTestRound2.OrderByDescending(x => x.Id).Select(x => x.A2Q2Samples).FirstOrDefault();
+            var listTestRoundToDelete = sampleSelection.ListTestRound2.Where(x => x.TestingRound.Equals(roundNum.Replace("-", ""))).OrderByDescending(x => x.Id).FirstOrDefault();
+            var listRoundItemToDelete = listRoundItem2.Where(x => x.RoundName.Equals(roundNum.Replace("-", ""))).OrderByDescending(x => x.Id).FirstOrDefault();
+            if (lastElementAdded != null)
+            {
+                int a2q2Sample = 0;
+                int.TryParse(lastElementAdded, out a2q2Sample);
+                if (a2q2Sample > 0)
+                {
+
+                    if (roundVal < 0)
+                    {
+                        if (sampleSelection.ListTestRound2.Any() && listTestRoundToDelete != null)
+                        {
+                            //sampleSelection.ListTestRound.Remove(sampleSelection.ListTestRound.ElementAt(elementToDelete));
+                            //sampleSelection.ListTestRound.ElementAt(elementToDelete);
+                            sampleSelection.ListTestRound2.Remove(listTestRoundToDelete);
+                        }
+                        if (listRoundItem2.Any() && listRoundItemToDelete != null)
+                        {
+                            listRoundItem2.Remove(listRoundItemToDelete);
+                        }
+                    }
+
+                    else
+                    {
+                        a2q2Sample++;
+                        TestRound testRound = new TestRound();
+                        testRound.TestingRound = roundNum;
+                        testRound.A2Q2Samples = a2q2Sample.ToString();
+                        testRound.Id = a2q2Sample;
+                        sampleSelection.ListTestRound2.Add(testRound);
+
+                        System.Diagnostics.Debug.WriteLine($"------------------------------AFTER1------------------------------");
+                        System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound: {sampleSelection.ListTestRound.Count}");
+                        System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound2: {sampleSelection.ListTestRound2.Count}");
+                        System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound3: {sampleSelection.ListTestRound3.Count}");
+                        System.Diagnostics.Debug.WriteLine($"-----------------------------------------------------------------");
+
+                        roundItem = new RoundItem();
+                        roundItem.AppId = listQuestion.Select(x => x.AppId).FirstOrDefault();
+                        roundItem.A2Q2Samples = a2q2Sample.ToString();
+                        roundItem.RoundName = roundNum;
+                        roundItem.Position = a2q2Sample.ToString();
+                        roundItem.Id = a2q2Sample;
+
+                        roundItem = RoundQuestionPopulate(roundItem, templistRoundQuestion2);
+
+                        listRoundItem2.Add(roundItem);
+
+                        //LoadSampleSelection();
+                    }
+                }
+            }
+            this.StateHasChanged();
+
+        }
+    }
+
+    //add row in round table 3 or testing attributes 3rd table
+    private void ReturnAddRound3(string roundNum)
+    {
+        if (roundNum != string.Empty)
+        {
+
+            int roundVal = 0;
+            int.TryParse(roundNum.Replace("Round ", ""), out roundVal);
+
+            System.Diagnostics.Debug.WriteLine($"------------------------------BEFORE------------------------------");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound: {sampleSelection.ListTestRound.Count}");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound2: {sampleSelection.ListTestRound2.Count}");
+            System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound3: {sampleSelection.ListTestRound3.Count}");
+            System.Diagnostics.Debug.WriteLine($"-----------------------------------------------------------------");
+
+            //var lastElement = sampleSelection.ListTestRound3.OrderByDescending(x => x.Id).Select(x => x.A2Q2Samples).FirstOrDefault();
+            var lastElementAdded = sampleSelection.ListTestRound3.OrderByDescending(x => x.Id).Select(x => x.A2Q2Samples).FirstOrDefault();
+            var listTestRoundToDelete = sampleSelection.ListTestRound3.Where(x => x.TestingRound.Equals(roundNum.Replace("-", ""))).OrderByDescending(x => x.Id).FirstOrDefault();
+            var listRoundItemToDelete = listRoundItem3.Where(x => x.RoundName.Equals(roundNum.Replace("-", ""))).OrderByDescending(x => x.Id).FirstOrDefault();
+            if (lastElementAdded != null)
+            {
+                int a2q2Sample = 0;
+                int.TryParse(lastElementAdded, out a2q2Sample);
+                if (a2q2Sample > 0)
+                {
+
+                    if (roundVal < 0)
+                    {
+                        if (sampleSelection.ListTestRound3.Any() && listTestRoundToDelete != null)
+                        {
+                            //sampleSelection.ListTestRound.Remove(sampleSelection.ListTestRound.ElementAt(elementToDelete));
+                            //sampleSelection.ListTestRound.ElementAt(elementToDelete);
+                            sampleSelection.ListTestRound3.Remove(listTestRoundToDelete);
+                        }
+                        if (listRoundItem3.Any() && listRoundItemToDelete != null)
+                        {
+                            listRoundItem3.Remove(listRoundItemToDelete);
+                        }
+                    }
+                    else
+                    {
+                        a2q2Sample++;
+                        TestRound testRound = new TestRound();
+                        testRound.TestingRound = roundNum;
+                        testRound.A2Q2Samples = a2q2Sample.ToString();
+                        testRound.Id = a2q2Sample;
+                        sampleSelection.ListTestRound3.Add(testRound);
+
+                        System.Diagnostics.Debug.WriteLine($"------------------------------AFTER1------------------------------");
+                        System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound: {sampleSelection.ListTestRound.Count}");
+                        System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound2: {sampleSelection.ListTestRound2.Count}");
+                        System.Diagnostics.Debug.WriteLine($"sampleSelection.ListTestRound3: {sampleSelection.ListTestRound3.Count}");
+                        System.Diagnostics.Debug.WriteLine($"-----------------------------------------------------------------");
+
+                        roundItem = new RoundItem();
+                        roundItem.AppId = listQuestion.Select(x => x.AppId).FirstOrDefault();
+                        roundItem.A2Q2Samples = a2q2Sample.ToString();
+                        roundItem.RoundName = roundNum;
+                        roundItem.Position = a2q2Sample.ToString();
+                        roundItem.Id = a2q2Sample;
+
+                        roundItem = RoundQuestionPopulate(roundItem, templistRoundQuestion3);
+
+                        listRoundItem3.Add(roundItem);
+                    }
+
+
+
+                }
+            }
+
+            this.StateHasChanged();
+
+        }
+    }
+
+    private void ReturnUniqueNote1(UniqueNoteCallback uniqueNote)
+    {
+        if (uniqueNote != null && uniqueNote.Item.Count > 0)
+        {
+            listUniqueNotes = uniqueNote.Item;
+            this.StateHasChanged();
+        }
+
+    }
+
+    private void ReturnUniqueNote2(UniqueNoteCallback uniqueNote)
+    {
+        if (uniqueNote != null && uniqueNote.Item.Count > 0)
+        {
+            listUniqueNotes2 = uniqueNote.Item;
+            this.StateHasChanged();
+        }
+
+    }
+
+    private void ReturnUniqueNote3(UniqueNoteCallback uniqueNote)
+    {
+        if (uniqueNote != null && uniqueNote.Item.Count > 0)
+        {
+            listUniqueNotes3 = uniqueNote.Item;
+            this.StateHasChanged();
+        }
+
+        //if (uniqueNote != null)
+        //{
+        //    listUniqueNotes3.Add(uniqueNote);
+        //    this.StateHasChanged();
+        //}
+
+    }
+
+    private async Task<List<RoundItem>> HttpRequestAddTestRound(List<RoundItem> listRoundItem)
+    {
+        List<RoundItem> listRoundCreated = null;
+        var httpResponse = await QuestionnaireService.CreateQuestionnaireRoundsAsync(listRoundItem, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                listRoundCreated = new List<RoundItem>();
+                listRoundCreated = JsonConvert.DeserializeObject<List<RoundItem>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                //userInput.Where(x => x.StrQuestion.Equals("Round Reference")).Select(d => { d.ListRoundItem = listRoundCreated; return d; }).ToList();
+                toastService.ShowSuccess($"Successfully created test round in Podio");
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to create test round");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to create test round");
+        }
+
+        return listRoundCreated;
+
+    }
+
+    private string RemoveRT(string s)
+    {
+        StringBuilder sb = new StringBuilder(s);
+        sb.Replace("(RT)", "");
+        sb.Replace("(RT2)", "");
+        sb.Replace("(RT3)", "");
+        sb.Replace("(RT Title)", "");
+        sb.Replace("(RT2 Title)", "");
+        sb.Replace("(RT3 Title)", "");
+
+        return sb.ToString();
+    }
+
+    private void ReturnIUCSystem(FinalIUCSystemGen objFinalIUCSystemGen)
+    {
+        if (objFinalIUCSystemGen != null)
+        {
+
+            listIUCSystemGen = objFinalIUCSystemGen.Item;
+
+            this.StateHasChanged();
+        }
+    }
+
+    private void ReturnIUCNonSystem(FinalIUCNonSystemGen objFinalIUCNonSystemGen)
+    {
+        if (objFinalIUCNonSystemGen != null)
+        {
+
+            listIUCNonSystemGen = objFinalIUCNonSystemGen.Item;
+
+            this.StateHasChanged();
+        }
+    }
+
+    private void SetIUCNonSystemGen()
+    {
+        listIUCNonSystemGen = new List<IUCNonSystemGenAnswer>();
+        for (int i = 0; i < countIUCNonSystemGen; i++)
+        {
+            IUCNonSystemGenAnswer tempIUCNonSystemGen = new IUCNonSystemGenAnswer();
+            tempIUCNonSystemGen.AppId = objIUCNonSystemGen.AppId;
+            tempIUCNonSystemGen.Position = i;
+            List<IUCQuestionUserAnswer> listQA = new List<IUCQuestionUserAnswer>();
+
+            foreach (var item in objIUCNonSystemGen.ListQuestionAnswer)
+            {
+                string unique = string.Empty;
+                IUCQuestionUserAnswer qA = new IUCQuestionUserAnswer();
+                qA.AppId = item.AppId;
+                qA.FieldId = item.FieldId;
+                qA.Position = item.Position;
+                qA.Type = item.Type;
+                qA.Question = item.Question;
+                qA.Id = item.Id;
+                qA.Answer = item.Answer;
+                qA.Options = item.Options;
+                unique = $"{item.FieldId}{tempIUCNonSystemGen.Position}";
+                qA.UniqueId = unique;
+                listQA.Add(qA);
+            }
+            tempIUCNonSystemGen.ListQuestionAnswer = listQA;
+            listIUCNonSystemGen.Add(tempIUCNonSystemGen);
+        }
+    }
+
+    private void SetIUCSystemGen()
+    {
+        listIUCSystemGen = new List<IUCSystemGenAnswer>();
+        for (int i = 0; i < countIUCSystemGen; i++)
+        {
+            IUCSystemGenAnswer tempIUCSystemGen = new IUCSystemGenAnswer();
+            tempIUCSystemGen.AppId = objIUCSystemGen.AppId;
+            tempIUCSystemGen.Position = i;
+            List<IUCQuestionUserAnswer> listQA = new List<IUCQuestionUserAnswer>();
+
+            foreach (var item in objIUCSystemGen.ListQuestionAnswer)
+            {
+                string unique = string.Empty;
+                IUCQuestionUserAnswer qA = new IUCQuestionUserAnswer();
+                qA.AppId = item.AppId;
+                qA.FieldId = item.FieldId;
+                qA.Position = item.Position;
+                qA.Type = item.Type;
+                qA.Question = item.Question;
+                qA.Id = item.Id;
+                qA.Answer = item.Answer;
+                qA.Options = item.Options;
+                unique = $"{item.FieldId}{tempIUCSystemGen.Position}";
+                qA.UniqueId = unique;
+                listQA.Add(qA);
+            }
+            tempIUCSystemGen.ListQuestionAnswer = listQA;
+            listIUCSystemGen.Add(tempIUCSystemGen);
+        }
+    }
+
+    private void SetPopulationSize()
+    {
+        if (populationSizeSampleSelectedPosition > 0)
+        {
+            if (sampleSelection != null && sampleSelection.AnnualPopulation.ToString() != string.Empty)
+            {
+
+                userInput[populationSizeSampleSelectedPosition - 1].StrAnswer = sampleSelection.AnnualPopulation.ToString();
+
+            }
+            else
+            {
+                switch (rcm.ControlFrequency)
+                {
+                    case "Daily":
+                        userInput[populationSizeSampleSelectedPosition - 1].StrAnswer = "366";
+                        break;
+                    case "Weekly":
+                        userInput[populationSizeSampleSelectedPosition - 1].StrAnswer = "52";
+                        break;
+                    case "Monthly":
+                        userInput[populationSizeSampleSelectedPosition - 1].StrAnswer = "12";
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+
+    }
+
+    private void SetAnnualDerivation()
+    {
+        if (sizeDerivationSizeSampleSelectedPosition > 0 )
+        {
+            string derivation = string.Empty;
+            if (sampleSelection != null && sampleSelection.AnnualPopulation.ToString() != string.Empty)
+            {
+                derivation = $"Annualized Population: ({sampleSelection.AnnualSampleSize}); R1: ({sampleSelection.SamplesByRound1}); R2: ({sampleSelection.SamplesByRound2}); R3: ({sampleSelection.SamplesByRound3})";
+                userInput[sizeDerivationSizeSampleSelectedPosition - 1].StrAnswer = derivation;
+            }
+            else
+            {
+                sampleRound1 = SampleRound1();
+                sampleRound2 = SampleRound2();
+                sampleRound3 = SampleRound3();
+
+                derivation = $"Annualized Population: ({userInput[populationSizeSampleSelectedPosition - 1].StrAnswer}); R1: ({sampleRound1}); R2: ({sampleRound2}); R3: ({sampleRound3})";
+                userInput[sizeDerivationSizeSampleSelectedPosition - 1].StrAnswer = derivation;
+            }
+
+
+        }
+    }
+
+    private int SampleRound1()
+    {
+        decimal totalRound = 0;
+        decimal roundPercent = 0;
+        decimal populationSize = 0;
+        int round = 0;
+
+        try
+        {
+            if(decimal.TryParse(percentRound1, out roundPercent))
+            {
+                if(decimal.TryParse(userInput[populationSizeSampleSelectedPosition - 1].StrAnswer, out populationSize))
+                {
+                    totalRound = populationSize * (roundPercent / 100);
+                    //round1 = random.Next(0, (int)(totalRound));
+                    round = (int)(totalRound);
+                    System.Diagnostics.Debug.WriteLine($"Sample Round 1 {round}");
+                }
+
+            }
+
+        }
+        catch (Exception ex)
+        {
+            //Console.WriteLine("Error processing SampleRound1() " + ex.ToString());
+        }
+        return round;
+    }
+
+    private int SampleRound2()
+    {
+        decimal totalRound = 0;
+        decimal roundPercent = 0;
+        decimal populationSize = 0;
+        int round = 0;
+
+        try
+        {
+            //totalRound = decimal.Parse(userInput[populationSizeSampleSelectedPosition - 1].StrAnswer) - sampleRound1;
+            if(decimal.TryParse(percentRound1, out roundPercent))
+            {
+                if (decimal.TryParse(userInput[populationSizeSampleSelectedPosition - 1].StrAnswer, out populationSize))
+                {
+                    totalRound = populationSize - sampleRound1;
+                    round = (int)(totalRound * (decimal)(roundPercent / 100));
+                    System.Diagnostics.Debug.WriteLine($"Sample Round 2 {round}");
+                }
+
+            }
+        }
+        catch (Exception ex)
+        {
+            //Console.WriteLine("Error processing SampleRound2() " + ex.ToString());
+        }
+        return round;
+    }
+
+    private int SampleRound3()
+    {
+        decimal totalRound = 0;
+        int round = 0;
+        decimal populationSize = 0;
+
+        try
+        {
+            if(decimal.TryParse(userInput[populationSizeSampleSelectedPosition - 1].StrAnswer, out populationSize))
+            {
+                totalRound = populationSize - sampleRound1 - sampleRound2;
+                round = (int)(totalRound);
+                System.Diagnostics.Debug.WriteLine($"Sample Round 3 {round}");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            //Console.WriteLine("Error processing SampleRound3() " + ex.ToString());
+        }
+        return round;
+    }
+
+    private RoundItem RoundQuestionPopulate(RoundItem roundItem, List<RoundQA> templistRoundQuestion)
+    {
+        foreach (var tempRoundQ in templistRoundQuestion)
+        {
+            switch (tempRoundQ.Position.ToString())
+            {
+                case "1":
+                    roundItem.Question1 = tempRoundQ.Question;
+                    break;
+                case "2":
+                    roundItem.Question2 = tempRoundQ.Question;
+                    break;
+                case "3":
+                    roundItem.Question3 = tempRoundQ.Question;
+                    break;
+                case "4":
+                    roundItem.Question4 = tempRoundQ.Question;
+                    break;
+                case "5":
+                    roundItem.Question5 = tempRoundQ.Question;
+                    break;
+                case "6":
+                    roundItem.Question6 = tempRoundQ.Question;
+                    break;
+                case "7":
+                    roundItem.Question7 = tempRoundQ.Question;
+                    break;
+                case "8":
+                    roundItem.Question8 = tempRoundQ.Question;
+                    break;
+                case "9":
+                    roundItem.Question9 = tempRoundQ.Question;
+                    break;
+                case "10":
+                    roundItem.Question10 = tempRoundQ.Question;
+                    break;
+                case "11":
+                    roundItem.Question11 = tempRoundQ.Question;
+                    break;
+                case "12":
+                    roundItem.Question12 = tempRoundQ.Question;
+                    break;
+                case "13":
+                    roundItem.Question13 = tempRoundQ.Question;
+                    break;
+                case "14":
+                    roundItem.Question14 = tempRoundQ.Question;
+                    break;
+                case "15":
+                    roundItem.Question15 = tempRoundQ.Question;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        return roundItem;
+    }
+
+}

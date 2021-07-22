@@ -1,0 +1,98 @@
+﻿@using System.Timers
+@using System
+@using System.Diagnostics
+@implements IDisposable
+@inject NavigationManager NavigationManager
+
+<div class="is-pulled-right is-sticky">
+    <div class="is-fixed-timer">
+        <span class="button is-large is-danger ">@elapsedTime</span>
+    </div>
+</div>
+<div class="is-clearfix"></div>
+
+
+@code {
+
+    [Parameter] public bool startTimer { get; set; }
+    [Parameter] public EventCallback<string> ReturnTimeValue { get; set; }
+
+    private System.Timers.Timer timer;
+    private string elapsedTime { get; set; } = "00:00:00";
+    private TimeSpan timeSpan;
+    private DateTime dt, dtNow;
+
+    protected override Task OnInitializedAsync()
+    {
+
+        timer = new Timer();
+
+        return base.OnInitializedAsync();
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        if (startTimer && !timer.Enabled)
+        {
+            StartTimer();
+            //NavigationManager.LocationChanged += LocationChanged;
+        }
+
+
+        else if (!startTimer && timer.Enabled)
+            StopTimer();
+
+        this.StateHasChanged();
+        return base.OnParametersSetAsync();
+
+    }
+
+    private void StartTimer()
+    {
+        Debug.WriteLine($"Init Start Time");
+        timeSpan = new TimeSpan();
+        dt = new DateTime();
+        dt = DateTime.Now;
+        dtNow = new DateTime();
+        timer = new System.Timers.Timer(1000);
+        timer.Elapsed += HandleTimerElapsed;
+        timer.Interval = 1000; //10000 ms = 10 seconds
+        timer.Enabled = true;
+    }
+
+    private void StopTimer()
+    {
+        Debug.WriteLine($"Timer Stop");
+        timer.Elapsed -= HandleTimerElapsed;
+        timer.Stop();
+        timer.Enabled = false;
+        ReturnTimeValue.InvokeAsync(elapsedTime);
+    }
+
+    private void HandleTimerElapsed(object sender, ElapsedEventArgs e)
+    {
+        // do whatever it is that you need to do on a timer
+        //Debug.WriteLine("The Elapsed event was raised at {0:HH:mm:ss.fff}", e.SignalTime);
+        dtNow = DateTime.Now;
+        timeSpan = dtNow - dt;
+        elapsedTime = timeSpan.ToString(@"hh\:mm\:ss");
+        this.StateHasChanged();
+    }
+
+    void LocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        //string navigationMethod = e.IsNavigationIntercepted ? "HTML" : "code";
+        //System.Diagnostics.Debug.WriteLine($"Notified of navigation via {navigationMethod} to {e.Location}");
+    }
+
+    void IDisposable.Dispose()
+    {
+        elapsedTime = string.Empty;
+        StopTimer();
+        // Unsubscribe from the event when our component is disposed
+        //NavigationManager.LocationChanged -= LocationChanged;
+    }
+
+
+}

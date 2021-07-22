@@ -1,0 +1,224 @@
+﻿@page "/meetingnotif"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using A2B_App.Shared.Skype
+@using A2B_App.Client.Component.Meeting
+@using A2B_App.Client.Component.Rcm 
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize(Roles = "Admin, IT, Meeting")]
+@inject HttpClient Http
+
+<h1>Meeting Notification</h1>
+<div class="border-top my-3"></div>
+
+<div class="columns is-desktop">
+    <div class="column">
+        <button class="btn btn-primary" @onclick="(() =>
+                                                  {
+                                                      skypeGc = new SkypeAddress();
+                                                      conversation = new Conversation();
+                                                      skypeObj = new SkypeObj();
+                                                      listKeyword = new List<KeyWordGC>();
+                                                      process = 1;
+                                                      title = newGC;
+                                                      meetingDialog.Show();
+                                                  })">Add new skype address</button>
+    </div>
+</div>
+
+<div class="columns is-desktop">
+    <div class="column">
+        <div class="table-container">
+            <table class="table is-bordered is-narrow is-hoverable is-fullwidth">
+                <thead>
+                    <tr>
+                        <th style="display:none;">Id</th>
+                        <th>Name</th>
+                        <th>Skype GC</th>
+                        <th>All GC</th>
+                        <th>Active</th>
+                        <th>BizDev</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @if (listGc != null && listGc.Any())
+                    {
+                        foreach (var item in listGc)
+                        {
+                            <tr>
+                                <td style="display:none;">@item.Sys_id</td>
+                                <td>@item.Name</td>
+                                <td>@item.SkypeObj.conversation.id</td>
+                                <td>@(item.IsAllGC ? "True" : "False")</td>
+                                <td>@(item.IsEnabled ? "True" : "False")</td>
+                                <td>@(item.IsBizDev ? "True" : "False")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-dark" @onclick="@(() => { GetInfo(item); })">Info</button>
+                                    <button class="btn btn-warning btn-sm" @onclick="@(() => { UpdateSkypeGC(item); })">Update</button>
+                                    <button class="btn btn-danger btn-sm" @onclick="@(() => { DeleteSkypeGC(item); })">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                           
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<MeetingNotifDialog
+                    @ref="meetingDialog"
+                    title="@title"
+                    skypeGC="@skypeGc"
+                    conversation="@conversation"
+                    skypeObj="@skypeObj"
+                    listKeyword="@listKeyword"
+                    ReturnValue="GetAllGC"
+                    meetingProcess="@process"
+                    >
+
+</MeetingNotifDialog>
+
+<ModalYesNo @ref="yesNoDialog" title="Confirm Delete" message="@deleteMessage" ReturnValue="ReturnDelete"></ModalYesNo>
+
+@code {
+    private MeetingNotifDialog meetingDialog;
+    private ModalYesNo yesNoDialog;
+    private int Total { get; set; }
+    private ClientSettings settings;
+    private MeetingService meetingService;
+    private List<SkypeAddress> listGc { get; set; }
+    private SkypeAddress skypeGc { get; set; }
+    private Conversation conversation { get; set; }
+    private SkypeObj skypeObj { get; set; }
+    private List<KeyWordGC> listKeyword { get; set; }
+    private string title { get; set; }
+    private string newGC { get; set; } = "New Skype Address";
+    private string updateGC { get; set; } = "Update Skype Address";
+    private string deleteMessage { get; set; }
+    private int process { get; set; } //1 - new, 2 - update, 3 - info
+
+    protected override async Task OnInitializedAsync()
+    {
+        //Initialize();
+        settings = await _getSettings;
+        meetingService = new MeetingService(settings);
+    }
+
+    protected override void OnParametersSet()
+    {
+        Total = 0;
+        GetAllGC();
+        base.OnParametersSet();
+    }
+
+    private void NewSkypeGC()
+    {
+        System.Diagnostics.Debug.WriteLine($"New Skype GC");
+    }
+
+    private async void GetAllGC()
+    {
+        //upload file and get response
+        var response = await meetingService.GetAllGC(Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var result = response.Content.ReadAsStringAsync().Result.ToString();
+            listGc = new List<SkypeAddress>();
+            listGc = JsonConvert.DeserializeObject<List<SkypeAddress>>(result);
+        }
+        else
+            toastService.ShowError("Failed to get all GC");
+
+        this.StateHasChanged();
+    }
+
+    private void GetInfo(SkypeAddress skypeAddress)
+    {
+        System.Diagnostics.Debug.WriteLine($"Get Info Id: {skypeAddress.Sys_id}");
+        skypeGc = new SkypeAddress();
+        conversation = new Conversation();
+        skypeObj = new SkypeObj();
+        listKeyword = new List<KeyWordGC>();
+        process = 3;
+        skypeGc = skypeAddress;
+
+        if (skypeAddress.SkypeObj != null)
+        {
+            skypeObj = skypeAddress.SkypeObj;
+            if (skypeAddress.SkypeObj.conversation != null)
+            {
+                conversation = skypeAddress.SkypeObj.conversation;
+            }
+        }
+
+        if (skypeAddress.ListKeyword != null)
+            listKeyword = skypeAddress.ListKeyword;
+
+        title = "Info Skype Address";
+        meetingDialog.Show();
+    }
+
+    private void UpdateSkypeGC(SkypeAddress skypeAddress)
+    {
+        System.Diagnostics.Debug.WriteLine($"Update Info Id: {skypeAddress.Sys_id}");
+        skypeGc = new SkypeAddress();
+        conversation = new Conversation();
+        skypeObj = new SkypeObj();
+        listKeyword = new List<KeyWordGC>();
+        process = 2;
+        skypeGc = skypeAddress;
+
+        if(skypeAddress.SkypeObj != null )
+        {
+            skypeObj = skypeAddress.SkypeObj;
+            if(skypeAddress.SkypeObj.conversation != null)
+            {
+                conversation = skypeAddress.SkypeObj.conversation;
+            }
+        }
+
+        if(skypeAddress.ListKeyword != null)
+            listKeyword = skypeAddress.ListKeyword;
+
+        title = updateGC;
+        meetingDialog.Show();
+    }
+
+    private void DeleteSkypeGC(SkypeAddress skypeAddress)
+    {
+        System.Diagnostics.Debug.WriteLine($"Delete Info Id: {skypeAddress.Sys_id}");
+        deleteMessage = $"Do you wish to delete skype address name {skypeAddress.Name}?";
+        yesNoDialog.Show();
+        skypeGc = new SkypeAddress();
+        skypeGc = skypeAddress;
+    }
+
+    private async void ReturnDelete(string userResponse)
+    {
+        if(userResponse != null && userResponse != string.Empty && userResponse == "Yes")
+        {
+            System.Diagnostics.Debug.WriteLine($"Deleting Info Id: {skypeGc.Sys_id}");
+            var response = await meetingService.DeleteSkypeGC(skypeGc, Http);
+            if (response.StatusCode.ToString() == "OK")
+            {
+                toastService.ShowSuccess($"Successfully delete skype address");
+            }
+            else
+                toastService.ShowError($"Error deleting skype address {response.Content.ReadAsStringAsync().Result.ToString()}");
+
+
+            skypeGc = new SkypeAddress();
+            GetAllGC();
+            this.StateHasChanged();
+        }
+    }
+}

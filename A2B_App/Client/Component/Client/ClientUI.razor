@@ -1,0 +1,66 @@
+﻿@inject HttpClient Http
+
+<div class="tabs">
+    <ul>
+        <li class="@(activeTabControl == 0 ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(0); })">
+                <span class="icon is-small"><i class="oi oi-file" aria-hidden="true"></i></span>
+                <span>Add New Client</span>
+            </a>
+        </li>
+        <li class="@(activeTabControl == 1 ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(1); })">
+                <span class="icon is-small"><i class="oi oi-pencil" aria-hidden="true"></i></span>
+                <span>Update Client</span>
+            </a>
+        </li>
+    </ul>
+</div>
+<div class="container is-fluid">
+
+    @switch (activeTabControl)
+    {
+        case 0:
+            <div><ClientAdd></ClientAdd></div>
+            break;
+        case 1:
+            <div><ClientUpdate></ClientUpdate></div>
+            break;
+        case 2:
+            //<div><RcmDownload></RcmDownload></div>
+            break;
+        case 3:
+            // <div><RcmImport></RcmImport></div>
+            break;
+        case 4:
+            //<div><RcmView></RcmView></div>
+            break;
+        default:
+            break;
+    }
+
+</div>
+
+
+
+@code {
+
+
+    public int activeTabControl { get; set; }
+
+    public void TabControl(int activePage)
+    {
+        switch (activePage)
+        {
+            case 0:
+                activeTabControl = 0;
+                break;
+
+            case 1:
+                activeTabControl = 1;
+                break;
+
+        }
+    }
+
+}

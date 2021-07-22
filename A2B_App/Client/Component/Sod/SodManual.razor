@@ -1,0 +1,208 @@
+﻿
+@using A2B_App.Client.Component.Rcm
+@using A2B_App.Shared.Sox
+@using System.IO
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using Microsoft.AspNetCore.Http
+@inject HttpClient Http
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject NavigationManager NavigationManager
+
+<div>
+    <a class="" target="_top" download="@fileNameDownload" href="@DownloadTemplateFile(VideoName)">Instruction</a> - Video Instruction of processing a SOD
+</div>
+<div>
+    <a class="" target="_top" download="@fileNameDownload" href="@DownloadTemplateFile(TemplateName)">Template</a> - Fill out Tab 1 and 2 of the template
+</div>
+
+<br />
+
+
+@*Q1 Client*@
+<div class="columns">
+    <div class="column is-half">
+        <div class="form-group">
+            <label for="Q2Client"><span class="has-text-weight-bold">1. </span> Client</label>
+            <select class="form-control" id="Q2Client" @bind="Q2Answer">
+                <option value="">Select Client</option>
+                @if (listClient != null && listClient.Count > 0)
+                {
+                    @foreach (var item in listClient)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+</div>
+
+
+
+@if (clientName != string.Empty && clientName != "Select Client")
+{
+    <div class="columns">
+        <div class="column is-half">
+            <DragDropFile ReturnFiles="@((e) => { ReturnFiles(e); })" enableRemove="true" title="Upload Excel File" fileFormatAccepted="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"></DragDropFile>
+        </div>
+    </div>
+
+    @if (fileNameUpload != string.Empty)
+    {
+        <div class="columns">
+            <div class="column is-one-third">
+                <div class="form-group">
+                    <button class="btn btn-success @(importStatus ? "is-loading" : "")" @onclick="GenerateSod">Generate SOD</button>
+                    @if (fileNameDownload != string.Empty)
+                    {
+                        <a class="btn btn-primary has-text-white" target="_top" download="@fileNameDownload" href="@DownloadExcelFile2(fileNameDownload)">Download Sod File</a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+}
+
+
+
+@code {
+
+    private bool importStatus { get; set; }
+    private FileImport fileImport { get; set; }
+    private FileService fileService { get; set; }
+    private ImportFields importFields { get; set; }
+    private string clientName { get; set; } = string.Empty;
+    private List<string> listClient = new List<string>();
+    private RcmService rcmService;
+    private ClientSettings settings;
+    private string fileNameUpload { get; set; } = string.Empty;
+    private string fileNameDownload { get; set; } = string.Empty;
+    private FileUpload fileUpload { get; set; }
+    private ServiceResponse serviceResponse { get; set; }
+    private string TemplateName = "template.xlsx";
+    private string VideoName = "video.mp4";
+
+    protected async override void OnInitialized()
+    {
+        fileImport = new FileImport();
+        fileService = new FileService();
+        settings = await _getSettings;
+        rcmService = new RcmService(settings);
+        GetClient();
+        base.OnInitialized();
+    }
+
+    private string Q2Answer
+    {
+        get
+        {
+            return clientName;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ2Selected(eventArgs);
+        }
+    }
+
+    private void EventQ2Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty && e.Value.ToString() != "Select Client")
+        {
+            System.Diagnostics.Debug.WriteLine($"ClientName: {e.Value}");
+            clientName = e.Value.ToString();
+        }
+        else
+        {
+            clientName = string.Empty;
+            fileNameUpload = string.Empty;
+        }
+        this.StateHasChanged();
+
+    }
+
+    private async void GetClient()
+    {
+
+        var responseClientName = await rcmService.GetClient(Http);
+        if (responseClientName != null)
+        {
+            listClient = responseClientName;
+        }
+        this.StateHasChanged();
+        //if (response.StatusCode.ToString() == "OK")
+        //{
+        //    string result = response.Content.ReadAsStringAsync().Result.ToString();
+        //    //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+        //    listClient = JsonConvert.DeserializeObject<List<string>>(result);
+        //    this.StateHasChanged();
+        //}
+    }
+
+    private void ReturnFiles(FileUpload _fileUpload)
+    {
+
+        if (_fileUpload.IFileEntry != null)
+        {
+            fileNameUpload = _fileUpload.IFileEntry.Name;
+            fileUpload = _fileUpload;
+        }
+        else
+        {
+            fileNameUpload = string.Empty;
+            fileNameDownload = string.Empty;
+        }
+        this.StateHasChanged();
+
+    }
+
+    private async void GenerateSod()
+    {
+        importStatus = true;
+        serviceResponse = new ServiceResponse();
+        fileImport = new FileImport();
+        fileImport.Process = 2;
+        fileImport.ClientName = clientName;
+        //fileImport.File = fileUpload;
+        if (fileUpload.IFileEntry != null)
+        {
+            var ms = new MemoryStream();
+            await fileUpload.IFileEntry.Data.CopyToAsync(ms);
+            fileNameUpload = fileUpload.IFileEntry.Name;
+            //upload file and get response
+            //var response = await fileService.UploadFileForImport2(ms, fileUpload.IFileEntry.Name, 2, Http);
+            var response = await fileService.UploadFileForImportSod(ms, fileUpload.IFileEntry.Name, fileImport, Http);
+            if (response.StatusCode.ToString() == "OK")
+            {
+                serviceResponse = JsonConvert.DeserializeObject<ServiceResponse>(response.Content.ReadAsStringAsync().Result.ToString());
+                fileNameDownload = serviceResponse.Content;
+                toastService.ShowSuccess($"Successfully read excel file");
+                this.StateHasChanged();
+            }
+            else
+                toastService.ShowError($"Failed to read excel file");
+
+        }
+        else
+        {
+            toastService.ShowInfo($"No file attach");
+        }
+        importStatus = false;
+    }
+
+    private string DownloadExcelFile2(string fileName)
+    {
+        return $"{NavigationManager.BaseUri}api/FileDownload/sod/{fileName}";
+    }
+
+    private string DownloadTemplateFile(string fileName)
+    {
+        return $"{NavigationManager.BaseUri}api/FileDownload/sod/template/{fileName}";
+    }
+
+}

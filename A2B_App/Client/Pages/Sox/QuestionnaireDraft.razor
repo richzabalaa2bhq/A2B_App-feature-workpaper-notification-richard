@@ -1,0 +1,1385 @@
+﻿@page "/workpaper/draft/{RoundName}/{RcmId}/{UniqueId}"
+
+@using BlazorDateRangePicker
+@using A2B_App.Client.Services;
+@using A2B_App.Shared.Sox
+@using A2B_App.Shared.Podio
+@using A2B_App.Client.Component.Questionnaire
+@using Newtonsoft.Json
+@using A2B_App.Client.Component.SampleSelection
+@using A2B_App.Client.Component
+@using System.Text
+@using System;
+@using System.Text.RegularExpressions;
+@using A2B_App.Client.Component.Utilities
+@using Microsoft.AspNetCore.Authorization
+@inject IToastService toastService
+@inject IJSRuntime JSRuntime
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+@*<h3>Workpaper </h3>*@
+<p class="title is-4 is-family-primary">@(clientName != string.Empty? clientName : string.Empty) Workpaper</p>
+<p class="subtitle is-5">@RoundName Draft</p>
+@*<div class="border-top my-3"></div>*@
+
+
+@if (listTesterDraft != null && listTesterDraft.Any())
+{
+
+    <div>
+
+        <div class="columns" style="overflow: auto;">
+
+            @foreach (var itemTester in listTesterDraft.Select((value, i) => new { i, value }))
+            {
+
+                bool isFirstRtFound = false;
+
+                    <div class="p-2"></div>
+                    <div class="card column is-one-third @(BackgroundColor(itemTester.value.WorkpaperStatus.Index))">
+                        <div class="block">
+                            <span class="tag is-large @(TextColor(itemTester.value.WorkpaperStatus.Index))">@($"{Subtitle(itemTester.value.UserAction, itemTester.value.DraftNum.ToString())}")</span>
+                        </div>
+
+                        <EditForm Model="itemTester">
+
+                            @*@foreach (var item in listQuestion)*@
+                            @foreach (var item in itemTester.value.ListUserInputRound)
+                            {
+
+                                @if (item.StrQuestion.ToLower().Contains("(rt)") && !isFirstRtFound)
+                                {
+                                    isFirstRtFound = true;
+
+                                    <TestRoundComponent3 listRoundItem="listTesterDraft[itemTester.value.Position].ListRoundItem2.OrderBy(pos => pos.Position).ToList()"
+                                                         roundName="@listTesterDraft[itemTester.value.Position].RoundName"
+                                                         disable="@(totalDraftTestItem == itemTester.i ? false : true)"
+                                                         ReturnAddRound="@((e) =>
+                                                                {
+                                                                    if(e != null)
+                                                                    {
+                                                                        if(e.ListUniqueNotes != null && e.ListUniqueNotes.Any())
+                                                                        {
+                                                                            //set previous description
+                                                                            foreach (var item in e.ListUniqueNotes)
+                                                                            {
+                                                                                item.Description = listTesterDraft[itemTester.value.Position].ListUniqueNotes.Where(note => note.Notes.Equals(item.Notes)).Select(desc => desc.Description).FirstOrDefault();
+                                                                            }
+                                                                            //add to list unique notes
+                                                                            listTesterDraft[itemTester.value.Position].ListUniqueNotes = e.ListUniqueNotes;
+                                                                        }
+                                                                        if(e.ListRoundItem != null && e.ListRoundItem.Any())
+                                                                        {
+                                                                            listTesterDraft[itemTester.value.Position].ListRoundItem2 = e.ListRoundItem;
+                                                                        }
+                                                                    }
+                                                                })">
+
+                                    </TestRoundComponent3>
+
+
+                                    <button class="button @(itemTester.value.GeneralNote.Display ? btnDanger : btnPrimary)" style="cursor: pointer;" disabled="@(totalDraftTestItem == itemTester.i ? (itemTester.value.WorkpaperStatus.Index == 3 ? true : item.IsDisabled) : true)"
+                                            @onclick="@(()=>
+                                        {
+                                            itemTester.value.GeneralNote.Display = !itemTester.value.GeneralNote.Display;
+                                        })">
+                                        @(itemTester.value.GeneralNote.Display ? "Remove General Note" : "Add General Note")
+                                    </button>
+
+                                    @if (itemTester.value.ListIPENote != null && itemTester.value.ListIPENote.Any())
+                                    {
+                                        foreach (var itemIPE in itemTester.value.ListIPENote)
+                                        {
+                                            <button class="button @(itemIPE.Display ? btnDanger : btnPrimary)" style="cursor: pointer;" disabled="@(totalDraftTestItem == itemTester.i ? (itemTester.value.WorkpaperStatus.Index == 3 ? true : item.IsDisabled) : true)"
+                                                    @onclick="@(()=> { itemIPE.Display = !itemIPE.Display; })">
+                                                @(itemIPE.Display ? $"Remove {itemIPE.Name}" : $"Add {itemIPE.Name}")
+                                            </button>
+                                        }
+                                    }
+
+                                    <UniqueNotes2 listUniqueNotes="listTesterDraft[itemTester.value.Position].ListUniqueNotes.ToList()"
+                                                  generalNote="listTesterDraft[itemTester.value.Position].GeneralNote"
+                                                  listIPENote="listTesterDraft[itemTester.value.Position].ListIPENote.ToList()"
+                                                  isDisabled="@(totalDraftTestItem == itemTester.i ? (itemTester.value.WorkpaperStatus.Index == 3 ? true : item.IsDisabled) : true)">
+
+                                    </UniqueNotes2>
+
+                                    <div class="pb-4"></div>
+
+                                }
+                                else if (!item.StrQuestion.ToLower().Contains("(rt)"))
+                                {
+                                    @switch (item.Type)
+                                    {
+                                        case "text":
+
+                                            <div class="row">
+                                                <div class="col">
+                                                    <div class="form-group">
+                                                        <label for="@($"{itemTester.value.RoundName}{item.Id}{item.AppId}")">@item.StrQuestion</label>
+                                                        <div class="field">
+                                                            <div class="control is-expanded">
+                                                                @if (item.DtEndRequire != "large")
+                                                                {
+                                                                    //if not multiline then we set as input field
+                                                                    <input type="text" class="input" id="@($"{itemTester.value.RoundName}{item.Id}{item.AppId}")" @bind-value="@item.StrAnswer" disabled="@(totalDraftTestItem == itemTester.i ? item.IsDisabled : true)">
+                                                                }
+                                                                else
+                                                                {
+                                                                    //if multi line then we set as textarea
+                                                                    <textarea rows="4" class="textarea" id="@($"{itemTester.value.RoundName}{item.Id}{item.AppId}")" @bind="@item.StrAnswer" disabled="@(totalDraftTestItem == itemTester.i ? item.IsDisabled : true)"></textarea>
+                                                                }
+                                                            </div>
+                                                            @if (item.Description != null && item.Description != string.Empty)
+                                                            {
+                                                                <p class="is-size-7 has-text-left has-text-grey-light">@itemTester.value.ListUserInputRound.ToList()[item.Position - 1].Description</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            break;
+
+                                        case "date":
+
+                                            <div class="row">
+                                                <div class="col">
+                                                    <div class="form-group">
+                                                        <label>@(item.StrQuestion)</label>
+                                                        @*<label class="label">@(item.QuestionString)</label>*@
+                                                        <QuestionnaireDateFieldComponent position="@(item.Position - 1)"
+                                                                                         OnDateChanged="@((e) => {
+                                                                                                    if(e != null && e.startDate.HasValue)
+                                                                                                    {
+                                                                                                        item.StrAnswer = e.startDate.Value.DateTime.ToString();
+                                                                                                    }
+                                                                                                    if(e != null && e.endDate.HasValue)
+                                                                                                    {
+                                                                                                        item.StrAnswer2 = e.endDate.Value.DateTime.ToString();
+                                                                                                    }
+                                                                                                })"
+                                                                                         answer1="@item.StrAnswer"
+                                                                                         answer2="@item.StrAnswer2"
+                                                                                         isDateRange="@(item.DtEndRequire == "enabled" ? false : true)"
+                                                                                         isDisabled="@(totalDraftTestItem == itemTester.i ? item.IsDisabled : true)">
+                                                        </QuestionnaireDateFieldComponent>
+
+                                                        @if (item.Description != null && item.Description != string.Empty)
+                                                        {
+                                                            @*<p class="is-size-7 has-text-left has-text-grey-light">@itemTester.value.ListUserInputRound.ToList()[item.Position - 1].Description</p>*@
+                                                            <p class="is-size-7 has-text-left has-text-grey-light">@item.Description</p>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            break;
+
+                                        case "category":
+
+                                            switch (item.StrQuestion.ToLower())
+                                            {
+                                                //create special condition for this question field
+
+                                                case string s when s.Contains("10. select the testing phase"):
+
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label for="@($"{itemTester.value.RoundName}{item.Id}{item.AppId}")">@(item.StrQuestion) </label>
+                                                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                                                <select class="form-control" @onchange="@(()=> { item.StrAnswer = itemTester.value.RoundName; })" id="@($"{itemTester.value.RoundName}{item.Id}{item.AppId}")" disabled="@(totalDraftTestItem == itemTester.i ? item.IsDisabled : true)">
+                                                                    <option value="@(itemTester.value.RoundName)" selected>@(itemTester.value.RoundName)</option>
+                                                                </select>
+                                                                @if (item.Description != null && item.Description != string.Empty)
+                                                                {
+                                                                    <p class="is-size-7 has-text-left has-text-grey-light">@item.Description</p>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    break;
+
+                                                case string s when s.Contains("what is the level of risk for the control"):
+
+                                                    itemTester.value.SampleSelProp.Risk = listTesterDraft[itemTester.value.Position].ListUserInputRound.ToList()[item.Position - 1].StrAnswer;
+
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>@(item.StrQuestion) </label>
+                                                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                                                <InputSelect class="form-control" disabled="@(totalDraftTestItem == itemTester.i ? item.IsDisabled : true)"
+                                                                             @bind-Value="@item.StrAnswer">
+                                                                    @if (item.Options.Count > 0)
+                                                                                                    {
+                                                                        @*@(riskPostion = item.Position - 1);*@
+                                                                        <option value="">Select Option</option>
+                                                                                                        foreach (var option in item.Options)
+                                                                                                        {
+                                                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                                                                                        }
+                                                                                                    }
+                                                                </InputSelect>
+                                                                @if (item.Description != null && item.Description != string.Empty)
+                                                                {
+                                                                    <p class="is-size-7 has-text-left has-text-grey-light">@itemTester.value.ListUserInputRound.ToList()[item.Position - 1].Description</p>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    break;
+
+                                                case string s when s.Contains("how often does this control happen"):
+
+                                                    itemTester.value.SampleSelProp.Frequency = listTesterDraft[itemTester.value.Position].ListUserInputRound.ToList()[item.Position - 1].StrAnswer;
+
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>@(item.StrQuestion) </label>
+                                                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                                                <InputSelect class="form-control" disabled="@(totalDraftTestItem == itemTester.i ? item.IsDisabled : true)"
+                                                                             @bind-Value="@item.StrAnswer">
+                                                                    @if (item.Options.Count > 0)
+                                                                                                    {
+                                                                        @*@(riskPostion = item.Position - 1);*@
+                                                                        <option value="">Select Option</option>
+                                                                                                        foreach (var option in item.Options)
+                                                                                                        {
+                                                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                                                                                        }
+                                                                                                    }
+                                                                </InputSelect>
+                                                                @if (item.Description != null && item.Description != string.Empty)
+                                                                {
+                                                                    <p class="is-size-7 has-text-left has-text-grey-light">@itemTester.value.ListUserInputRound.ToList()[item.Position - 1].Description</p>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    break;
+
+                                                case string s when s.Contains("sample selection required?"):
+
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>@(item.StrQuestion) </label>
+                                                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                                                <InputSelect class="form-control" @bind-Value="@item.StrAnswer" disabled="@(totalDraftTestItem == itemTester.i ? item.IsDisabled : true)">
+                                                                    @if (item.Options.Count > 0)
+                                                                                                    {
+                                                                        @*@(riskPostion = item.Position - 1);*@
+                                                                        <option value="">Select Option</option>
+                                                                                                        foreach (var option in item.Options)
+                                                                                                        {
+                                                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                                                                                        }
+                                                                                                    }
+                                                                </InputSelect>
+                                                                @if (item.Description != null && item.Description != string.Empty)
+                                                                {
+                                                                    <p class="is-size-7 has-text-left has-text-grey-light">@item.Description</p>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    if (item.StrQuestion.ToLower().Contains("sample selection required?") && item.StrAnswer.ToLower().Contains("yes"))
+                                                    {
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <div class="form-group">
+                                                                    <label for="populationRequired">Population File Required?</label>
+                                                                    <InputSelect class="form-control" disabled="@(totalDraftTestItem == itemTester.i ? item.IsDisabled : true)"
+                                                                                 @bind-Value="@itemTester.value.SampleSelProp.Version">
+                                                                        <option value="">Select Option</option>
+                                                                        <option value="1">No</option>
+                                                                        <option value="3">Yes</option>
+                                                                    </InputSelect>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <div class="form-group">
+                                                                    <button class="btn btn-primary" @onclick="@(() =>
+                                                                                                {
+                                                                                                    if (itemTester.value.SampleSelProp.Version == "1" || itemTester.value.SampleSelProp.Version == "3")
+                                                                                                    {
+                                                                                                        itemTester.value.Rcm.PopulationFileRequired = itemTester.value.SampleSelProp.Version == "3" ? "Yes" : "No";
+                                                                                                        itemTester.value.SampleSelProp.display = true;
+                                                                                                        this.StateHasChanged();
+                                                                                                        //this.Modal.Show();
+                                                                                                    }
+                                                                                                })">
+                                                                        Run Sample Selection
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+
+                                                    break;
+
+                                                default:
+
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>@(item.StrQuestion)</label>
+                                                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                                                <InputSelect class="form-control" disabled="@(totalDraftTestItem == itemTester.i ? item.IsDisabled : true)"
+                                                                             @bind-Value="@item.StrAnswer">
+                                                                    @if (item.Options.Count > 0)
+                                                                                                    {
+                                                                        <option value="">Select Option</option>
+                                                                                                        foreach (var option in item.Options)
+                                                                                                        {
+                                                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                                                                                        }
+                                                                                                    }
+                                                                </InputSelect>
+                                                                @if (item.Description != null && item.Description != string.Empty)
+                                                                {
+                                                                    <p class="is-size-7 has-text-left has-text-grey-light">@item.Description</p>
+                                                                }
+                                                                @if (item.StrAnswer != string.Empty && item.StrAnswer != null)
+                                                                {
+                                                                    //UpdateElement updateElement = new UpdateElement();
+                                                                    //updateElement.elementId = TrimElementId($"{itemTester.value.RoundName}{item.Id}{item.AppId}");
+                                                                    //updateElement.elementValue = item.StrAnswer;
+                                                                    //UpdateCategoryValue(updateElement);
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    break;
+                                            }
+
+                                            break;
+
+                                        case "image":
+                                            //System.Diagnostics.Debug.WriteLine($"Screenshot Question: {item.QuestionString} - Screenshot Answer: {listUserInput[item.Position - 1].StrAnswer}");
+                                            //System.Diagnostics.Debug.WriteLine($"item.Position: {item.Position}");
+
+
+                                            <div class="row">
+
+                                                <div class="col-sm col-lg-4 col-md-8 col-4">
+                                                    <div class="form-group">
+                                                        <DragDrop ReturnFiles="@((e) => { ReturnFiles(e); })" position="@(item.Position)" enable="@(totalDraftTestItem == itemTester.i ? item.IsDisabled : false)" />
+                                                    </div>
+                                                </div>
+
+                                                @if (item.StrAnswer != string.Empty)
+                                                {
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+
+                                                                <div class="is-overlay">
+                                                                    <a class="delete is-large is-pulled-right has-background-danger" @onclick="@(() => { RemoveImage(item.Position); })"></a>
+                                                                </div>
+                                                                @*<img src="@($"{NavManager.BaseUri}include/upload/image/" + itemTester.value.ListUserInputRound.ToList()[item.Position - 1].StrAnswer)" />*@
+                                                                <img src="@($"{NavManager.BaseUri}include/upload/image/" + item.StrAnswer)" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                            </div>
+
+                                            break;
+                                    }
+
+                                }
+
+
+
+                            }
+
+                            <SampleSelectionComponent2 roundName="@itemTester.value.RoundName"
+                                                       rcm="@itemTester.value.Rcm"
+                                                       sampleSelection1="@itemTester.value.SampleSel"
+                                                       sampleSelectionProp="@itemTester.value.SampleSelProp"
+                                                       clientName="@itemTester.value.Rcm.ClientName"
+                                                       ReturnSampleSelection="@((e) =>
+                                                                    {
+                                                                        if(e != null)
+                                                                        {
+                                                                            if(e.SampleSelection != null)
+                                                                            {
+                                                                                itemTester.value.SampleSel = e.SampleSelection;
+                                                                            }
+
+                                                                            if(e.SampleSelProp != null)
+                                                                                itemTester.value.SampleSelProp = e.SampleSelProp;
+                                                                        }
+                                                                    })">
+                            </SampleSelectionComponent2>
+
+                            @if (totalDraftTestItem == itemTester.i)
+                            {
+                                itemTester.value.AddedBy = email;
+
+                                if (itemTester.value.WorkpaperStatus.Index == 3)
+                                {
+                                    <AuthorizeView Roles="SOXReviewer" Context="authContext">
+                                        <Authorized>
+                                            <button class="button is-success @(isLoading ? "is-loading" : string.Empty )" @onclick="@(() => {
+                                                                itemTester.value.UserAction = "Approved";
+                                                                SaveWorkpaper("Approved");
+                                                            })" disabled="@isLoading">
+                                                Approved
+                                            </button>
+                                            <button class="button is-warning @(isLoading ? "is-loading" : string.Empty )" @onclick="@(() => {
+                                                                itemTester.value.UserAction = "With Comments";
+                                                                SaveWorkpaper("With Comments");
+                                                            })" disabled="@isLoading">
+                                                With Comments
+                                            </button>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                }
+                                else if (itemTester.value.WorkpaperStatus.Index == 1 || itemTester.value.WorkpaperStatus.Index == 5)
+                                {
+                                    <AuthorizeView Roles="SOXTester" Context="authContext">
+                                        <Authorized>
+                                            <button class="button is-success @(isLoading ? "is-loading" : string.Empty )" @onclick="@(() => {
+                                                    itemTester.value.UserAction = "Submit";
+                                                    SaveWorkpaper("Submit");
+                                                })" disabled="@isLoading">
+                                                Submit
+                                            </button>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                    
+                                }
+
+                            }
+
+                        </EditForm>
+
+                    </div>
+
+               
+
+
+
+            }
+
+        </div>
+
+    </div>
+
+
+}
+else
+{
+    <p><em>@loadingStatus</em></p>
+}
+
+
+
+@if (authState != null)
+{
+
+    var user = authState.User;
+    email = user.Identity.Name;
+}
+
+
+@code {
+
+    [Parameter] public string UniqueId { get; set; }
+    [Parameter] public string RoundName { get; set; }
+    [Parameter] public string RcmId { get; set; }
+    private AuthenticationState authState { get; set; }
+    private string email { get; set; }
+    private List<QuestionnaireQuestion> listQuestion { get; set; }
+    private SampleSelectionComponent2 Modal;
+    private QuestionnaireService QuestionnaireService;
+    private FormatService FormatService = new FormatService();
+    private ClientSettings settings;
+    private SampleSelectionService SampleSelectionService;
+    private RcmService RcmService;
+
+    private Rcm rcm { get; set; }
+    private QuestionnaireFieldParam questionnaireParam { get; set; }
+    private PodioAppKey appkey { get; set; }
+    private IUCSystemGen objIUCSystemGen { get; set; }
+    private IUCNonSystemGen objIUCNonSystemGen { get; set; }
+    private List<ClientSs> ListClient { get; set; }
+    private List<QuestionnaireQuestion> listQuestion1stSet, listQuestion2ndSet;
+    private List<RoundQA> listQA { get; set; }
+    private List<HeaderNote> listHeaderNote { get; set; }
+    private List<QuestionnaireTesterSet> listTesterDraft { get; set; }
+    private List<RoundQA2> listRoundQA { get; set; }
+    private SampleSelection sampleSel;
+
+    public string appId { get; set; }
+    private string round1Percent { get; set; }
+    private string round2Percent { get; set; }
+    private string loadingStatus { get; set; }
+    private string clientName { get; set; }
+    private bool isLoading { get; set; }
+    //private bool isFirstRtFound { get; set; }
+
+
+    //private bool isSavingState { get; set; }
+    //private FileDownload fileDownload;
+    //private List<RoundItem> listRoundItem, listRound1, listRound2, listRound3;
+    //private List<NotesItem> listUniqueNotes;
+    //private List<QuestionnaireQuestion> listQuestion1stSet, listQuestion2ndSet;
+    ////First Set of Question with User Answer
+    //private List<QuestionnaireUserAnswer> listAnswer1stSetR1;
+    ////Second Set of Question with User Answer
+    //private List<QuestionnaireUserAnswer> listAnswer2ndSetR1;
+    ////Consolidated User Answer (First Set and Second Set)
+    //private List<QuestionnaireUserAnswer> listAnswerR1, listAnswerR2, listAnswerR3;
+    //private List<RoundQA> listQA;
+    //private List<HeaderNote> listHeaderNote;
+    //private List<IUCSystemGenAnswer> listIUCSystemGen;
+    //private List<IUCNonSystemGenAnswer> listIUCNonSystemGen;
+
+
+
+    //private GeneralNote generalNote { get; set; }
+    //private List<string> SeventeenList = new List<string>();
+
+    //private QuestionaireAddedInputs AddedInputss { get; set; } //keyword to search: mark
+    private string SeventeenA { get; set; }
+    private string SeventeenB { get; set; }
+    private string SeventeenC { get; set; }
+    private string SeventeenD { get; set; }
+    private string SeventeenE { get; set; }
+    private string SeventeenF { get; set; }
+
+    private string sampleSelectionReq;
+    //private string risk, frequency, version;
+    private int sampleRound1 = 0, sampleRound2 = 0, sampleRound3 = 0;
+    private int posSampleSize { get; set; }
+    private int postPopulationSize { get; set; }
+    //private bool isRender = false;
+    private string roundName { get; set; }
+    private int totalDraftTestItem { get; set; }
+    private string userAction { get; set; }
+    private bool fieldEnabled { get; set; } = true;
+    private string btnDanger { get; set; } = "is-danger";
+    private string btnPrimary { get; set; } = "is-info";
+
+    protected override void OnInitialized()
+    {
+        LoadStatus("Loading...");
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Initialize();
+
+        this.StateHasChanged();
+
+        base.OnParametersSet();
+    }
+
+    private async void Initialize()
+    {
+        authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        LoadStatus("Initialize service component...");
+        settings = await _getSettings;
+        //FormatService = new FormatService();
+        QuestionnaireService = new QuestionnaireService(settings);
+        RcmService = new RcmService(settings);
+        SampleSelectionService = new SampleSelectionService(settings);
+
+        GetData();
+
+    }
+
+    private async void GetData()
+    {
+        LoadStatus("Loading data...");
+        isLoading = false;
+        //isFirstRtFound = false;
+        //isRendered = false;
+        //settings = await _getSettings;
+        //RcmService = new RcmService(settings);
+        //QuestionnaireService = new QuestionnaireService(settings);
+        //SampleSelectionService = new SampleSelectionService(settings);
+
+        //roundSet = new QuestionnaireRoundSet();
+        //roundSet.UniqueId = string.Empty;
+
+        //if (roundSetId != "0")
+        //{
+        //    System.Diagnostics.Debug.WriteLine($"Get Round Set");
+        //    var roundResponse = await QuestionnaireService.GetSpecificRoundSetAsync(roundSetId, Http);
+        //    if (roundResponse.StatusCode.ToString() == "OK")
+        //    {
+        //        string result = roundResponse.Content.ReadAsStringAsync().Result.ToString();
+        //        roundSet = JsonConvert.DeserializeObject<QuestionnaireRoundSet>(result);
+        //    }
+        //}
+
+
+        //listQuestion1stSet = new List<QuestionnaireQuestion>();
+        //listQuestion2ndSet = new List<QuestionnaireQuestion>();
+
+        if (RcmId != "0")
+        {
+            LoadStatus("Loading RCM...");
+            rcm = new Rcm();
+            rcm = await RcmService.GetRcmByPodioItemId(RcmId, Http);
+            questionnaireParam = new QuestionnaireFieldParam();
+            questionnaireParam.ClientName = rcm.ClientName;
+            questionnaireParam.ControlName = rcm.ControlId;
+            clientName = rcm.ClientName;
+
+            LoadStatus("Loading Questions...");
+            //var httpResponse = await QuestionnaireService.GetQuestionnaireAppId(questionnaireParam, Http);
+            //if (httpResponse.StatusCode.ToString() == "OK")
+            //{
+            //    try
+            //    {
+            //        appId = httpResponse.Content.ReadAsStringAsync().Result.ToString();
+            //        if (appId != string.Empty)
+            //        {
+
+            //            appkey = new PodioAppKey();
+            //            appkey.AppId = appId;
+            //            questionnaireParam.AppKey = appkey;
+            //            if (questionnaireParam.AppKey.AppId != string.Empty)
+            //            {
+
+            //                listQuestion = await GetQuestion(questionnaireParam);
+            //                GenerateQuestionSet(listQuestion); //separate question set
+
+
+            //            }
+            //        }
+
+
+            //        this.StateHasChanged();
+            //    }
+            //    catch (Exception)
+            //    {
+            //        toastService.ShowError("Failed to load questionnaire field");
+            //    }
+
+            //}
+            //else
+            //{
+            //    toastService.ShowError("Failed to load questionnaire field");
+            //}
+
+        }
+
+
+
+        //Get IUC System Question
+        appkey = new PodioAppKey();
+        appkey.AppToken = string.Empty;
+        appkey.AppId = settings.GetIUCSystemAppId();
+        questionnaireParam.AppKey = appkey;
+        GetIUCSystem(questionnaireParam);
+
+        //Get IUC Non System Question
+        appkey = new PodioAppKey();
+        appkey.AppToken = string.Empty;
+        appkey.AppId = settings.GetIUCNonSystemAppId();
+        questionnaireParam.AppKey = appkey;
+        GetIUCNonSystem(questionnaireParam);
+
+
+        GetClientDetail();
+
+        //Get All Draft for this Id
+        GetTesterDraft();
+
+        //Get All Tester for this Id
+        //GetReviewerDraft();
+
+
+        this.StateHasChanged();
+
+    }
+
+    private async Task<List<QuestionnaireQuestion>> GetQuestion(QuestionnaireFieldParam questionnaireParam)
+    {
+        LoadStatus("Loading workpaper question...");
+        List<QuestionnaireQuestion> listQuestion = new List<QuestionnaireQuestion>();
+        var httpResponse = await QuestionnaireService.GetQuestionnaireField(questionnaireParam, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                listQuestion = JsonConvert.DeserializeObject<List<QuestionnaireQuestion>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                toastService.ShowSuccess($"Successfully loaded questionnaire");
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to load questionnaire");
+            }
+        }
+        else
+        {
+            toastService.ShowError("Failed to load questionnaire");
+        }
+        return listQuestion;
+    }
+
+    private async void GetIUCSystem(QuestionnaireFieldParam questionnaireParam)
+    {
+        LoadStatus("Loading IUC...");
+        var httpResponse = await QuestionnaireService.GetIUCSystem(questionnaireParam, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                objIUCSystemGen = JsonConvert.DeserializeObject<IUCSystemGen>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                //objIUCSystemGen.ListQuestionAnswer = objIUCSystemGen.ListQuestionAnswer.OrderBy(x => x.Position).ToList();
+                toastService.ShowSuccess($"Successfully Loaded IUCSystem");
+                this.StateHasChanged();
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to Load IUCSystem Question");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to Load IUCSystem Question");
+        }
+    }
+
+    private async void GetIUCNonSystem(QuestionnaireFieldParam questionnaireParam)
+    {
+        LoadStatus("Loading Non IUC...");
+        var httpResponse = await QuestionnaireService.GetIUCNonSystem(questionnaireParam, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                objIUCNonSystemGen = JsonConvert.DeserializeObject<IUCNonSystemGen>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                //objIUCNonSystemGen.ListQuestionAnswer = objIUCNonSystemGen.ListQuestionAnswer.OrderBy(x => x.Position).ToList();
+                toastService.ShowSuccess($"Successfully Loaded IUCNonSystemGen");
+                this.StateHasChanged();
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to Load IUCNonSystem Question");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to Load IUCNonSystem Question");
+        }
+    }
+
+    private async void GetClientDetail()
+    {
+        LoadStatus("Loading client details...");
+        ListClient = new List<ClientSs>();
+        ListClient = await SampleSelectionService.SetClientAsync(Http);
+
+        List<ClientSs> selectedClient = new List<ClientSs>();
+        round1Percent = ListClient.Where(x => x.ClientName == rcm.ClientName).Select(d => d.Percent.ToString()).FirstOrDefault();
+        round2Percent = ListClient.Where(x => x.ClientName == rcm.ClientName).Select(d => d.PercentRound2.ToString()).FirstOrDefault();
+
+    }
+
+    private async void GetTesterDraft()
+    {
+        LoadStatus("Loading tester draft...");
+        listTesterDraft = new List<QuestionnaireTesterSet>();
+        QuestionnaireDraftId draftId = new QuestionnaireDraftId();
+        draftId.UniqueId = UniqueId;
+        draftId.RcmItemId = RcmId != string.Empty ? int.Parse(RcmId) : 0;
+        draftId.RoundName = RoundName;
+
+        var httpResponse = await QuestionnaireService.GetQuestionnaireTesterAsync(draftId, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                var result = httpResponse.Content.ReadAsStringAsync().Result.ToString();
+                listTesterDraft = JsonConvert.DeserializeObject<List<QuestionnaireTesterSet>>(result);
+
+                if (listTesterDraft.Any())
+                {
+
+                    foreach (var item in listTesterDraft)
+                    {
+                        item.Rcm = rcm;
+
+                        if (item.GeneralNote == null)
+                        {
+                            item.GeneralNote = new GeneralNote();
+                            item.GeneralNote.GeneralNoteText = "General Note";
+                            item.GeneralNote.Display = false;
+                        }
+
+                        item.SampleSelProp = item.SampleSelProp ?? new SampleSelectionProperties(); //if null, instantiate
+                        item.SampleSel = item.SampleSel ?? new SampleSelection(); //if null, instantiate
+
+                        //set population file required
+                        if (item.Rcm.PopulationFileRequired == "Yes")
+                            item.SampleSelProp.Version = "3";
+                        else
+                            item.SampleSelProp.Version = "1";
+
+                        item.SampleSelProp.ClientName = item.Rcm.ClientName;
+
+
+                    }
+
+                    totalDraftTestItem = listTesterDraft.Count() - 1;
+                    //sampleSel = listTesterDraft[listTesterDraft.Count() - 1].SampleSel ?? new SampleSelection();
+                    //roundName = listTesterDraft[listTesterDraft.Count() - 1].RoundName;
+                }
+
+                this.StateHasChanged();
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to load tester draft");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to load tester draft");
+        }
+
+    }
+
+    private void GetReviewerDraft()
+    {
+        LoadStatus("Loading reviewer draft...");
+    }
+
+    private void LoadStatus(string status)
+    {
+        loadingStatus = status;
+        this.StateHasChanged();
+    }
+
+    private string SetTitle(int num)
+    {
+
+        //var result = num % 2;
+        //if (result == 0 || (result != 0 && num > 1)) // even or odd but num is greater than 1
+        //{
+        //    num = num - 2 <= 1 ? 1 : num;
+        //}
+        return num.ToString();
+    }
+
+    private string Subtitle(string name, string draft)
+    {
+        string result = string.Empty;
+        if (name != string.Empty && name != null && name != "Final")
+        {
+            result = $"Draft {draft} ({name})";
+        }
+        else if (name == "Final")
+            result = $"{name}";
+        else
+            result = $"Draft {draft} ";
+        return result;
+    }
+
+    private string TextColor(int status)
+    {
+        string result = string.Empty;
+        //var oddEven = num % 2;
+        //if (oddEven == 0) // even or odd but num is greater than 1
+        //{
+        //    result = "is-danger";
+        //}
+        //else
+        //{
+        //    result = "is-info";
+        //}
+        if (status == 1 || status == 5)
+            result = "is-info";
+        else if (status == 0)
+            result = "is-success";
+        else
+            result = "is-danger";
+
+        return result;
+    }
+
+    private string BackgroundColor(int status)
+    {
+        string result = string.Empty;
+        //var oddEven = num % 2;
+        //if (oddEven == 0) // even or odd but num is greater than 1
+        //{
+        //    result = "has-background-danger-light";
+        //}
+        //else
+        //{
+        //    //result = "has-background-info-light";
+        //    result = "has-background-white-bis";
+        //}
+        if (status == 1 || status == 5)
+            result = "has-background-white-bis";
+        else if (status == 0)
+            result = "has-background-success-light";
+        else
+            result = "has-background-danger-light";
+
+        return result;
+    }
+
+    private void GetIndex()
+    {
+        //if (listUserInput != null)
+        //{
+        //    var questionFrequency = listUserInput.FindIndex(x => x.StrQuestion.ToLower().Contains("how often does this control happen"));
+        //    if (questionFrequency != 0)
+        //    {
+        //        //frequencyIndex = questionFrequency.Position;
+        //        //frequency = questionFrequency.StrAnswer;
+        //        frequencyIndex = questionFrequency;
+        //        frequency = listUserInput[frequencyIndex].StrAnswer;
+        //    }
+
+        //    var questionRisk = listUserInput.FindIndex(x => x.StrQuestion.ToLower().Contains("what is the level of risk for the control"));
+        //    if (questionRisk != 0)
+        //    {
+        //        //riskIndex = questionRisk.Position;
+        //        //risk = questionRisk.StrAnswer;
+        //        riskIndex = questionRisk;
+        //        risk = listUserInput[riskIndex].StrAnswer;
+        //    }
+
+        //    var questionSampleSelectionReq = listUserInput.FindIndex(x => x.StrQuestion.ToLower().Contains("is sample selection required"));
+        //    if (questionSampleSelectionReq != 0)
+        //    {
+        //        //sampleSelectionReqIndex = questionSampleSelectionReq.Position;
+        //        //sampleSelectionReq = questionSampleSelectionReq.StrAnswer;
+        //        sampleSelectionReqIndex = questionSampleSelectionReq;
+        //        sampleSelectionReq = listUserInput[questionSampleSelectionReq].StrAnswer;
+        //    }
+
+        //    var questionPopulationSize = listUserInput.FindIndex(x => x.StrQuestion.ToLower().Contains("what is the population size"));
+        //    if (questionPopulationSize != 0)
+        //    {
+        //        //postPopulationSize = questionPopulationSize.Position;
+        //        postPopulationSize = questionPopulationSize;
+        //    }
+
+        //    var questionSampleSize = listUserInput.FindIndex(x =>
+        //    x.StrQuestion.ToLower().Contains("what is the sample/sub sample size") ||
+        //    x.StrQuestion.ToLower().Contains("what is the sub-sample size? enter a number"));
+        //    if (questionSampleSize != 0)
+        //    {
+        //        //posSampleSize = questionSampleSize.Position;
+        //        posSampleSize = questionSampleSize;
+        //        SetPopulationSize();
+        //        SetAnnualDerivation();
+        //    }
+
+
+        //}
+
+        //if (listUserInput != null && listQuestion != null)
+        //{
+        //    foreach (var item in listQuestion)
+        //    {
+
+        //        switch (item.Type)
+        //        {
+        //            case "text":
+
+        //                if (item.QuestionString.Contains("17."))
+        //                {
+        //                    //textarea seventeen A MarkSearch)
+        //                    Seventeen Seventeenn = new Seventeen();
+        //                    Seventeenn.SeventeenA = SeventeenAA;
+        //                    Seventeenn.SeventeenB = SeventeenBB;
+        //                    Seventeenn.SeventeenC = SeventeenCC;
+        //                    Seventeenn.SeventeenD = SeventeenDD;
+        //                    Seventeenn.SeventeenE = SeventeenEE;
+        //                    Seventeenn.SeventeenF = SeventeenFF;
+
+        //                    if (SeventeenAA == null || SeventeenAA == string.Empty)
+        //                    {
+        //                        SeventeenAA = SeventeenA;
+        //                    }
+        //                    if (SeventeenBB == null || SeventeenBB == string.Empty)
+        //                    {
+        //                        SeventeenBB = SeventeenB;
+        //                    }
+        //                    if (SeventeenCC == null || SeventeenCC == string.Empty)
+        //                    {
+        //                        SeventeenCC = SeventeenC;
+        //                    }
+        //                    if (SeventeenDD == null || SeventeenDD == string.Empty)
+        //                    {
+        //                        SeventeenDD = SeventeenD;
+        //                    }
+        //                    if (SeventeenEE == null || SeventeenCC == string.Empty)
+        //                    {
+        //                        SeventeenEE = SeventeenE;
+        //                    }
+        //                    if (SeventeenFF == null || SeventeenFF == string.Empty)
+        //                    {
+        //                        SeventeenFF = SeventeenF;
+        //                    }
+
+        //                    listUserInput[item.Position - 1].StrAnswer = SeventeenAA + SeventeenBB + SeventeenCC + SeventeenDD + SeventeenEE + SeventeenFF;
+        //                }
+
+        //                break;
+        //        }
+        //    }
+        //}
+
+    }
+
+    private string FrequencySelected
+    {
+        get
+        {
+            //return frequency;
+            return string.Empty;
+        }
+        set
+        {
+
+            ChangeEventArgs clientEventArgs = new ChangeEventArgs();
+            clientEventArgs.Value = value;
+            EventFrequencySelected(clientEventArgs);
+            //RcmFilter.ClientName = value;
+        }
+    }
+
+    private void EventFrequencySelected(ChangeEventArgs e)
+    {
+
+        //if (e.Value.ToString() != string.Empty && frequencyIndex != 0)
+        //{
+        //    //System.Diagnostics.Debug.WriteLine($"Selected Frequency: {e.Value}");
+        //    //System.Diagnostics.Debug.WriteLine($"Selected Frequency: {e.Value}| StrQuestion: {listUserInput[frequencyIndex].StrQuestion}");
+        //    listUserInput[frequencyIndex].StrAnswer = frequency = e.Value.ToString();
+        //    switch (roundName)
+        //    {
+        //        case "Round 1":
+        //            sampleSelection.Frequency = frequency;
+        //            break;
+        //        case "Round 2":
+        //            sampleSelection1.Frequency = frequency;
+        //            break;
+        //        case "Round 3":
+        //            sampleSelection2.Frequency = frequency;
+        //            break;
+        //    }
+
+        //    //rcm.ControlFrequency = e.Value.ToString();
+        //    SetPopulationSize();
+        //    SetAnnualDerivation();
+        //}
+
+    }
+
+    private string RiskSelected
+    {
+        get
+        {
+            //return risk;
+            return string.Empty;
+        }
+        set
+        {
+
+            ChangeEventArgs clientEventArgs = new ChangeEventArgs();
+            clientEventArgs.Value = value;
+            EventRiskSelected(clientEventArgs);
+            //RcmFilter.ClientName = value;
+        }
+    }
+
+    private void EventRiskSelected(ChangeEventArgs e)
+    {
+
+        //if (e.Value.ToString() != string.Empty)
+        //{
+        //    //System.Diagnostics.Debug.WriteLine($"Selected Risk: {e.Value}");
+        //    //System.Diagnostics.Debug.WriteLine($"Selected Risk: {e.Value} | StrQuestion: {listUserInput[riskIndex].StrQuestion}");
+        //    listUserInput[riskIndex].StrAnswer = risk = e.Value.ToString();
+        //    sampleSelection.Risk = risk;
+        //    SetPopulationSize();
+        //    SetAnnualDerivation();
+        //}
+
+    }
+
+    private string RoundSelected
+    {
+        get
+        {
+            return roundName;
+        }
+        set
+        {
+            roundName = roundName;
+        }
+
+    }
+
+    private string SampleSelectionSelected
+    {
+        get
+        {
+            //return sampleSelectionReq;
+            return string.Empty;
+        }
+        set
+        {
+
+            ChangeEventArgs clientEventArgs = new ChangeEventArgs();
+            clientEventArgs.Value = value;
+            EventSampleSectionSelected(clientEventArgs);
+            //RcmFilter.ClientName = value;
+        }
+    }
+
+    private void EventSampleSectionSelected(ChangeEventArgs e)
+    {
+
+        //if (e.Value.ToString() != string.Empty)
+        //{
+        //    System.Diagnostics.Debug.WriteLine($"Selected Sample Selection Required: {e.Value} | StrQuestion: {listUserInput[sampleSelectionReqIndex].StrQuestion}");
+        //    //sampleSelectionReq = e.Value.ToString();
+        //    listUserInput[sampleSelectionReqIndex].StrAnswer = sampleSelectionReq = e.Value.ToString();
+        //    SetPopulationSize();
+        //    SetAnnualDerivation();
+        //}
+
+    }
+
+    private void SetPopulationSize()
+    {
+        //if (postPopulationSize > 0)
+        //{
+        //    if (sampleSelection != null && sampleSelection.AnnualPopulation.ToString() != string.Empty)
+        //    {
+        //        //listUserInput[postPopulationSize - 1].StrAnswer = sampleSelection.AnnualPopulation.ToString();
+        //        listUserInput[postPopulationSize].StrAnswer = sampleSelection.AnnualPopulation.ToString();
+        //    }
+        //    else
+        //    {
+        //        switch (frequency)
+        //        {
+        //            case "Daily":
+        //                listUserInput[postPopulationSize].StrAnswer = "366";
+        //                break;
+        //            case "Weekly":
+        //                listUserInput[postPopulationSize].StrAnswer = "52";
+        //                break;
+        //            case "Monthly":
+        //                listUserInput[postPopulationSize].StrAnswer = "12";
+        //                break;
+        //            case "Quarterly":
+        //                listUserInput[postPopulationSize].StrAnswer = "4";
+        //                break;
+        //            default:
+        //                break;
+        //        }
+        //    }
+        //}
+        this.StateHasChanged();
+
+    }
+
+    private void SetAnnualDerivation()
+    {
+        if (posSampleSize > 0)
+        {
+            //string derivation = string.Empty;
+            //if (sampleSelection != null && sampleSelection.AnnualPopulation.ToString() != string.Empty)
+            //{
+            //    derivation = $"Annualized Sample: ({sampleSelection.AnnualSampleSize}); R1: ({sampleSelection.SamplesByRound1}); R2: ({sampleSelection.SamplesByRound2}); R3: ({sampleSelection.SamplesByRound3})";
+            //    //listUserInput[posSampleSize - 1].StrAnswer = derivation;
+            //    listUserInput[posSampleSize].StrAnswer = derivation;
+            //}
+            //else
+            //{
+            //    sampleRound1 = SampleRound1();
+            //    sampleRound2 = SampleRound2();
+            //    sampleRound3 = SampleRound3();
+
+            //    derivation = $"Annualized Sample: ({listUserInput[postPopulationSize - 1].StrAnswer}); R1: ({sampleRound1}); R2: ({sampleRound2}); R3: ({sampleRound3})";
+            //    System.Diagnostics.Debug.WriteLine($"Derivation Position : {posSampleSize}");
+            //    //listUserInput[posSampleSize - 1].StrAnswer = derivation;
+            //    listUserInput[posSampleSize].StrAnswer = derivation;
+            //}
+
+            this.StateHasChanged();
+        }
+    }
+
+    private async void UpdateCategoryValue(UpdateElement updateElement)
+    {
+        await JSRuntime.InvokeAsync<object>($"SetElement", updateElement.elementId, updateElement.elementValue);
+    }
+
+    private async void ReturnFiles(FileUpload fileUpload)
+    {
+        //fileUpload.IFileEntry = _file;
+        //if (fileUpload.IFileEntry != null)
+        //{
+        //    var ms = new MemoryStream();
+        //    await fileUpload.IFileEntry.Data.CopyToAsync(ms);
+
+        //    //upload file and get response
+        //    var response = await fileService.UploadFileAsync(ms, fileUpload.IFileEntry.Name, Http);
+
+        //    if (response.StatusCode.ToString() == "OK")
+        //    {
+        //        listUserInput[fileUpload.Position - 1].StrAnswer = response.Content.ReadAsStringAsync().Result.ToString();
+        //        //file = response.Content.ReadAsStringAsync().Result.ToString();
+        //        this.StateHasChanged();
+        //    }
+
+        //}
+    }
+
+    private void RemoveImage(int position)
+    {
+        //if (listUserInput[position - 1].StrAnswer != string.Empty)
+        //{
+        //    listUserInput[position - 1].StrAnswer = string.Empty;
+        //    this.StateHasChanged();
+        //}
+
+    }
+
+    private string TrimElementId(string elementId)
+    {
+        StringBuilder sb = new StringBuilder(elementId);
+        sb.Replace(" ", "-");
+        return sb.ToString();
+    }
+
+    private void ReturnSampleSelection(SampleSelection e)
+    {
+        if (e != null)
+        {
+            //switch (e.RoundName)
+            //{
+            //    case "Round 1":
+            //        sampleSel1 = e.SampleSelection;
+            //        if (sampleSel1.ListTestRound.Any())
+            //        {
+            //            listRound1.Clear();
+            //            listRound1 = LoadSampleSelectionTestRound(listRound1, sampleSel1);
+            //        }
+            //        break;
+            //    case "Round 2":
+            //        sampleSel2 = e.SampleSelection;
+            //        if (sampleSel2.ListTestRound.Any())
+            //        {
+            //            listRound2.Clear();
+            //            listRound2 = LoadSampleSelectionTestRound(listRound2, sampleSel2);
+            //        }
+            //        break;
+            //    case "Round 3":
+            //        sampleSel3 = e.SampleSelection;
+            //        if (sampleSel3.ListTestRound.Any())
+            //        {
+            //            listRound3.Clear();
+            //            listRound3 = LoadSampleSelectionTestRound(listRound3, sampleSel3);
+            //        }
+            //        break;
+        }
+        this.StateHasChanged();
+    }
+
+    private void ReturnGeneralNotesValue(GeneralNote genNote, int Position)
+    {
+        if (genNote != null && listTesterDraft != null)
+        {
+            listTesterDraft[Position].GeneralNote = genNote;
+        }
+        this.StateHasChanged();
+    }
+
+    private void ReturnAddRound(int roundNum)
+    {
+        //if (roundNum != 0 && listTesterDraft != null && listTesterDraft.Select(item => item.ListRoundItem2).FirstOrDefault() != null)
+        //{
+
+        //    switch (roundNum)
+        //    {
+        //        case "1":
+        //            listRound1 = AddRoundItem(listRound1, "Round 1");
+        //            break;
+        //        case "-1":
+        //            listRound1 = RemoveRoundItem(listRound1);
+        //            break;
+        //        case "2":
+        //            listRound2 = AddRoundItem(listRound2, "Round 2");
+        //            break;
+        //        case "-2":
+        //            listRound2 = RemoveRoundItem(listRound2);
+        //            break;
+        //        case "3":
+        //            listRound3 = AddRoundItem(listRound3, "Round 3");
+        //            break;
+        //        case "-3":
+        //            listRound3 = RemoveRoundItem(listRound3);
+        //            break;
+        //        default:
+        //            break;
+        //    }
+
+        //    this.StateHasChanged();
+        //}
+    }
+
+    private async void SaveWorkpaper(string action)
+    {
+        isLoading = true;
+        this.StateHasChanged();
+        //listTesterDraft save
+        //CreateQuestionnaireTesterAsync
+        var httpResponse = await QuestionnaireService.SaveQuestionnaireTesterAsync(listTesterDraft, Http);
+        if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            string result = httpResponse.Content.ReadAsStringAsync().Result.ToString();
+            toastService.ShowSuccess("Successfully save draft workpaper");
+        }
+        else
+            toastService.ShowError("Failed to save draft workpaper");
+
+        WriteLog writeLog = new WriteLog();
+        writeLog.Display(listTesterDraft);
+
+        isLoading = false;
+        this.StateHasChanged();
+    }
+
+
+}
+
+
+
+

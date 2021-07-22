@@ -1,0 +1,626 @@
+﻿
+
+@using A2B_App.Shared.Sox
+
+<div class="row @(version != "3"? "" : "hidden-field")">
+
+    @* field for round test *@
+    <div class="col">
+        <table class="table table-striped table-active table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>Testing Round</th>
+                    <th>A2Q2 Samples</th>
+                    <th>@(version != "3"? sampleSelection.Frequency : "Id")</th>
+                    <th>Weekly Only</th>
+                    <th>Status</th>
+                    <th>Comments</th>
+                    <th>
+                        @if (sampleSelection.ListTestRound != null && sampleSelection.ListTestRound.Count > 0)
+                        {
+                            <button class="button is-info is-pulled-right" @onclick="@(() => { Generate(true, 0);} )">
+                                <span class="icon is-small">
+                                    <i class="oi oi-reload"></i>
+                                </span>
+                                <span>Re-run All</span>
+                            </button>
+                        }
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (sampleSelection.ListTestRound != null)
+                {
+                    foreach (var testRound in sampleSelection.ListTestRound)
+                    {
+                        <tr>
+                            <td>@testRound.TestingRound</td>
+                            <td>@testRound.A2Q2Samples</td>
+                            <td>
+                                @if (version != "3")
+                                {
+                                    //(sampleSelection.Frequency == "Monthly" ? testRound.MonthOnly : testRound.Date);
+                                    switch (@sampleSelection.Frequency)
+                                    {
+                                        case "Monthly":
+                                            @testRound.MonthOnly;
+                                            break;
+                                        default:
+                                            @testRound.Date.Value.ToString("MM/dd/yyyy");
+                                            break;
+                                    }
+                                }
+                                else
+                                {
+                                    @testRound.ContentDisplay1;
+                                }
+                            </td>
+                            <td>@(sampleSelection.Frequency == "Weekly" ? testRound.WeeklyOnly : "")</td>
+                            <td>@testRound.Status</td>
+                            <td>@testRound.Comment</td>
+                            <td>
+                                <button class="button is-info is-pulled-right" @onclick="@(() => { Generate(false, int.Parse(testRound.A2Q2Samples)); })">
+                                    <span class="icon is-small">
+                                        <i class="oi oi-reload"></i>
+                                    </span>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+@*Test round output table Materiality 1*@
+<div class="row @(version == "3"? "" : "hidden-field")">
+
+    @* field for round test *@
+    <div class="col">
+        <table class="table table-striped table-active table-sm table-hover">
+            @if (testRoundMateriality1 != null)
+            {
+                <thead>
+                    <tr>
+                        <th>Testing Round 1</th>
+                        <th>A2Q2 Samples</th>
+
+                        @*display header 1*@
+                        @if (header1[0] != string.Empty)
+                        {
+                            <th>@header1[0]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 2*@
+                        @if (header1[1] != string.Empty)
+                        {
+                            <th>@header1[1]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 3*@
+                        @if (header1[2] != string.Empty)
+                        {
+                            <th>@header1[2]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 3*@
+                        @if (header1[3] != string.Empty)
+                        {
+                            <th>@header1[3]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 3*@
+                        @if (header1[4] != string.Empty)
+                        {
+                            <th>@header1[4]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        <th>Status</th>
+                        <th>Comments</th>
+                        <th>
+                            @if (testRoundMateriality1.Count > 0)
+                            {
+                                <button class="button is-info is-pulled-right" @onclick="@(() => { Generate(true, 0);} )">
+                                    <span class="icon is-small">
+                                        <i class="oi oi-reload"></i>
+                                    </span>
+                                    <span>Re-run All</span>
+                                </button>
+                            }
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var testRound in testRoundMateriality1)
+                    {
+
+                        <tr>
+                            <td>@testRound.TestingRound</td>
+                            <td>@testRound.A2Q2Samples</td>
+
+                            @if (testRound.ContentDisplay1 != string.Empty)
+                            {
+                                <td>@testRound.ContentDisplay1</td>
+                            }
+                            else
+                            {
+                                <td></td>
+                            }
+
+                            @if (testRound.ContentDisplay2 != string.Empty)
+                            {
+                                <td>@testRound.ContentDisplay2</td>
+                            }
+                            else
+                            {
+                                <td></td>
+                            }
+
+                            @if (testRound.ContentDisplay3 != string.Empty)
+                            {
+                                <td>@testRound.ContentDisplay3</td>
+                            }
+                            else
+                            {
+                                <td></td>
+                            }
+
+                            @if (testRound.ContentDisplay4 != string.Empty)
+                            {
+                                <td>@testRound.ContentDisplay4</td>
+                            }
+                            else
+                            {
+                                <td></td>
+                            }
+
+                            @if (testRound.ContentDisplay5 != string.Empty)
+                            {
+                                <td>@testRound.ContentDisplay5</td>
+                            }
+                            else
+                            {
+                                <td></td>
+                            }
+
+                            <td>@testRound.Status</td>
+                            <td>@testRound.Comment</td>
+
+                            <td>
+                                <button class="button is-info is-pulled-right" @onclick="@(() => { Generate(false, int.Parse(testRound.A2Q2Samples)); })">
+                                    <span class="icon is-small">
+                                        <i class="oi oi-reload"></i>
+                                    </span>
+                                </button>
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+            }
+
+
+        </table>
+    </div>
+
+</div>
+
+@*Test round output table Materiality 2*@
+<div class="row @(version == "3"? "" : "hidden-field")">
+
+    @* field for round test *@
+    <div class="col">
+        <table class="table table-striped table-active table-sm table-hover">
+            @if (testRoundMateriality2 != null)
+            {
+                <thead>
+                    <tr>
+                        <th>Testing Round 2</th>
+                        <th>A2Q2 Samples</th>
+
+                        @*display header 1*@
+                        @if (header2[0] != string.Empty)
+                        {
+                            <th>@header2[0]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 2*@
+                        @if (header2[1] != string.Empty)
+                        {
+                            <th>@header2[1]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 3*@
+                        @if (header2[2] != string.Empty)
+                        {
+                            <th>@header2[2]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 2*@
+                        @if (header2[3] != string.Empty)
+                        {
+                            <th>@header2[3]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 3*@
+                        @if (header2[4] != string.Empty)
+                        {
+                            <th>@header2[4]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        <th>Status</th>
+                        <th>Comments</th>
+                        <th>
+                            @if (testRoundMateriality2.Count > 0)
+                            {
+                                <button class="button is-info is-pulled-right" @onclick="@(() => { Generate(true, 0);} )">
+                                    <span class="icon is-small">
+                                        <i class="oi oi-reload"></i>
+                                    </span>
+                                    <span>Re-run All</span>
+                                </button>
+                            }
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var testRound in testRoundMateriality2)
+                    {
+                    <tr>
+                        <td>@testRound.TestingRound</td>
+                        <td>@testRound.A2Q2Samples</td>
+
+                        @if (testRound.ContentDisplay1 != string.Empty)
+                        {
+                            <td>@testRound.ContentDisplay1</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        @if (testRound.ContentDisplay2 != string.Empty)
+                        {
+                            <td>@testRound.ContentDisplay2</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        @if (testRound.ContentDisplay3 != string.Empty)
+                        {
+                            <td>@testRound.ContentDisplay3</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        @if (testRound.ContentDisplay4 != string.Empty)
+                        {
+                            <td>@testRound.ContentDisplay4</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        @if (testRound.ContentDisplay5 != string.Empty)
+                        {
+                            <td>@testRound.ContentDisplay5</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        <td>@testRound.Status</td>
+                        <td>@testRound.Comment</td>
+
+                        <td>
+                            <button class="button is-info is-pulled-right" @onclick="@(() => { Generate(false, int.Parse(testRound.A2Q2Samples)); })">
+                                <span class="icon is-small">
+                                    <i class="oi oi-reload"></i>
+                                </span>
+                            </button>
+                        </td>
+                    </tr>
+                    }
+
+                </tbody>
+            }
+
+        </table>
+    </div>
+
+</div>
+
+@*Test round output table Materiality 3*@
+<div class="row @(version == "3"? "" : "hidden-field")">
+
+    @* field for round test *@
+    <div class="col">
+        <table class="table table-striped table-active table-sm table-hover">
+            @if (testRoundMateriality3 != null)
+            {
+                <thead>
+                    <tr>
+                        <th>Testing Round 3</th>
+                        <th>A2Q2 Samples</th>
+
+                        @*display header 1*@
+                        @if (header3[0] != string.Empty)
+                        {
+                            <th>@header3[0]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 2*@
+                        @if (header3[1] != string.Empty)
+                        {
+                            <th>@header3[1]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 3*@
+                        @if (header3[2] != string.Empty)
+                        {
+                            <th>@header3[2]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 2*@
+                        @if (header3[3] != string.Empty)
+                        {
+                            <th>@header3[3]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        @*display header 3*@
+                        @if (header3[4] != string.Empty)
+                        {
+                            <th>@header3[4]</th>
+                        }
+                        else
+                        {
+                            <th></th>
+                        }
+
+                        <th>Status</th>
+                        <th>Comments</th>
+                        <th>
+                            @if (testRoundMateriality3.Count > 0)
+                            {
+                                <button class="button is-info is-pulled-right" @onclick="@(() => { Generate(true, 0);} )">
+                                    <span class="icon is-small">
+                                        <i class="oi oi-reload"></i>
+                                    </span>
+                                    <span>Re-run All</span>
+                                </button>
+                            }
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var testRound in testRoundMateriality3)
+                    {
+                    <tr>
+                        <td>@testRound.TestingRound</td>
+                        <td>@testRound.A2Q2Samples</td>
+
+                        @if (testRound.ContentDisplay1 != string.Empty)
+                        {
+                            <td>@testRound.ContentDisplay1</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        @if (testRound.ContentDisplay2 != string.Empty)
+                        {
+                            <td>@testRound.ContentDisplay2</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        @if (testRound.ContentDisplay3 != string.Empty)
+                        {
+                            <td>@testRound.ContentDisplay3</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        @if (testRound.ContentDisplay4 != string.Empty)
+                        {
+                            <td>@testRound.ContentDisplay4</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        @if (testRound.ContentDisplay5 != string.Empty)
+                        {
+                            <td>@testRound.ContentDisplay5</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        <td>@testRound.Status</td>
+                        <td>@testRound.Comment</td>
+                        <td>
+                            <button class="button is-info is-pulled-right" @onclick="@(() => { Generate(false, int.Parse(testRound.A2Q2Samples)); })">
+                                <span class="icon is-small">
+                                    <i class="oi oi-reload"></i>
+                                </span>
+                            </button>
+                        </td>
+                    </tr>
+                    }
+
+                </tbody>
+            }
+
+        </table>
+    </div>
+
+</div>
+
+
+@code {
+    [Parameter]
+    public SampleSelection sampleSelection { get; set; }
+
+    [Parameter]
+    public string version { get; set; }
+
+    [Parameter]
+    public int roundSelected { get; set; }
+
+    [Parameter] public EventCallback<RegenerateData> ReturnRegenData { get; set; }
+
+    private string _isMateriality { get; set; }
+
+    private List<TestRound> testRoundMateriality1, testRoundMateriality2, testRoundMateriality3;
+
+    private string[] header1 = new string[] { string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, };
+    private string[] header2 = new string[] { string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, };
+    private string[] header3 = new string[] { string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, };
+
+    protected override void OnParametersSet()
+    {
+
+        if(sampleSelection != null)
+        {
+            if (sampleSelection.IsMateriality != null)
+                _isMateriality = sampleSelection.IsMateriality;
+            else
+                _isMateriality = "No";
+            System.Diagnostics.Debug.WriteLine($"_isMateriality : {_isMateriality}");
+
+            //tempSampleSelection = sampleSelection;
+            if (sampleSelection.ListTestRound != null && version == "3")
+            {
+
+                testRoundMateriality1 = new List<TestRound>();
+                testRoundMateriality1.AddRange(sampleSelection.ListTestRound.Where(x => x.TestingRound == "Round 1"));
+                if (testRoundMateriality1 != null && testRoundMateriality1.Count > 0)
+                {
+                    header1[0] = testRoundMateriality1.Select(x => x.HeaderRoundDisplay1).FirstOrDefault();
+                    header1[1] = testRoundMateriality1.Select(x => x.HeaderRoundDisplay2).FirstOrDefault();
+                    header1[2] = testRoundMateriality1.Select(x => x.HeaderRoundDisplay3).FirstOrDefault();
+                    header1[3] = testRoundMateriality1.Select(x => x.HeaderRoundDisplay4).FirstOrDefault();
+                    header1[4] = testRoundMateriality1.Select(x => x.HeaderRoundDisplay5).FirstOrDefault();
+                }
+
+                testRoundMateriality2 = new List<TestRound>();
+                testRoundMateriality2.AddRange(sampleSelection.ListTestRound.Where(x => x.TestingRound == "Round 2"));
+                if (testRoundMateriality2 != null && testRoundMateriality2.Count > 0)
+                {
+                    header2[0] = testRoundMateriality2.Select(x => x.HeaderRoundDisplay1).FirstOrDefault();
+                    header2[1] = testRoundMateriality2.Select(x => x.HeaderRoundDisplay2).FirstOrDefault();
+                    header2[2] = testRoundMateriality2.Select(x => x.HeaderRoundDisplay3).FirstOrDefault();
+                    header2[3] = testRoundMateriality2.Select(x => x.HeaderRoundDisplay4).FirstOrDefault();
+                    header2[4] = testRoundMateriality2.Select(x => x.HeaderRoundDisplay5).FirstOrDefault();
+                }
+
+                testRoundMateriality3 = new List<TestRound>();
+                testRoundMateriality3.AddRange(sampleSelection.ListTestRound.Where(x => x.TestingRound == "Round 3"));
+                if (testRoundMateriality3 != null && testRoundMateriality3.Count > 0)
+                {
+                    header3[0] = testRoundMateriality3.Select(x => x.HeaderRoundDisplay1).FirstOrDefault();
+                    header3[1] = testRoundMateriality3.Select(x => x.HeaderRoundDisplay2).FirstOrDefault();
+                    header3[2] = testRoundMateriality3.Select(x => x.HeaderRoundDisplay3).FirstOrDefault();
+                    header3[3] = testRoundMateriality3.Select(x => x.HeaderRoundDisplay4).FirstOrDefault();
+                    header3[4] = testRoundMateriality3.Select(x => x.HeaderRoundDisplay5).FirstOrDefault();
+                }
+
+            }
+        }
+
+
+
+
+    }
+
+    private void Generate(bool isAll, int index)
+    {
+        System.Diagnostics.Debug.WriteLine($"Generate({isAll}, {index})");
+        RegenerateData generate = new RegenerateData();
+        generate.IsAll = isAll;
+        generate.Index = index;
+
+        ReturnRegenData.InvokeAsync(generate);
+    }
+}

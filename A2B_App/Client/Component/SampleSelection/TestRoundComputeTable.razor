@@ -1,0 +1,57 @@
+﻿@using A2B_App.Shared.Sox
+<div class="row">
+
+    @*field table for test round*@
+    <div class="col">
+        <table class="table table-sm table-hover ">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Round 1</th>
+                    <th>Round 2</th>
+                    <th>Round 3</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Population by Round</td>
+                    <td>@sampleSelection.PopulationByRound1</td>
+                    <td>@sampleSelection.PopulationByRound2</td>
+                    <td>@sampleSelection.PopulationByRound3</td>
+                    <td>@sampleSelection.PopulationByRoundTot</td>
+                </tr>
+                <tr>
+                    <td>Samples by Round</td>
+                    <td>@sampleSelection.SamplesByRound1</td>
+                    <td>@sampleSelection.SamplesByRound2</td>
+                    <td>@sampleSelection.SamplesByRound3</td>
+                    <td>@sampleSelection.SamplesByRoundTot</td>
+                </tr>
+                <tr class="hidden-field">
+                    <td>Samples Closed</td>
+                    <td>@sampleSelection.SamplesCloseRound1</td>
+                    <td>@sampleSelection.SamplesCloseRound2</td>
+                    <td>@sampleSelection.SamplesCloseRound3</td>
+                    <td>@sampleSelection.SamplesCloseRoundTot</td>
+                </tr>
+                <tr class="hidden-field">
+                    <td>Samples Remaining</td>
+                    <td>@sampleSelection.SamplesRemainingRound1</td>
+                    <td>@sampleSelection.SamplesRemainingRound2</td>
+                    <td>@sampleSelection.SamplesRemainingRound3</td>
+                    <td>@sampleSelection.SamplesRemainingRoundTot</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
+
+@code {
+    [Parameter]
+    public SampleSelection sampleSelection { get; set; }
+
+}

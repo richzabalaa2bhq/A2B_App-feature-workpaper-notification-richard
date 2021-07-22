@@ -1,0 +1,2084 @@
+﻿
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using System.Text
+@using A2B_App.Shared.Sox
+@using A2B_App.Client.Component.Utilities
+@using System.Globalization
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+
+<h4>SOX Controls Tracker</h4>
+
+<div class="columns">
+
+    <div class="column is-half">
+
+        @*Q1 FY*@
+        <div class="row">
+            <div class="col-10">
+                <div class="form-group">
+                    <label for="Question1"><span class="has-text-weight-bold">1. </span> Year?</label>
+                    <select class="form-control" id="Question1" @bind="Q1Answer">
+                        <option value="">Select Year</option>
+                        @if (listFy != null && listFy.Count > 0)
+                        {
+                            @foreach (var item in listFy)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        }
+
+                    </select>
+                </div>
+            </div>
+        </div>
+
+
+        @*Q2 Client*@
+        <div class="row">
+            <div class="col-10">
+                <div class="form-group">
+                    <label for="Q2Client"><span class="has-text-weight-bold">2. </span> What is the Client Name</label>
+                    <select class="form-control" id="Q2Client" @bind="Q2Answer">
+                        <option value="">Select Client</option>
+                        @if (listClient != null && listClient.Count > 0)
+                        {
+                            @foreach (var item in listClient)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        }
+
+                    </select>
+                </div>
+            </div>
+        </div>
+
+
+        @if (rcm.ClientName != null && rcm.ClientName != string.Empty && rcm.ClientName != "Select Client")
+        {
+
+
+            @*Q3 Process*@
+            <div class="row">
+                <div class="col-10">
+                    <div class="form-group">
+                        <label for="Q3Process"><span class="has-text-weight-bold">3. </span> What is the Process</label>
+                        <select class="form-control" id="Q3Process" @bind="Q3Answer">
+                            <option value="">Select Process</option>
+                            @if (listProcess != null && listProcess.Count > 0)
+                            {
+                                @foreach (var item in listProcess)
+                                {
+                                    <option value="@item">@item</option>
+                                }
+                            }
+
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+            @if (rcm.Process != null && rcm.Process != string.Empty && rcm.Process != "Select Process")
+            {
+
+                @*Q4 Sub Process*@
+                <div class="row">
+                    <div class="col-10">
+                        <div class="form-group">
+                            <label for="Q4SubProcess"><span class="has-text-weight-bold">4. </span>What is the Sub-Process</label>
+                            <select class="form-control" id="Q4SubProcess" @bind="Q4Answer">
+                                <option value="">Select Sub Process</option>
+                                @if (listSubProcess != null && listSubProcess.Count > 0)
+                                {
+                                    @foreach (var item in listSubProcess)
+                                    {
+                                        <option value="@item">@item</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                @if (rcm.Subprocess != null && rcm.Subprocess != string.Empty && rcm.Subprocess != "Select Sub Process")
+                {
+
+                    @*Q5 What is the Control ID?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q5Client"><span class="has-text-weight-bold">5. </span> What is the Control ID?</label>
+                                <select class="form-control" id="Q5Client" @bind="Q5Answer">
+                                    <option value="">Select Option</option>
+                                    @if (listControlId != null && listControlId.Count > 0)
+                                    {
+                                        @foreach (var item in listControlId)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    if (soxTrackerQuestionnaire != null && soxTrackerQuestionnaire.PodioItemId != 0)
+                    {
+                        @*Q6 What PBC's (supporting documents) are needed to test this control?*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="Q6">
+                                        <span class="has-text-weight-bold">6. </span>What PBC's (supporting documents) are needed to test this control?
+                                    </label>
+                                    <div class="field">
+                                        <div class="control is-expanded">
+                                            <textarea readonly rows="10" class="textarea" id="Q6" @bind="soxTracker.PBC"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        @*Q7 Who is the PBC Owner*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="Q7"><span class="has-text-weight-bold">7. </span>Who is the PBC Owner?</label>
+                                    <select class="form-control" id="Q7" @bind="Q7Answer">
+                                        <option value="">Select Option</option>
+                                        @if (listPBCOwner != null && listPBCOwner.Count > 0)
+                                        {
+                                            @foreach (var item in listPBCOwner)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+
+                                    @if (soxTracker.PBCOwner != null && (soxTracker.PBCOwner.ToLower() == "other" || soxTracker.PBCOwner.ToLower() == "others"))
+                                    {
+                                        <div class="field">
+                                            <div class="control is-expanded">
+                                                <input type="text" class="input" id="Q7COtherValue" @bind="soxTracker.PBCOwnerOther">
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        @*Q8 Does the control need a population file request?*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="Q8">
+                                        <span class="has-text-weight-bold">8. </span>Does the control need a population file request?
+                                    </label>
+                                    <select class="form-control" id="Q8" @bind="Q8Answer">
+                                        <option value="">Select Option</option>
+                                        @if (listPopFileReq != null && listPopFileReq.Count > 0)
+                                        {
+                                            @foreach (var item in listPopFileReq)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        @*Q9 Does the external auditor require samples to be tested in R3 (Q4)?*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="Q9">
+                                        <span class="has-text-weight-bold">9. </span>Is sample selection/sub-selection required?
+                                    </label>
+                                    <select class="form-control" id="Q9" @bind="Q9Answer">
+                                        <option value="">Select Option</option>
+                                        @if (listSampleSelection != null && listSampleSelection.Count > 0)
+                                        {
+                                            @foreach (var item in listSampleSelection)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        @*Q10 Is sample selection/sub-selection required?*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="Q10">
+                                        <span class="has-text-weight-bold">10. </span>Does the external auditor require samples to be tested in R3 (Q4)?
+                                    </label>
+                                    <select class="form-control" id="Q10" @bind="Q10Answer">
+                                        <option value="">Select Option</option>
+                                        @if (listExternalEditor != null && listExternalEditor.Count > 0)
+                                        {
+                                            @foreach (var item in listExternalEditor)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        @*Q11 How many samples to be tested in R3(Q4)?*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="Q11">
+                                        <span class="has-text-weight-bold">11. </span>How many samples to be tested in R3(Q4)?
+                                    </label>
+                                    <select class="form-control" id="Q11" @bind="Q11Answer">
+                                        <option value="">Select Option</option>
+                                        @if (listR3Q4 != null && listR3Q4.Count > 0)
+                                        {
+                                            @foreach (var item in listR3Q4)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        @*Q12 What is the PBC status? Label*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="Q12">
+                                        <span class="has-text-weight-bold">12. </span>What is the PBC status?
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*Q12 What is the PBC status? Label*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group pl-6">
+                                    <label for="Q12WT">
+                                        <span class="has-text-weight-bold">Walkthrough </span>
+                                    </label>
+                                    <select class="form-control" id="Q12WT" @bind="Q12AAnswer">
+                                        <option value="">Select Option</option>
+                                        @if (listPBCStatusWT != null && listPBCStatusWT.Count > 0)
+                                        {
+                                            @foreach (var item in listPBCStatusWT)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*Q12 R1*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group pl-6">
+                                    <label for="Q12R1">
+                                        <span class="has-text-weight-bold">Round 1 </span>
+                                    </label>
+                                    <select class="form-control" id="Q12R1" @bind="Q12BAnswer">
+                                        <option value="">Select Option</option>
+                                        @if (listPBCStatusR1 != null && listPBCStatusR1.Count > 0)
+                                        {
+                                            @foreach (var item in listPBCStatusR1)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*Q12 R2*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group pl-6">
+                                    <label for="Q12R2">
+                                        <span class="has-text-weight-bold">Round 2 </span>
+                                    </label>
+                                    <select class="form-control" id="Q12R2" @bind="Q12CAnswer">
+                                        <option value="">Select Option</option>
+                                        @if (listPBCStatusR2 != null && listPBCStatusR2.Count > 0)
+                                        {
+                                            @foreach (var item in listPBCStatusR2)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*Q12 R3*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group pl-6">
+                                    <label for="Q12R3">
+                                        <span class="has-text-weight-bold">Round 3 </span>
+                                    </label>
+                                    <select class="form-control" id="Q12R3" @bind="Q12DAnswer">
+                                        <option value="">Select Option</option>
+                                        @if (listPBCStatusR3 != null && listPBCStatusR3.Count > 0)
+                                        {
+                                            @foreach (var item in listPBCStatusR3)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        @*Q13 Testing Assignment Label*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="Q12">
+                                        <span class="has-text-weight-bold">13. </span>Testing Assignment
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group pl-6">
+                                    <table class="table">
+                                        @*Table header*@
+                                        <thead>
+                                            <tr>
+                                                <td></td>
+                                                <td>Walkthrough</td>
+                                                <td>Round 1</td>
+                                                <td>Round 2</td>
+                                                <td>Round 3</td>
+                                            </tr>
+                                        </thead>
+
+                                        @*Table body*@
+                                        <tbody>
+                                            <tr>
+                                                @*Table tester*@
+                                                <td>Tester</td>
+                                                <td>
+                                                    <select class="form-control" id="Q13A" @bind="Q13AAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (listTestAssignWT != null && listTestAssignWT.Count > 0)
+                                                        {
+                                                            @foreach (var item in listTestAssignWT)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="Q13B" @bind="Q13BAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (listTestAssignR1 != null && listTestAssignR1.Count > 0)
+                                                        {
+                                                            @foreach (var item in listTestAssignR1)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="Q13C" @bind="Q13CAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (listTestAssignR2 != null && listTestAssignR2.Count > 0)
+                                                        {
+                                                            @foreach (var item in listTestAssignR2)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="Q13D" @bind="Q13DAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (listTestAssignR3 != null && listTestAssignR3.Count > 0)
+                                                        {
+                                                            @foreach (var item in listTestAssignR3)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                @*Table 1st level reviewer*@
+                                                <td>1st Level Reviewer</td>
+                                                <td>
+                                                    <select class="form-control" id="Q13E" @bind="Q13EAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (list1stLevReviewerWT != null && list1stLevReviewerWT.Count > 0)
+                                                        {
+                                                            @foreach (var item in list1stLevReviewerWT)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="Q13F" @bind="Q13FAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (list1stLevReviewerR1 != null && list1stLevReviewerR1.Count > 0)
+                                                        {
+                                                            @foreach (var item in list1stLevReviewerR1)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="Q13G" @bind="Q13GAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (list1stLevReviewerR2 != null && list1stLevReviewerR2.Count > 0)
+                                                        {
+                                                            @foreach (var item in list1stLevReviewerR2)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="Q13H" @bind="Q13HAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (list1stLevReviewerR3 != null && list1stLevReviewerR3.Count > 0)
+                                                        {
+                                                            @foreach (var item in list1stLevReviewerR3)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                @*Table 2nd level reviewer*@
+                                                <td>2nd Level Reviewer</td>
+                                                <td>
+                                                    <select class="form-control" id="Q13I" @bind="Q13IAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (list2ndLevReviewerWT != null && list2ndLevReviewerWT.Count > 0)
+                                                        {
+                                                            @foreach (var item in list2ndLevReviewerWT)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="Q13J" @bind="Q13JAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (list2ndLevReviewerR1 != null && list2ndLevReviewerR1.Count > 0)
+                                                        {
+                                                            @foreach (var item in list2ndLevReviewerR1)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="Q13K" @bind="Q13KAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (list2ndLevReviewerR2 != null && list2ndLevReviewerR2.Count > 0)
+                                                        {
+                                                            @foreach (var item in list2ndLevReviewerR2)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control" id="Q13L" @bind="Q13LAnswer">
+                                                        <option value="">Select Option</option>
+                                                        @if (list2ndLevReviewerR3 != null && list2ndLevReviewerR3.Count > 0)
+                                                        {
+                                                            @foreach (var item in list2ndLevReviewerR3)
+                                                            {
+                                                                <option value="@item">@item</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*Q14 What is the PBC status? Label*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="Q12">
+                                        <span class="has-text-weight-bold">14. </span>Testing status?
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*Q14 Reviewer checklist required?*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group pl-6">
+                                    <label for="Q14checklist"><span class="has-text-weight-bold"></span> Reviewer checklist required?</label>
+                                    <div class="field">
+                                        @if (listRevChecklist != null && listRevChecklist != null && listRevChecklist.Count > 0)
+                                        {
+                                            @foreach (var item in listRevChecklist)
+                                            {
+                                                @if (item.selected)
+                                                {
+                                                    <label class="checkbox"><input type="checkbox" checked @onchange="eventArgs => { Q14ClickEvent(item.item, eventArgs.Value); }"> @item.item</label> <br />
+                                                }
+                                                else
+                                                {
+                                                    <label class="checkbox"><input type="checkbox" @onchange="eventArgs => { Q14ClickEvent(item.item, eventArgs.Value); }"> @item.item</label> <br />
+                                                }
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        @*Q14 WT*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group pl-6">
+                                    <label for="Q12WT">
+                                        <span class="has-text-weight-bold">Walkthrough </span>
+                                    </label>
+                                    <select class="form-control" id="Q14WT" @bind="Q14AAnswer">
+                                        <option value="">Select Option</option>
+                                        @if (listTestingStatusWT != null && listTestingStatusWT.Count > 0)
+                                        {
+                                            @foreach (var item in listTestingStatusWT)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*Q14 R1*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group pl-6">
+                                    <label for="Q12R1">
+                                        <span class="has-text-weight-bold">Round 1 </span>
+                                    </label>
+                                    <select class="form-control" id="Q14R1" @bind="Q14BAnswer">
+                                        <option value="">Select Option</option>
+                                        @if (listTestingStatusR1 != null && listTestingStatusR1.Count > 0)
+                                        {
+                                            @foreach (var item in listTestingStatusR1)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*Q14 R2*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group pl-6">
+                                    <label for="Q12R2">
+                                        <span class="has-text-weight-bold">Round 2 </span>
+                                    </label>
+                                    <select class="form-control" id="Q14R2" @bind="Q14CAnswer">
+                                        <option value="">Select Option</option>
+                                        @if (listTestingStatusR2 != null && listTestingStatusR2.Count > 0)
+                                        {
+                                            @foreach (var item in listTestingStatusR2)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @*Q14 R3*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group pl-6">
+                                    <label for="Q12R3">
+                                        <span class="has-text-weight-bold">Round 3 </span>
+                                    </label>
+                                    <select class="form-control" id="Q14R3" @bind="Q14DAnswer">
+                                        <option value="">Select Option</option>
+                                        @if (listTestingStatusR3 != null && listTestingStatusR3.Count > 0)
+                                        {
+                                            @foreach (var item in listTestingStatusR3)
+                                            {
+                                                <option value="@item">@item</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        @*Q15 Is this a key report?*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="Q15">
+                                        <span class="has-text-weight-bold">15. </span>Is this a key report?
+                                    </label>
+                                    <select class="form-control" id="Q15" @bind="Q15BAnswer">
+                                        @foreach (var Choice in KeyReport)
+                                        {
+                                            <option value=@Choice>@Choice</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        //Console.WriteLine(KeyReport);
+
+
+                        if (soxTracker.KeyReport == "Yes")
+                        {
+                            @*Q16 Is this a key report?*@
+                            <div class="row">
+                                <div class="col-10">
+                                    <div class="form-group">
+                                        <label for="KeyRportName">
+                                            <span class="has-text-weight-bold">16. </span>What is the Key report name?
+                                        </label>
+                                        <input class="form-control" type="text" placeholder="" id="KeyRportName" @bind="soxTracker.KeyReportName">
+
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        if (soxTracker.KeyReport == "No")
+                        {
+
+                        }
+                        <br />
+                        @*Save button*@
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <button class="button is-success @(isLoading ? "is-loading" : string.Empty) " @onclick="StopTimer" disabled="@(isLoading ? true : false)" >Save Control</button>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                    }
+
+                }
+
+
+            }
+
+
+
+        }
+
+
+
+    </div>
+
+</div>
+
+<ElapsedTime startTimer="@startTimer"
+             ReturnTimeValue="ReturnTimeValue">
+
+</ElapsedTime>
+
+
+@code {
+
+
+    [Parameter] public bool startTimer { get; set; }
+    //ElapsedTime refElapseTime;
+    private bool isSavingState { get; set; } = false;
+    private bool isQ12Rendered { get; set; } = false;
+    private ClientSettings settings;
+    private RcmService RcmService;
+    private SoxTrackerService SoxTrackerService;
+    private FormatService FormatService;
+    private bool isSoxTrackerFound { get; set; } = false;
+    private bool q12IsOthers { get; set; } = false;
+    private string q12OtherValue { get; set; } = string.Empty;
+    private List<string> listFy = new List<string>();
+    private List<string> listClient = new List<string>();
+    private List<string> listProcess = new List<string>();
+    private List<string> listSubProcess = new List<string>();
+    private List<string> listPBCOwner = new List<string>();
+    private List<string> listPopFileReq = new List<string>();
+    private List<string> listSampleSelection = new List<string>();
+    private List<string> listExternalEditor = new List<string>();
+    private List<string> listR3Q4 = new List<string>();
+    private List<string> listPBCStatusWT = new List<string>();
+    private List<string> listPBCStatusR1 = new List<string>();
+    private List<string> listPBCStatusR2 = new List<string>();
+    private List<string> listPBCStatusR3 = new List<string>();
+    private List<string> listTestAssignWT = new List<string>();
+    private List<string> listTestAssignR1 = new List<string>();
+    private List<string> listTestAssignR2 = new List<string>();
+    private List<string> listTestAssignR3 = new List<string>();
+    private List<string> list1stLevReviewerWT = new List<string>();
+    private List<string> list1stLevReviewerR1 = new List<string>();
+    private List<string> list1stLevReviewerR2 = new List<string>();
+    private List<string> list1stLevReviewerR3 = new List<string>();
+    private List<string> list2ndLevReviewerWT = new List<string>();
+    private List<string> list2ndLevReviewerR1 = new List<string>();
+    private List<string> list2ndLevReviewerR2 = new List<string>();
+    private List<string> list2ndLevReviewerR3 = new List<string>();
+    private List<CheckBoxItem> listRevChecklist = new List<CheckBoxItem>();
+    private List<string> listRevChecklistValue = new List<string>();
+    private List<string> listTestingStatusWT = new List<string>();
+    private List<string> listTestingStatusR1 = new List<string>();
+    private List<string> listTestingStatusR2 = new List<string>();
+    private List<string> listTestingStatusR3 = new List<string>();
+    private bool isLoading { get; set; } = false;
+
+    //private List<string> listFinStatementElement = new List<string>();
+    //private List<string> listFinStatementAssert = new List<string>();
+    private List<string> listControlId = new List<string>();
+    private List<string> listControlOwner = new List<string>();
+
+    private RcmQ13toQ19 rcmQ13toQ19 = new RcmQ13toQ19();
+
+    private A2B_App.Shared.Sox.Rcm rcm = new A2B_App.Shared.Sox.Rcm();
+    private A2B_App.Shared.Sox.SoxTracker soxTracker = new A2B_App.Shared.Sox.SoxTracker();
+    private A2B_App.Shared.Sox.SoxTrackerQuestionnaire soxTrackerQuestionnaire = new A2B_App.Shared.Sox.SoxTrackerQuestionnaire();
+    private RcmQuestionnaireFilter filter = new RcmQuestionnaireFilter();
+
+
+    //Start Mark Edited Code
+    private string KeyReportInput { get; set; }
+
+    List<string> KeyReport = new List<string>() { "No", "Yes" };
+
+    //End Mark Edited Code
+
+    private string Q15BAnswer
+    {
+        get
+        {
+            return soxTracker.KeyReport;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            Q15BAnswerSelected(eventArgs);
+        }
+    }
+
+    private void Q15BAnswerSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.KeyReport = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.KeyReport = string.Empty;
+        }
+        //soxTracker.KeyReport = e.Value.ToString();
+        //Console.WriteLine("Key report choices" + soxTracker.KeyReport);
+    }
+
+
+    protected async override void OnInitialized()
+    {
+        settings = await _getSettings;
+        rcm.ControlObjective = string.Empty;
+        RcmService = new RcmService(settings);
+        SoxTrackerService = new SoxTrackerService(settings);
+        FormatService = new FormatService();
+        GetFY();
+        base.OnInitialized();
+    }
+
+
+    #region Category Events
+
+    private string Q1Answer
+    {
+        get
+        {
+            return rcm.FY;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ1Selected(eventArgs);
+        }
+    }
+    private void EventQ1Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.FY: {e.Value}");
+            rcm.FY = e.Value.ToString();
+            rcm.ClientName = string.Empty;
+            rcm.Process = string.Empty;
+            rcm.Subprocess = string.Empty;
+            if (rcm.FY != string.Empty)
+            {
+                GetClient(rcm.FY); //pass fy to get all client name that is related to
+            }
+        }
+        else
+        {
+            rcm.FY = string.Empty;
+        }
+
+    }
+
+    private string Q2Answer
+    {
+        get
+        {
+            return rcm.ClientName;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ2Selected(eventArgs);
+        }
+    }
+    private void EventQ2Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.ClientName: {e.Value}");
+            rcm.ClientName = e.Value.ToString();
+            rcm.Process = string.Empty;
+            rcm.Subprocess = string.Empty;
+            if (rcm.ClientName != string.Empty)
+            {
+                GetProcess(rcm.ClientName);
+            }
+        }
+        else
+        {
+            rcm.ClientName = string.Empty;
+        }
+
+    }
+
+    private string Q3Answer
+    {
+        get
+        {
+            return rcm.Process;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ3Selected(eventArgs);
+        }
+    }
+    private void EventQ3Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.Process: {e.Value}");
+            rcm.Process = e.Value.ToString();
+            if (rcm.Process != string.Empty)
+            {
+                GetSubProcess(rcm.Process);
+            }
+        }
+        else
+        {
+            rcm.Process = string.Empty;
+        }
+
+    }
+
+    private string Q4Answer
+    {
+        get
+        {
+            return rcm.Subprocess;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ4Selected(eventArgs);
+        }
+    }
+    private void EventQ4Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.Subprocess: {e.Value}");
+            rcm.Subprocess = e.Value.ToString();
+            if (rcm.Subprocess != string.Empty)
+            {
+                GetControlId(rcm.Subprocess);
+
+            }
+        }
+        else
+        {
+            rcm.Subprocess = string.Empty;
+        }
+
+    }
+
+    private string Q5Answer
+    {
+        get
+        {
+            return rcm.ControlId;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ5Selected(eventArgs);
+        }
+    }
+    private void EventQ5Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.ControlId: {e.Value}");
+            rcm.ControlId = e.Value.ToString();
+            filter.ControlId = rcm.ControlId;
+            if (rcm.ControlId != string.Empty && rcm.ControlId != "Select Option")
+            {
+                GetSoxTracker(rcm.ControlId);
+            }
+        }
+        else
+        {
+            rcm.ControlId = string.Empty;
+        }
+
+    }
+
+    private string Q7Answer
+    {
+        get
+        {
+            return soxTracker.PBCOwner;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ7Selected(eventArgs);
+        }
+    }
+    private void EventQ7Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.PBCOwner = e.Value.ToString();
+            soxTracker.PBCOwnerOther = soxTracker.PBCOwner.ToLower() != "others" && soxTracker.PBCOwner.ToLower() != "other" ? string.Empty : soxTracker.PBCOwnerOther;
+
+        }
+
+    }
+
+    private string Q8Answer
+    {
+        get
+        {
+            return soxTracker.PopulationFileRequest;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ8Selected(eventArgs);
+        }
+    }
+    private void EventQ8Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.PopulationFileRequest = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.PopulationFileRequest = string.Empty;
+        }
+
+    }
+
+    private string Q9Answer
+    {
+        get
+        {
+            return soxTracker.SampleSelection;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ9Selected(eventArgs);
+        }
+    }
+    private void EventQ9Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.SampleSelection = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.SampleSelection = string.Empty;
+        }
+
+    }
+
+    private string Q10Answer
+    {
+        get
+        {
+            return soxTracker.ExternalAuditorSample;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ10Selected(eventArgs);
+        }
+    }
+    private void EventQ10Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.ExternalAuditorSample = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.ExternalAuditorSample = string.Empty;
+        }
+
+    }
+
+    private string Q11Answer
+    {
+        get
+        {
+            return soxTracker.R3Sample;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ11Selected(eventArgs);
+        }
+    }
+    private void EventQ11Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R3Sample = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R3Sample = string.Empty;
+        }
+
+    }
+
+    private string Q12AAnswer
+    {
+        get
+        {
+            return soxTracker.WTPBC;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ12ASelected(eventArgs);
+        }
+    }
+    private void EventQ12ASelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.WTPBC = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.WTPBC = string.Empty;
+        }
+
+    }
+
+    private string Q12BAnswer
+    {
+        get
+        {
+            return soxTracker.R1PBC;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ12BSelected(eventArgs);
+        }
+    }
+    private void EventQ12BSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R1PBC = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R1PBC = string.Empty;
+        }
+
+    }
+
+    private string Q12CAnswer
+    {
+        get
+        {
+            return soxTracker.R2PBC;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ12CSelected(eventArgs);
+        }
+    }
+    private void EventQ12CSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R2PBC = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R2PBC = string.Empty;
+        }
+
+    }
+
+    private string Q12DAnswer
+    {
+        get
+        {
+            return soxTracker.R3PBC;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ12DSelected(eventArgs);
+        }
+    }
+    private void EventQ12DSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R3PBC = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R3PBC = string.Empty;
+        }
+
+    }
+
+
+    private string Q13AAnswer
+    {
+        get
+        {
+            return soxTracker.WTTester;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13ASelected(eventArgs);
+        }
+    }
+    private void EventQ13ASelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.WTTester = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.WTTester = string.Empty;
+        }
+
+    }
+
+    private string Q13BAnswer
+    {
+        get
+        {
+            return soxTracker.R1Tester;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13BSelected(eventArgs);
+        }
+    }
+    private void EventQ13BSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R1Tester = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R1Tester = string.Empty;
+        }
+
+    }
+
+    private string Q13CAnswer
+    {
+        get
+        {
+            return soxTracker.R2Tester;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13CSelected(eventArgs);
+        }
+    }
+    private void EventQ13CSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R2Tester = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R2Tester = string.Empty;
+        }
+
+    }
+
+    private string Q13DAnswer
+    {
+        get
+        {
+            return soxTracker.R3Tester;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13DSelected(eventArgs);
+        }
+    }
+    private void EventQ13DSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R3Tester = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R3Tester = string.Empty;
+        }
+    }
+
+
+    private string Q13EAnswer
+    {
+        get
+        {
+            return soxTracker.WT1LReviewer;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13ESelected(eventArgs);
+        }
+    }
+    private void EventQ13ESelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.WT1LReviewer = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.WT1LReviewer = string.Empty;
+        }
+
+    }
+
+    private string Q13FAnswer
+    {
+        get
+        {
+            return soxTracker.R11LReviewer;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13FSelected(eventArgs);
+        }
+    }
+    private void EventQ13FSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R11LReviewer = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R11LReviewer = string.Empty;
+        }
+
+    }
+
+    private string Q13GAnswer
+    {
+        get
+        {
+            return soxTracker.R21LReviewer;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13GSelected(eventArgs);
+        }
+    }
+    private void EventQ13GSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R21LReviewer = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R21LReviewer = string.Empty;
+        }
+
+    }
+
+    private string Q13HAnswer
+    {
+        get
+        {
+            return soxTracker.R31LReviewer;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13HSelected(eventArgs);
+        }
+    }
+    private void EventQ13HSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R31LReviewer = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R31LReviewer = string.Empty;
+        }
+
+    }
+
+
+    private string Q13IAnswer
+    {
+        get
+        {
+            return soxTracker.WT2LReviewer;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13ISelected(eventArgs);
+        }
+    }
+    private void EventQ13ISelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.WT2LReviewer = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.WT2LReviewer = string.Empty;
+        }
+
+    }
+
+    private string Q13JAnswer
+    {
+        get
+        {
+            return soxTracker.R12LReviewer;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13JSelected(eventArgs);
+        }
+    }
+    private void EventQ13JSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R12LReviewer = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R12LReviewer = string.Empty;
+        }
+
+    }
+
+    private string Q13KAnswer
+    {
+        get
+        {
+            return soxTracker.R22LReviewer;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13KSelected(eventArgs);
+        }
+    }
+    private void EventQ13KSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R22LReviewer = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R22LReviewer = string.Empty;
+        }
+
+    }
+
+    private string Q13LAnswer
+    {
+        get
+        {
+            return soxTracker.R32LReviewer;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13LSelected(eventArgs);
+        }
+    }
+    private void EventQ13LSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R32LReviewer = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R32LReviewer = string.Empty;
+        }
+
+    }
+
+    private void Q14ClickEvent(string value, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            if (!listRevChecklistValue.Contains(value))
+            {
+                listRevChecklistValue.Add(value);
+                System.Diagnostics.Debug.WriteLine($"Add Q7: {value}");
+            }
+        }
+        else
+        {
+            if (listRevChecklistValue.Contains(value))
+            {
+                listRevChecklistValue.Remove(value);
+                System.Diagnostics.Debug.WriteLine($"Remove Q7: {value}");
+            }
+        }
+    }
+
+    private string Q14AAnswer
+    {
+        get
+        {
+            return soxTracker.WTTestingStatus;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ14ASelected(eventArgs);
+        }
+    }
+    private void EventQ14ASelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.WTTestingStatus = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.WTTestingStatus = string.Empty;
+        }
+
+    }
+
+    private string Q14BAnswer
+    {
+        get
+        {
+            return soxTracker.R1TestingStatus;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ14BSelected(eventArgs);
+        }
+    }
+    private void EventQ14BSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R1TestingStatus = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R1TestingStatus = string.Empty;
+        }
+
+    }
+
+    private string Q14CAnswer
+    {
+        get
+        {
+            return soxTracker.R2TestingStatus;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ14CSelected(eventArgs);
+        }
+    }
+    private void EventQ14CSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R2TestingStatus = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R2TestingStatus = string.Empty;
+        }
+
+    }
+
+    private string Q14DAnswer
+    {
+        get
+        {
+            return soxTracker.R3TestingStatus;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ14DSelected(eventArgs);
+        }
+    }
+    private void EventQ14DSelected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            soxTracker.R3TestingStatus = e.Value.ToString();
+        }
+        else
+        {
+            soxTracker.R3TestingStatus = string.Empty;
+        }
+    }
+
+    #endregion
+
+
+    private async void GetFY()
+    {
+        listFy = await RcmService.GetRcmQuestionnaireFy(Http);
+        this.StateHasChanged();
+    }
+
+    private async void GetClient(string Fy)
+    {
+        filter.FY = Fy;
+        var response = await RcmService.GetRcmQuestionnaireClient(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            listClient = JsonConvert.DeserializeObject<List<string>>(result);
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetProcess(string clientName)
+    {
+        filter.Client = clientName;
+        var response = await RcmService.GetRcmQuestionnaireProcess(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            listProcess = JsonConvert.DeserializeObject<List<string>>(result);
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetSubProcess(string process)
+    {
+        filter.Process = process;
+        var response = await RcmService.GetRcmQuestionnaireSubProcess(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            listSubProcess = JsonConvert.DeserializeObject<List<string>>(result);
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetControlId(string subProcess)
+    {
+        filter.SubProcess = subProcess;
+        var response = await RcmService.GetRcmQuestionnaireControlId(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            listControlId = JsonConvert.DeserializeObject<List<string>>(result);
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetSoxTracker(string controlId)
+    {
+        filter.ControlId = controlId;
+        var response = await SoxTrackerService.GetSoxTracker(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            var tempSoxTracker = JsonConvert.DeserializeObject<A2B_App.Shared.Sox.SoxTracker>(result);
+            if (tempSoxTracker != null)
+            {
+                isSoxTrackerFound = true;
+                soxTracker = tempSoxTracker;
+                soxTracker.PBC = FormatService.ReplaceTagHtmlParagraph(soxTracker.PBC);
+
+                soxTrackerQuestionnaire = await SoxTrackerService.GetSoxTrackerQuestionnaire(Http);
+
+                if (soxTrackerQuestionnaire.PodioItemId != 0)
+                {
+
+                    if (soxTrackerQuestionnaire.ListSoxTrackerAppCategory != null && soxTrackerQuestionnaire.ListSoxTrackerAppCategory.Any())
+                    {
+                        listPopFileReq = new List<string>();
+                        listPopFileReq = soxTrackerQuestionnaire.ListSoxTrackerAppCategory.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q8FieldId)).Select(x => x.Option).ToList();
+                        listPopFileReq.Sort();
+
+                        listSampleSelection = new List<string>();
+                        listSampleSelection = soxTrackerQuestionnaire.ListSoxTrackerAppCategory.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q9FieldId)).Select(x => x.Option).ToList();
+                        listSampleSelection.Sort();
+
+                        listExternalEditor = new List<string>();
+                        listExternalEditor = soxTrackerQuestionnaire.ListSoxTrackerAppCategory.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q10FieldId)).Select(x => x.Option).ToList();
+                        listSampleSelection.Sort();
+
+                        listR3Q4 = new List<string>();
+                        listR3Q4 = soxTrackerQuestionnaire.ListSoxTrackerAppCategory.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q11FieldId)).Select(x => x.Option).ToList();
+                        listR3Q4.Sort();
+
+                        listRevChecklist = new List<CheckBoxItem>();
+                        List<string> tempString = new List<string>();
+                        tempString = soxTrackerQuestionnaire.ListSoxTrackerAppCategory.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q14AFieldId)).Select(x => x.Option).ToList();
+                        tempString.Sort();
+                        if (tempString.Any())
+                        {
+                            foreach (var item in tempString)
+                            {
+                                CheckBoxItem cbItem = new CheckBoxItem();
+
+                                cbItem.item = item;
+                                if (item == "Walkthrough" && soxTracker.RCRWT == 1)
+                                {
+                                    cbItem.selected = true;
+                                    listRevChecklistValue.Add(cbItem.item);
+                                }
+
+                                else if (item == "Round 1" && soxTracker.RCRR1 == 1)
+                                {
+                                    cbItem.selected = true;
+                                    listRevChecklistValue.Add(cbItem.item);
+                                }
+
+                                else if (item == "Round 2" && soxTracker.RCRR2 == 1)
+                                {
+                                    cbItem.selected = true;
+                                    listRevChecklistValue.Add(cbItem.item);
+                                }
+
+                                else if (item == "Round 3" && soxTracker.RCRR3 == 1)
+                                {
+                                    cbItem.selected = true;
+                                    listRevChecklistValue.Add(cbItem.item);
+                                }
+
+                                listRevChecklist.Add(cbItem);
+
+                            }
+                        }
+
+                    }
+
+                    if (soxTrackerQuestionnaire.ListSoxTrackerAppRelationship != null && soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Any())
+                    {
+                        listPBCOwner = new List<string>();
+                        listPBCOwner = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q7FieldId)).Select(x => x.Title).ToList();
+                        listPBCOwner.Sort();
+
+                        listPBCStatusWT = new List<string>();
+                        listPBCStatusWT = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q12AFieldId)).Select(x => x.Title).ToList();
+                        listPBCStatusWT.Sort();
+                        listPBCStatusR1 = new List<string>();
+                        listPBCStatusR1 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q12BFieldId)).Select(x => x.Title).ToList();
+                        listPBCStatusR1.Sort();
+                        listPBCStatusR2 = new List<string>();
+                        listPBCStatusR2 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q12CFieldId)).Select(x => x.Title).ToList();
+                        listPBCStatusR2.Sort();
+                        listPBCStatusR3 = new List<string>();
+                        listPBCStatusR3 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q12DFieldId)).Select(x => x.Title).ToList();
+                        listPBCStatusR3.Sort();
+
+                        listTestAssignWT = new List<string>();
+                        listTestAssignWT = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13AFieldId)).Select(x => x.Title).ToList();
+                        listTestAssignWT.Sort();
+                        listTestAssignR1 = new List<string>();
+                        listTestAssignR1 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13BFieldId)).Select(x => x.Title).ToList();
+                        listTestAssignR1.Sort();
+                        listTestAssignR2 = new List<string>();
+                        listTestAssignR2 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13CFieldId)).Select(x => x.Title).ToList();
+                        listTestAssignR2.Sort();
+                        listTestAssignR3 = new List<string>();
+                        listTestAssignR3 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13DFieldId)).Select(x => x.Title).ToList();
+                        listTestAssignR3.Sort();
+
+                        list1stLevReviewerWT = new List<string>();
+                        list1stLevReviewerWT = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13EFieldId)).Select(x => x.Title).ToList();
+                        list1stLevReviewerR1 = new List<string>();
+                        list1stLevReviewerR1 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13FFieldId)).Select(x => x.Title).ToList();
+                        list1stLevReviewerR2 = new List<string>();
+                        list1stLevReviewerR2 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13GFieldId)).Select(x => x.Title).ToList();
+                        list1stLevReviewerR3 = new List<string>();
+                        list1stLevReviewerR3 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13HFieldId)).Select(x => x.Title).ToList();
+                        list1stLevReviewerWT.Sort();
+                        list1stLevReviewerR1.Sort();
+                        list1stLevReviewerR2.Sort();
+                        list1stLevReviewerR3.Sort();
+
+
+
+                        list2ndLevReviewerWT = new List<string>();
+                        list2ndLevReviewerWT = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13IFieldId)).Select(x => x.Title).ToList();
+                        list2ndLevReviewerR1 = new List<string>();
+                        list2ndLevReviewerR1 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13JFieldId)).Select(x => x.Title).ToList();
+                        list2ndLevReviewerR2 = new List<string>();
+                        list2ndLevReviewerR2 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13KFieldId)).Select(x => x.Title).ToList();
+                        list2ndLevReviewerR3 = new List<string>();
+                        list2ndLevReviewerR3 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q13LFieldId)).Select(x => x.Title).ToList();
+                        list2ndLevReviewerWT.Sort();
+                        list2ndLevReviewerR1.Sort();
+                        list2ndLevReviewerR2.Sort();
+                        list2ndLevReviewerR3.Sort();
+
+
+                        //listRevChecklist = new List<string>();
+                        //listRevChecklist = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q14AFieldId)).Select(x => x.Title).ToList();
+                        listTestingStatusWT = new List<string>();
+                        listTestingStatusWT = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q14BFieldId)).Select(x => x.Title).ToList();
+                        listTestingStatusR1 = new List<string>();
+                        listTestingStatusR1 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q14CFieldId)).Select(x => x.Title).ToList();
+                        listTestingStatusR2 = new List<string>();
+                        listTestingStatusR2 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q14DFieldId)).Select(x => x.Title).ToList();
+                        listTestingStatusR3 = new List<string>();
+                        listTestingStatusR3 = soxTrackerQuestionnaire.ListSoxTrackerAppRelationship.Where(x => x.FieldId.Equals(soxTrackerQuestionnaire.Q14EFieldId)).Select(x => x.Title).ToList();
+                        listTestingStatusWT.Sort();
+                        listTestingStatusR1.Sort();
+                        listTestingStatusR2.Sort();
+                        listTestingStatusR3.Sort();
+
+
+                    }
+                }
+
+
+
+            }
+            else
+            {
+                isSoxTrackerFound = false;
+                toastService.ShowInfo("Sox tracker not found");
+            }
+
+        }
+        else
+        {
+
+            isSoxTrackerFound = false;
+            toastService.ShowInfo("Sox tracker not found");
+
+        }
+
+        this.StateHasChanged();
+    }
+
+    private async void InitSave()
+    {
+
+        isLoading = true;
+        var checkRcrWT = listRevChecklistValue.FirstOrDefault(x => x.Contains("Walkthrough"));
+        var checkRcrR1 = listRevChecklistValue.FirstOrDefault(x => x.Contains("Round 1"));
+        var checkRcrR2 = listRevChecklistValue.FirstOrDefault(x => x.Contains("Round 2"));
+        var checkRcrR3 = listRevChecklistValue.FirstOrDefault(x => x.Contains("Round 3"));
+
+        soxTracker.RCRWT = checkRcrWT != null && checkRcrWT.ToString() != string.Empty ? 1 : 0;
+        soxTracker.RCRR1 = checkRcrR1 != null && checkRcrR1.ToString() != string.Empty ? 1 : 0;
+        soxTracker.RCRR2 = checkRcrR2 != null && checkRcrR2.ToString() != string.Empty ? 1 : 0;
+        soxTracker.RCRR3 = checkRcrR3 != null && checkRcrR3.ToString() != string.Empty ? 1 : 0;
+
+        soxTracker.FY = rcm.FY;
+        soxTracker.ClientName = rcm.ClientName;
+        soxTracker.Process = rcm.Process;
+        soxTracker.Subprocess = rcm.Subprocess;
+        soxTracker.ControlId = rcm.ControlId;
+
+        //Console.WriteLine(soxTracker);
+        //Console.WriteLine("KEY REPORT NAME =>", soxTracker.KeyReportName);
+        await SaveToPodio();
+
+        isSavingState = false;
+
+        isLoading = false;
+        this.StateHasChanged();
+    }
+
+    private async Task SaveControl()
+    {
+        //check if podio item id is already created
+        if (soxTracker.PodioItemId != 0)
+        {
+            var response = await SoxTrackerService.SaveSoxTrackerDB(soxTracker, Http);
+
+            if (response.StatusCode.ToString() == "OK")
+            {
+                toastService.ShowSuccess("Successfully save sox tracker control in database");
+                this.StateHasChanged();
+            }
+            else
+            {
+                toastService.ShowError("Failed to save sox tracker control in database");
+            }
+        }
+
+    }
+
+    private async Task SaveToPodio()
+    {
+
+        var response = await SoxTrackerService.UpdatePodioSoxTrackerControl(soxTracker, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var tempSoxTracker = JsonConvert.DeserializeObject<A2B_App.Shared.Sox.SoxTracker>(response.Content.ReadAsStringAsync().Result.ToString());
+            if (tempSoxTracker != null)
+            {
+                //soxTracker.PodioItemId = tempSoxTracker.PodioItemId;
+                await SaveControl();
+            }
+            toastService.ShowSuccess("Successfully created/updated sox tracker control in podio");
+            this.StateHasChanged();
+        }
+        else
+        {
+            //Console.WriteLine(response);
+            toastService.ShowError("Failed to update sox tracker control in Podio");
+        }
+    }
+
+    public void StartTimer()
+    {
+        if (!startTimer)
+        {
+            startTimer = true;
+            //refElapseTime.startTimer = true;
+        }
+        this.StateHasChanged();
+    }
+
+    private void StopTimer()
+    {
+
+        if (startTimer)
+        {
+            startTimer = false;
+            isSavingState = true;
+        }
+
+        this.StateHasChanged();
+    }
+
+    private void ReturnTimeValue(string timeValue)
+    {
+        System.Diagnostics.Debug.WriteLine($"Elapse Time: {timeValue}");
+        if (soxTracker != null)
+        {
+            TimeSpan ts;
+            if (TimeSpan.TryParse(timeValue, CultureInfo.CurrentCulture, out ts))
+            {
+                soxTracker.Duration = ts;
+            }
+
+        }
+
+        if (isSavingState)
+            InitSave();
+        //Console.WriteLine($"rcm.Duration: {rcm.Duration}");
+    }
+
+
+}

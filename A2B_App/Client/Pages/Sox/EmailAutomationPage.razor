@@ -1,0 +1,28 @@
+﻿@page "/sox/emailautomation/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Client.Component.Client
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize]
+
+<h3>Sox Email Automation</h3>
+
+
+
+<iframe id="JotFormIFrame-200795347141454"
+        title="SOX Email Request"
+        onload="window.parent.scrollTo(0,0)"
+        allowtransparency="true"
+        allowfullscreen="true"
+        allow="geolocation; microphone; camera"
+        src="https://form.jotform.com/200795347141454"
+        frameborder="0"
+        style="
+      min-width: 100%;
+      height:700px;
+      border:none;"
+        scrolling="yes">
+</iframe>
+@code {
+
+}

@@ -1,0 +1,391 @@
+﻿
+@using A2B_App.Client.Services
+@using A2B_App.Shared.Sox
+@using Microsoft.AspNetCore.Authorization
+@using Newtonsoft.Json
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize]
+@inject HttpClient Http
+@inject IToastService toastService
+@inject NavigationManager NavigationManager
+
+@if (display)
+{
+    if (items != null)
+    {
+        <div class="modal is-active">
+            <div class="modal-background"></div>
+            <div class="modal-card" style="width: 50%; height: 65%;">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">@title</p>
+                    <button class="delete" aria-label="close" @onclick="Close"></button>
+                </header>
+                <section class="modal-card-body" style="overflow-y: auto">
+                    <div class="simple-form">
+
+                        <EditForm Model="items">
+
+                            @if (items != null)
+                            {
+                                if (items.Any())
+                                {
+                                    @foreach (var item in items)
+                                    {
+                                        <article class="panel is-info" @oncontextmenu="HandleRightClick" @oncontextmenu:preventDefault="true">
+
+                                            <div class="panel-heading is-size-6" style="position: relative;">
+                                                @item.ItemId
+
+                                                <button class="button is-small is-info has-text-weight-bold is-pulled-right" @onclick="()=>item.Display = !item.Display">
+                                                    <span class="oi oi-caret-bottom"></span>
+                                                </button>
+                                                <button class="button is-small is-info has-text-weight-bold is-outlined is-inverted is-pulled-right"
+                                                        @onclick="@(() =>
+                                                                    {
+                                                                        NavigateTo($"workpaper/final/{item.RcmId}/{item.ItemId}");
+                                                                    })">Workpaper</button>
+
+                                            </div>
+
+                                            @if (item.Display)
+                                            {
+                                                <div class="table-container px-2">
+                                                    <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Round</th>
+                                                                <th>Added By</th>
+                                                                <th>Last Update</th>
+                                                                <th>Status</th>
+                                                                <th></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+
+                                                            @foreach (var roundItem in item.ListRoundItem)
+                                                            {
+                                                                <tr>
+                                                                    <td>@roundItem.RoundName</td>
+                                                                    <td>@roundItem.AddedBy</td>
+                                                                    <td>@roundItem.LastUpdate</td>
+                                                                    <td>@roundItem.Status</td>
+                                                                    <td>
+                                                                        <button class="button is-small @(roundItem.Status != string.Empty ? btnWarning : btnSuccess)"
+                                                                                @onclick="@(() =>
+                                                                                        {
+                                                                                            if(roundItem.Status == string.Empty)
+                                                                                                NewWorkpaper(roundItem.RoundName, item.ItemId);
+                                                                                            else
+                                                                                                NavigateTo($"workpaper/draft/{roundItem.RoundName}/{item.RcmId}/{item.ItemId}");
+                                                                                        })">
+                                                                            <span class="pr-1 oi oi-pencil" aria-hidden="true"></span>@(roundItem.Status != string.Empty ? "Update" : "Create")
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            }
+
+
+
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            }
+                                        </article>
+                                    }
+                                }
+
+                                else
+                                {
+                                    <p>@loadingStatus</p>
+                                }
+                            }
+
+                        </EditForm>
+
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    @*<button class="button is-success" @onclick="@(() => { NavigateTo($"questionnairegenerate/{rcm.PodioItemId}/0/0"); })">New Workpaper</button>*@
+                    <button class="button is-success @(isLoading ? "is-loading": string.Empty)" @onclick="@(() => { NewWorkpaper("Round 1",string.Empty); })" disabled="@(isLoading ? true : false)">New Workpaper</button>
+                    <button class="button" @onclick="Close">Close</button>
+                </footer>
+            </div>
+        </div>
+    } 
+}
+
+
+@code {
+
+    [Parameter] public Rcm rcm { get; set; }
+    [Parameter] public string title { get; set; }
+    [Parameter] public string email { get; set; }
+    private List<DisplayTable> items { get; set; }
+    private QuestionnaireService QuestionnaireService;
+    private ClientSettings settings;
+    private List<QuestionnaireTesterSet> listTesterSet;
+    private WriteLog writeLog = new WriteLog();
+    private string roundName { get; set; }
+
+    private bool display = false;
+    private bool isLoading = false;
+    private bool isRightClick = false;
+    private string btnWarning = "is-warning";
+    private string btnSuccess = "is-success";
+    private string loadingStatus = string.Empty;
+
+    //protected override Task OnParametersSetAsync()
+    //{
+    //    //ShowQuestionnaireSet();
+    //    //this.StateHasChanged();
+    //    //return base.OnParametersSetAsync();
+    //}
+
+    private bool isToggle { get; set; } = false;
+
+    public void Show()
+    {
+        this.display = true;
+        LoadStatus("Loading Component");
+        ShowQuestionnaireSet();
+        this.StateHasChanged();
+
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+    private async void ShowQuestionnaireSet()
+    {
+        LoadStatus("Loading Draft Workpaper");
+        settings = await _getSettings;
+        QuestionnaireService = new QuestionnaireService(settings);
+        listTesterSet = new List<QuestionnaireTesterSet>();
+        items = new List<DisplayTable>();
+        try
+        {
+            var roundSet = await QuestionnaireService.GetTesterSetAsync(rcm, Http);
+            if (roundSet.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                string result = roundSet.Content.ReadAsStringAsync().Result.ToString();
+                listTesterSet = JsonConvert.DeserializeObject<List<QuestionnaireTesterSet>>(result);
+
+                if (listTesterSet.Any())
+                {
+                    var listUniqueId = listTesterSet.Select(id => id.UniqueId).Distinct().ToList();
+                    if(listUniqueId.Any())
+                    {
+
+                        foreach (var item in listUniqueId)
+                        {
+                            var round1 = listTesterSet.Where(x => x.UniqueId.Equals(item) && x.RoundName.Equals("Round 1")).FirstOrDefault();
+                            var round2 = listTesterSet.Where(x => x.UniqueId.Equals(item) && x.RoundName.Equals("Round 2")).FirstOrDefault();
+                            var round3 = listTesterSet.Where(x => x.UniqueId.Equals(item) && x.RoundName.Equals("Round 3")).FirstOrDefault();
+                            DisplayTable dispItem = new DisplayTable();
+                            List<ListRound> listRoundItem = new List<ListRound>();
+
+                            if (round1 != null)
+                            {
+                                ListRound roundItem = new ListRound();
+                                roundItem.RoundName = round1.RoundName;
+                                roundItem.AddedBy = round1.AddedBy;
+                                roundItem.Status = round1.WorkpaperStatus.StatusName;
+                                roundItem.LastUpdate = round1.UpdatedOn.ToString("MM-dd-yyyy HH:mm:ss");
+                                listRoundItem.Add(roundItem);
+                            }
+                            else
+                            {
+                                ListRound roundItem = new ListRound();
+                                roundItem.RoundName = "Round 1";
+                                roundItem.AddedBy = string.Empty;
+                                roundItem.Status = string.Empty;
+                                roundItem.LastUpdate = string.Empty;
+                                listRoundItem.Add(roundItem);
+                            }
+
+                            if (round2 != null)
+                            {
+                                ListRound roundItem = new ListRound();
+                                roundItem.RoundName = round2.RoundName;
+                                roundItem.AddedBy = round2.AddedBy;
+                                roundItem.Status = round2.WorkpaperStatus.StatusName;
+                                roundItem.LastUpdate = round2.UpdatedOn.ToString("MM-dd-yyyy HH:mm:ss");
+                                listRoundItem.Add(roundItem);
+                            }
+                            else
+                            {
+                                ListRound roundItem = new ListRound();
+                                roundItem.RoundName = "Round 2";
+                                roundItem.AddedBy = string.Empty;
+                                roundItem.Status = string.Empty;
+                                roundItem.LastUpdate = string.Empty;
+                                listRoundItem.Add(roundItem);
+                            }
+
+                            if (round3 != null)
+                            {
+                                ListRound roundItem = new ListRound();
+                                roundItem.RoundName = round3.RoundName;
+                                roundItem.AddedBy = round3.AddedBy;
+                                roundItem.Status = round3.WorkpaperStatus.StatusName;
+                                roundItem.LastUpdate = round3.UpdatedOn.ToString("MM-dd-yyyy HH:mm:ss");
+                                listRoundItem.Add(roundItem);
+                            }
+                            else
+                            {
+                                ListRound roundItem = new ListRound();
+                                roundItem.RoundName = "Round 3";
+                                roundItem.AddedBy = string.Empty;
+                                roundItem.Status = string.Empty;
+                                roundItem.LastUpdate = string.Empty;
+                                listRoundItem.Add(roundItem);
+                            }
+
+                            dispItem.ItemId = item;
+                            dispItem.RcmId = rcm != null && rcm.PodioItemId != 0 ? rcm.PodioItemId.ToString() : string.Empty;
+                            dispItem.ListRoundItem = listRoundItem;
+                            dispItem.Display = true;
+                            items.Add(dispItem);
+
+                        }
+
+                    }
+
+                }
+                else
+                {
+                    //NavigateTo($"questionnairegenerate/{rcm.PodioItemId}/0/0");
+                    //NewWorkpaper(); //5-10-2021
+                    LoadStatus("No existing item");
+                }
+
+
+                this.StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+
+            writeLog.Display(ex);
+            toastService.ShowError($"{ex}");
+            //throw;
+        }
+
+        this.StateHasChanged();
+    }
+
+    private void ReturnItemId(string value)
+    {
+        if (value != null && value != string.Empty)
+        {
+            //navigate to questionnaire
+            System.Diagnostics.Debug.WriteLine($"ReturnItemId: {value}");
+            //NavigationManager.NavigateTo($"questionnaire/{value}/0/0");
+            //NavigationManager.NavigateTo($"questionnairegenerate/{value}/0/0");
+            //NavigateTo($"questionnairegenerate/{rcm.PodioItemId}/0/{value}");
+            //NewWorkpaper();
+        }
+    }
+
+    private async void NewWorkpaper(string roundName, string uniqueId)
+    {
+        try
+        {
+            isLoading = true;
+            //5-10-2021
+            //Added code for draft workpaper
+            //workpaper/draft/{RoundName}/{UniqueId}
+            //Guid guid = Guid.NewGuid();
+            QuestionnaireTesterSet workpaperTester = new QuestionnaireTesterSet();
+
+            //0   Approved
+            //1   New
+            //3   For Review
+            //4   Reviewed With Comments
+            //5   Updated
+            WorkpaperStatus testerStatus = new WorkpaperStatus();
+            testerStatus.Index = 1;
+
+            //roundName = round;
+
+            //workpaperTester.UniqueId = guid.ToString();
+            workpaperTester.WorkpaperStatus = testerStatus;
+            workpaperTester.RoundName = roundName;
+            workpaperTester.AddedBy = email;
+            workpaperTester.DraftNum = 1;
+            workpaperTester.Rcm = rcm;
+            workpaperTester.RcmItemId = rcm.PodioItemId;
+            workpaperTester.UniqueId = uniqueId;
+            //create tester workpaper and navigate to draft page on success
+
+            //CreateQuestionnaireTesterAsync
+            var httpResponse = await QuestionnaireService.CreateQuestionnaireTesterAsync(workpaperTester, Http);
+            if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                string result = httpResponse.Content.ReadAsStringAsync().Result.ToString();
+                workpaperTester = JsonConvert.DeserializeObject<QuestionnaireTesterSet>(result);
+                NavigateTo($"workpaper/draft/{roundName}/{workpaperTester.RcmItemId}/{workpaperTester.UniqueId}");
+
+            }
+
+            isLoading = false;
+
+        }
+        catch (Exception)
+        {
+
+            throw;
+        }
+
+        this.StateHasChanged();
+
+    }
+
+    private void NavigateTo(string uri)
+    {
+        NavigationManager.NavigateTo($"{uri}");
+    }
+
+    private void LoadStatus(string status)
+    {
+        loadingStatus = status;
+        this.StateHasChanged();
+    }
+
+    void HandleClick(MouseEventArgs args)
+    {
+        Console.WriteLine("This is a left click");
+    }
+
+    void HandleRightClick(MouseEventArgs args)
+    {
+        if (args.Button == 2)
+        {
+            isRightClick = true;
+            Console.WriteLine("This is a right click");
+            this.StateHasChanged();
+        }
+
+    }
+
+    private class DisplayTable
+    {
+        public string ItemId { get; set; }
+        public bool Display { get; set; }
+        public string RcmId { get; set; }
+        public List<ListRound> ListRoundItem { get; set; }
+    }
+
+    private class ListRound
+    {
+        public string RoundName { get; set; }
+        public string AddedBy { get; set; }
+        public string LastUpdate { get; set; }
+        public string Status { get; set; }
+    }
+
+
+}

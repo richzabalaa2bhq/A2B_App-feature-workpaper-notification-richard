@@ -1,0 +1,603 @@
+﻿@page "/keyreport/tracker/{fy}/{clientName}"
+
+@using Microsoft.AspNetCore.Authorization
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using System.Text
+@using System.IO
+@using System.Web
+@using A2B_App.Shared.Sox
+@using A2B_App.Client.Component.Utilities
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@attribute [Authorize(Roles = "Admin, IT, Accounting")]
+@*@if (isLoading)
+    {
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <progress class="progress is-medium is-dark" max="100">45%</progress>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {*@
+
+
+<div class="tabs">
+
+    <ul>
+        <li class="@(tabOriginalFormat ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(1); })">
+                <span class="icon is-small"><i clas s="oi oi-pencil" aria-hidden="true"></i></span>
+                <span>Consol Original FormatIUC</span>
+            </a>
+        </li>
+        <li class="@(tabAllIUC ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(2); })">
+                <span class="icon is-small"><i class="oi oi-data-transfer-download" aria-hidden="true"></i></span>
+                <span>All IUC </span>
+            </a>
+        </li>
+        <li class="@(tabTestStatusTracker ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(3); })">
+                <span class="icon is-small"><i class="oi oi-data-transfer-download" aria-hidden="true"></i></span>
+                <span>Test Status Tracker</span>
+            </a>
+        </li>
+
+        <li class="@(tabListExceptions ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(4); })">
+                <span class="icon is-small"><i class="oi oi-data-transfer-download" aria-hidden="true"></i></span>
+                <span>List of Exceptions</span>
+            </a>
+        </li>
+    </ul>
+
+</div>
+
+
+
+
+@if (tabOriginalFormat)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="table-container px-5">
+                    <table class="table table-bordered is-bordered is-fullwidth is-scrollable mt-5">
+                        <thead>
+                            <tr>
+                                <th scope="col" colspan="11">@clientName</th>
+                                <th scope="col" style="background: #D9D9D9;">Source in ELC</th>
+                                <th scope="col" style="background: #D9D9D9;">Source in Other Processes</th>
+                                <th scope="col"></th>
+                            </tr>
+                            <tr>
+                                <th scope="col" colspan="9">Consolidated IUC List</th>
+                                <th scope="col" colspan="2" style="background: #D9D9D9;">Number of IUC (include duplicates) </th>
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                            </tr>
+                            <tr>
+                                <th scope="col" colspan="9">SOX FY @fy</th>
+                                <th scope="col" colspan="2" style="background: #D9D9D9;">Total IUC (include duplicates)</th>
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                            </tr>
+                            <tr>
+                                <th scope="col" colspan="14" rowspan="2"></th>
+                            </tr>
+                            <tr>
+                                <th scope="col" colspan="14"></th>
+                            </tr>
+                            <tr>
+                                <th scope="col style="background: #D9D9D9;">No.</th>
+                                <th scope="col" style="min-width: 146px; background: #D9D9D9;">Key Control</th>
+                                <th scope="col" style="min-width: 440px; background: #D9D9D9;">Control Activity</th>
+                                <th scope="col" style="min-width: 250px; background: #D9D9D9;">Key / Non-Key Control</th>
+                                <th scope="col" style="min-width: 250px; background: #D9D9D9;">Name of IUC</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Source Process</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Key Report</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">IUC Type</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">System/Source</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Report Customized</th>
+                                <th scope="col" style="min-width: 250px; background: #D9D9D9;">Controls Relying on IUC</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Preparer</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Reviewer</th>
+                                <th scope="col" style="min-width: 300px; background: #D9D9D9;">Notes </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if(listOrigFormat != null)
+                            {
+                                foreach (var item in listOrigFormat) 
+                                { 
+                                    <tr>
+                                        <th scope="row">@item.no</th>
+                                        <td>@item.keyControl</td>
+                                        <td>@item.controlActivity</td>
+                                        <td>@item.keyNonKeyControl</td>
+                                        <td>@item.nameIUC</td>
+                                        <td>@item.sourceProcess</td>
+                                        <td>@item.keyReport</td>
+                                        <td>@item.iucType</td>
+                                        <td>@item.systemSource</td>
+                                        <td>@item.reportCustomized</td>
+                                        <td>@item.controlRelyingIUC</td>
+                                        <td>@item.preparer</td>
+                                        <td>@item.reviewer</td>
+                                        <td>@item.notes</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+}
+@if (tabAllIUC)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="table-container px-5">
+                    <table class="table table-bordered is-bordered is-fullwidth is-scrollable">
+                        <thead>
+                            <tr>
+                                <th scope="col" colspan="11">@clientName</th>
+                                <th scope="col" colspan="2">Number of IUC (include duplicates)</th>
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                            </tr>
+                            <tr>
+                                <th scope="col" colspan="9">Consolidated IUC List</th>
+                                <th scope="col" colspan="2"># of Key Reports (include dups)</th>
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                            </tr>
+                            <tr>
+                                <th scope="col" colspan="9">SOX FY @fy</th>
+                                <th scope="col" colspan="2"># of UNIQUE Key Reports</th>
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                                <th scope="col"></th>
+                            </tr>
+                            <tr>
+                                <th scope="col" colspan="14" rowspan="2"></th>
+                            </tr>
+                           
+                            <tr>
+                                <th scope="col" colspan="16"></th>
+                                <th scope="col" colspan="10" style="text-align: center; background: #FDE64B;">Business Owners</th>
+                                <th scope="col" colspan="5" style="text-align: center; background: #B7E2F3;">Information Technology</th>
+                                <th scope="col" colspan="4"></th>
+                            </tr>
+                            <tr>
+                                <th scope="col" style="background: #D9D9D9;">No.</th>
+                                <th scope="col" style="min-width: 146px; background: #D9D9D9;">Key Control</th>
+                                <th scope="col" style="min-width: 440px; background: #D9D9D9;">Control Activity</th>
+                                <th scope="col" style="min-width: 250px; background: #D9D9D9;">Key / Non-Key Control</th>
+                                <th scope="col" style="min-width: 250px; background: #D9D9D9;">Name of IUC</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Source Process</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Key Report</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Unique Key Report</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">IUC Type</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">System/Source</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Report Customized</th>
+                                <th scope="col" style="min-width: 250px; background: #D9D9D9;">Controls Relying on IUC</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Preparer</th>
+                                <th scope="col" style="min-width: 200px; background: #D9D9D9;">Reviewer</th>
+                                <th scope="col" style="min-width: 300px; background: #D9D9D9;">Added to Key Report Tracker</th>
+                                <th scope="col" style="min-width: 300px; background: #D9D9D9;">Report Notes</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">Description of Key Report (key data fields used, purpose of report)</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">Key Report Type (Canned, Customizable, Query, Excel, Custom Query, Saved Searches)</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">How is the report generated?</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">How is the report used to support the control(s)?</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">What steps are performed to validate the accuracy of the report?</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">What steps are performed to validate the completeness of the report?</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">What steps are performed to validate the source data used by the report?</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">Are parameters (e.g. date ranges) input each time this report is run?</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">Who is authorized to make/request  changes to this report?</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">Effective date</th>
+                                <th scope="col" style="min-width: 300px; background: #B7E2F3;">Who has access to edit/modify this report?</th>
+                                <th scope="col" style="min-width: 300px; background: #B7E2F3;">Who has access to run the report? Restricted report access?</th>
+                                <th scope="col" style="min-width: 300px; background: #B7E2F3;">When was this report last modified?</th>
+                                <th scope="col" style="min-width: 300px; background: #B7E2F3;">How was it tested when last modified?</th>
+                                <th scope="col" style="min-width: 300px; background: #B7E2F3;">IT Report Owner</th>
+                                <th scope="col" style="min-width: 300px; background: #BDFFA4">Questions</th>
+                                <th scope="col" style="min-width: 300px; background: #FDE64B;">Fastly Notes and Questions</th>
+                                <th scope="col" style="min-width: 300px; background: #BDFFA4;">Meeting date</th>
+                                <th scope="col" style="min-width: 300px; background: #B7E2F3;">Process</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (listAllIuc != null)
+                            {
+                                foreach (var item in listAllIuc)
+                                {
+                            <tr>
+                                <th scope="row">@item.no</th>
+                                <td>@item.keyControl</td>
+                                <td>@item.controlActivity</td>
+                                <td>@item.keyNonKeyControl</td>
+                                <td>@item.nameIUC</td>
+                                <td>@item.sourceProcess</td>
+                                <td>@item.keyReport</td>
+                                <td>@item.uniqueKeyReport</td>
+                                <td>@item.iucType</td>
+                                <td>@item.systemSource</td>
+                                <td>@item.reportCustomized</td>
+                                <td>@item.controlRelyingIUC</td>
+                                <td>@item.preparer</td>
+                                <td>@item.reviewer</td>
+                                <td>@item.addedToKeyReportTracker</td>
+                                <td>@item.reportNotes</td>
+                                <td>@item.descriptionKeyReport</td>
+                                <td>@item.keyReportType</td>
+                                <td>@item.howReportGenerated</td>
+                                <td>@item.howReportUsed</td>
+                                <td>@item.stepsPerformedAccuracy</td>
+                                <td>@item.stepsPerformedCompleteness</td>
+                                <td>@item.stepsPerformedValidateSource</td>
+                                <td>@item.areParameters</td>
+                                <td>@item.whoIsAuthorized</td>
+                                <td>@item.effectiveDate</td>
+                                <td>@item.whoHasAccessToEdit</td>
+                                <td>@item.whoHasAccessToRun</td>
+                                <td>@item.reportLastModified</td>
+                                <td>@item.howWasItTestedWhenLastModified</td>
+                                <td>@item.itReportOwner</td>
+                                <td>@item.questions</td>
+                                <td>@item.fastlyNotesAndQuestions</td>
+                                <td>@item.meetingDate</td>
+                                <td>@item.process</td>
+                            </tr>
+                                }
+                            }
+
+
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+}
+@if (tabTestStatusTracker)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="table-container px-5">
+                    <table class="table table-bordered is-bordered is-fullwidth is-scrollable">
+                        <thead>
+                            <tr>
+                                <th scope="col" colspan="25">@clientName</th>
+                            </tr>
+                            <tr>
+                                <th scope="col" colspan="25">Consolidated IUC List</th>
+                            </tr>
+                            <tr>
+                                <th scope="col" colspan="25">SOX FY @fy</th>
+                            </tr>
+                            <tr>
+                                <th scope="col" rowspan="2" colspan="25"></th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                            </tr>
+
+                            <tr>
+                                <th scope="col">No.</th>
+                                <th scope="col" style="min-width: 146px; background-color: #C00000; color: #fff;">Name of IUC</th>
+                                <th scope="col" style="min-width: 250px; background-color: #C00000; color: #fff;">Process</th>
+                                <th scope="col" style="min-width: 250px; background-color: #C00000; color: #fff;">Key Control</th>
+                                <th scope="col" style="min-width: 440px; background-color: #C00000; color: #fff;">Control Activity</th>
+                                <th scope="col" style="min-width: 200px; background-color: #C00000; color: #fff;">Key/Non-Key Control</th>
+                                <th scope="col" style="min-width: 200px; background-color: #C00000; color: #fff;">Key Report</th>
+                                <th scope="col" style="min-width: 200px; background-color: #C00000; color: #fff;">Unique Key Report</th>
+                                <th scope="col" style="min-width: 200px; background-color: #C00000; color: #fff;">Preparer</th>
+                                <th scope="col" style="min-width: 200px; background-color: #C00000; color: #fff;">Process Owner</th>
+                                <th scope="col" style="min-width: 250px; background-color: #C00000; color: #fff;">Key Report Owner</th>
+                                <th scope="col" style="min-width: 200px; background-color: #C00000; color: #fff;">Key Report IT Owner</th>
+                                <th scope="col" style="min-width: 200px; background-color: #B7E2F3;">Set up report Lead Sheet for testing</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">Schedule Process Owner meeting</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">Report Received</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">PBC Status</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">Tester</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">1st Reviewer</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">2nd Reviewer</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">Testing Status</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">A2Q2 Due Date (Testing)</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">Sent to ABC Company</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">ABC Company Review Status</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">Sent to Deloitte</th>
+                                <th scope="col" style="min-width: 300px; background-color: #B7E2F3;">A2Q2 Notes</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if(listTestStatus != null)
+                            {
+                                foreach (var item in listTestStatus)
+                                {
+                                    <tr>
+                                        <th scope="row">@item.no</th>
+                                        <td>@item.nameIuc</td>
+                                        <td>@item.process</td>
+                                        <td>@item.keyControl</td>
+                                        <td>@item.controlActvity</td>
+                                        <td>@item.keyNonKeyControl</td>
+                                        <td>@item.keyReport</td>
+                                        <td>@item.uniqueKeyReport</td>
+                                        <td>@item.preparer</td>
+                                        <td>@item.processOwner</td>
+                                        <td>@item.keyReportOwner</td>
+                                        <td>@item.keyReportITOwner</td>
+                                        <td>@item.setupLeadsheetForTesting</td>
+                                        <td>@item.scheduleProcessOwnerMeeting</td>
+                                        <td>@item.reportReceived</td>
+                                        <td>@item.pbcStatus</td>
+                                        <td>@item.tester</td>
+                                        <td>@item.firstReviewer</td>
+                                        <td>@item.secondReviewer</td>
+                                        <td>@item.testingStatus</td>
+                                        <td>@item.a2q2DueDateTesting</td>
+                                        <td>@item.sentToClient</td>
+                                        <td>@item.clientReviewStatus</td>
+                                        <td>@item.sentToDeloitte</td>
+                                        <td>@item.a2q2Notes</td>
+                                    </tr>
+                                }
+                            }
+
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+}
+@if (tabListExceptions)
+{
+
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="table-container px-5">
+                    <table class="table table-bordered is-bordered is-fullwidth is-scrollable">
+                        <thead>
+                            
+                            <tr>
+                                <th scope="col">No.</th>
+                                <th scope="col" style="min-width: 146px; background-color: #C00000; color: #fff;">Name of IUC</th>
+                                <th scope="col" style="min-width: 250px; background-color: #C00000; color: #fff;">Key Control</th>
+                                <th scope="col" style="min-width: 440px; background-color: #C00000; color: #fff;">Control Activity</th>
+                                <th scope="col" style="min-width: 250px; background-color: #C00000; color: #fff;">Exception Noted</th>
+                                <th scope="col" style="min-width: 200px; background-color: #C00000; color: #fff;">Reason for Exception</th>
+                                <th scope="col" style="min-width: 200px; background-color: #C00000; color: #fff;">Remediation</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if(listExceptions != null)
+                            {
+                                foreach(var item in listExceptions)
+                                {
+                                    <tr>
+                                        <th scope="row">@item.no</th>
+                                        <td>@item.nameIuc</td>
+                                        <td>@item.keyControl</td>
+                                        <td>@item.controlActvity</td>
+                                        <td>@item.exceptionNoted</td>
+                                        <td>@item.reasonForException</td>
+                                        <td>@item.remediation</td>
+
+                                    </tr>
+                                }
+                            }
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string fy { get; set; }
+    [Parameter] public string clientName { get; set; }
+    private KeyReportService KeyReportService;
+    private KeyReportFilter reportFilter;
+    private ClientSettings settings;
+    public List<ViewAccessOrigFormat> listOrigFormat = new List<ViewAccessOrigFormat>();
+    public List<ViewAccessAllIuc> listAllIuc = new List<ViewAccessAllIuc>();
+    public List<ViewAccessTestStatus> listTestStatus = new List<ViewAccessTestStatus>();
+    public List<ViewAccessListOfExceptions> listExceptions = new List<ViewAccessListOfExceptions>();
+    public bool isLoading = true;
+    public bool tabOriginalFormat { get; set; } = false;
+    public bool tabAllIUC { get; set; } = false;
+    public bool tabTestStatusTracker { get; set; } = false;
+    public bool tabListExceptions { get; set; } = false;
+    KeyReportScreenshot keyrepScreenshot { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Http.Timeout = TimeSpan.FromMinutes(30);
+        settings = await _getSettings;
+        KeyReportService = new KeyReportService(settings);
+        reportFilter = new KeyReportFilter();
+        keyrepScreenshot = new KeyReportScreenshot();
+
+        tabOriginalFormat = true;
+        tabAllIUC = false;
+        tabTestStatusTracker = false;
+        tabListExceptions = false;
+        GenerateOriginalFormat();
+    }
+    private void TabControl(int activeControl)
+    {
+        switch (activeControl)
+        {
+            case 1:
+                tabOriginalFormat = true;
+                tabAllIUC = false;
+                tabTestStatusTracker = false;
+                tabListExceptions = false;
+                GenerateOriginalFormat();
+                break;
+            case 2:
+                tabOriginalFormat = false;
+                tabAllIUC = true;
+                tabTestStatusTracker = false;
+                tabListExceptions = false;
+                GenerateAllIuc();
+                break;
+            case 3:
+                tabOriginalFormat = false;
+                tabAllIUC = false;
+                tabTestStatusTracker = true;
+                tabListExceptions = false;
+                GenerateTestStatus();
+                break;
+            case 4:
+                tabOriginalFormat = false;
+                tabAllIUC = false;
+                tabTestStatusTracker = false;
+                tabListExceptions = true;
+                GenerateListExceptions();
+                break;
+            default:
+                break;
+        }
+        this.StateHasChanged();
+    }
+
+    private async void GenerateOriginalFormat()
+    {
+        KeyReportFileProperties reportFile = new KeyReportFileProperties();
+        reportFilter.FY = fy;
+        reportFilter.ClientName = clientName;
+        reportFile.FileName = string.Empty;
+        reportFile.LoadingStatus = "is-loading";
+        this.StateHasChanged();
+
+        //generate the file
+        var response = await KeyReportService.GenerateTrackerOriginalFormat(reportFilter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            listOrigFormat = result != string.Empty ? JsonConvert.DeserializeObject<List<ViewAccessOrigFormat>>(result) : null;
+            Console.WriteLine(listOrigFormat);
+            toastService.ShowSuccess($"Successfully Generated Original Format Data"); //031221
+        }
+        else
+        {
+            toastService.ShowError($"Failed to Generate Original Format Data");
+        }
+
+        this.StateHasChanged();
+    }
+    private async void GenerateAllIuc()
+    {
+        KeyReportFileProperties reportFile = new KeyReportFileProperties();
+        reportFilter.FY = fy;
+        reportFilter.ClientName = clientName;
+        reportFile.FileName = string.Empty;
+        reportFile.LoadingStatus = "is-loading";
+        this.StateHasChanged();
+
+        //generate the file
+        var response = await KeyReportService.GenerateTrackerAllIuc(reportFilter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            listAllIuc = result != string.Empty ? JsonConvert.DeserializeObject<List<ViewAccessAllIuc>>(result) : null;
+            Console.WriteLine(listAllIuc);
+            toastService.ShowSuccess($"Successfully generated All IUC Data"); //031221
+        }
+        else
+        {
+            toastService.ShowError($"Failed to Generate All IUC Data");
+        }
+
+        this.StateHasChanged();
+    }
+    private async void GenerateTestStatus()
+    {
+        KeyReportFileProperties reportFile = new KeyReportFileProperties();
+        reportFilter.FY = fy;
+        reportFilter.ClientName = clientName;
+        reportFile.FileName = string.Empty;
+        reportFile.LoadingStatus = "is-loading";
+        this.StateHasChanged();
+
+        //generate the file
+        var response = await KeyReportService.GenerateTestStatusTracker(reportFilter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            listTestStatus = result != string.Empty ? JsonConvert.DeserializeObject<List<ViewAccessTestStatus>>(result) : null;
+            Console.WriteLine(listAllIuc);
+            toastService.ShowSuccess($"Successfully generated Test Status Tracker Data"); //031221
+        }
+        else
+        {
+            toastService.ShowError($"Failed to Generate Test Status Tracker Data");
+        }
+
+        this.StateHasChanged();
+    }
+
+    private async void GenerateListExceptions()
+    {
+        KeyReportFileProperties reportFile = new KeyReportFileProperties();
+        reportFilter.FY = fy;
+        reportFilter.ClientName = clientName;
+        reportFile.FileName = string.Empty;
+        reportFile.LoadingStatus = "is-loading";
+        this.StateHasChanged();
+
+        //generate the file
+        var response = await KeyReportService.GenerateListExceptions(reportFilter, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            listExceptions = result != string.Empty ? JsonConvert.DeserializeObject<List<ViewAccessListOfExceptions>>(result) : null;
+            Console.WriteLine(listAllIuc);
+            toastService.ShowSuccess($"Successfully generated list of exceptions data"); //031221
+        }
+        else
+        {
+            toastService.ShowError($"Failed to Generate list of exceptions data");
+        }
+
+        this.StateHasChanged();
+    }
+
+
+}

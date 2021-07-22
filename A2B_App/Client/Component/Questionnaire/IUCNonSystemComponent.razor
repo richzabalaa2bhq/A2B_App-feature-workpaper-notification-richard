@@ -1,0 +1,125 @@
+﻿@using A2B_App.Shared.Sox
+
+@if (listIUCNonSystemGen != null && listIUCNonSystemGen.Count > 0)
+{
+
+    @foreach (var item in listIUCNonSystemGen.OrderBy(x => x.Position))
+    {
+
+        @*<hr class="mt-5 mb-5">*@
+        <h1 class="title">IUC Non System Generated @($"{item.Position + 1}")</h1>
+        System.Diagnostics.Debug.WriteLine($"List Index: {item.Position}");
+        foreach (var inner in item.ListQuestionAnswer.OrderBy(x => x.Position))
+        {
+            if (!inner.Question.ToLower().Equals("position"))
+            {
+                <div class="row">
+                    <div class="col-10">
+                        <div class="form-group">
+                            <label for="@($"{item.Position}{inner.FieldId}")">@(inner.Question)</label>
+                            <div class="field">
+                                <div class="control is-expanded">
+                                    @if (inner.Options == "large")
+                                    {
+                                        @*<textarea rows="4" class="textarea" id="@($"{item.Position}{inner.FieldId}")"
+                                          @onchange="@((e)=> {
+                                            //inner.Answer = e.Value.ToString();
+                                            System.Diagnostics.Debug.WriteLine($"ChangeEvent index: {listIUCNonSystemGen[item.Position].Position}");
+                                            OnChangeEventHander(e, inner.FieldId.Value, inner.Position, listIUCNonSystemGen[item.Position].Position);
+                                        })"></textarea>*@
+
+                                        <textarea rows="4" class="textarea" id="@($"{item.Position}{inner.FieldId}")"
+                                                  @bind="listIUCNonSystemGen[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer"></textarea>
+                                    }
+                                    else
+                                    {
+
+                                        <input type="text" class="input" id="@($"{item.Position}{inner.FieldId}")"
+                                               @bind-value="listIUCNonSystemGen[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer">
+
+                                    }
+                                </div>
+                            </div>
+                            
+
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        index++;
+
+    }
+
+}
+
+@code {
+    //[Parameter] public IUCNonSystemGen objIUCNonSystemGen { get; set; }
+    [Parameter] public List<IUCNonSystemGenAnswer> listIUCNonSystemGen { get; set; }
+    [Parameter] public string roundName { get; set; }
+    //[Parameter] public int row { get; set; }
+    //[Parameter] public int index { get; set; }
+    [Parameter] public EventCallback<FinalIUCNonSystemGen> ReturnIUCNonSystem { get; set; }
+    private int index { get; set; }
+
+
+    protected override Task OnParametersSetAsync()
+    {
+        index = 0;
+        this.StateHasChanged();
+        return base.OnParametersSetAsync();
+    }
+
+    private void ReturnValue()
+    {
+        //pass the unique notes to QuestionnaireComponent.razor
+        //IUCNonSystemGenIndexOf nonSystemGenIndexOf = new IUCNonSystemGenIndexOf();
+        //nonSystemGenIndexOf.IUCNonSystemGen = objIUCNonSystemGen;
+        //nonSystemGenIndexOf.IndexOf = index;
+        //ReturnIUCNonSystem.InvokeAsync(listIUCSystemGenIndexOf);
+    }
+
+    private void OnChangeEventHander(ChangeEventArgs e, int fieldId, int position, int index)
+    {
+
+        System.Diagnostics.Debug.WriteLine($"value: {e.Value}");
+        System.Diagnostics.Debug.WriteLine($"fieldId: {fieldId}");
+        System.Diagnostics.Debug.WriteLine($"position: {position}");
+        System.Diagnostics.Debug.WriteLine($"index: {index}");
+
+        //var tempList = listIUCNonSystemGen.FirstOrDefault(x => x.Index.Equals(index));
+        //if (tempList != null)
+        //{
+        //    var innerList = tempList.ListQuestionAnswer.Where(x => x.FieldId.Value.Equals(fieldId) && x.Position.Equals(position)).FirstOrDefault();
+        //    if (innerList != null)
+        //    {
+        //        innerList.Answer = e.Value.ToString();
+        //    }
+        //}
+
+        //listIUCNonSystemGenIndexOf = listIUCNonSystemGenIndexOf.Where(x => x.IndexOf.Equals(index)).Where(x => x.IUCNonSystemGen.ListQuestionAnswer.Where(y => y.FieldId.Equals(fieldId)))
+        //listIUCNonSystemGenIndexOf[index].IUCNonSystemGen.ListQuestionAnswer.Where(x => x.FieldId.Equals(fieldId)).Select(s => { s.Answer = e.Value.ToString(); return s; }).ToList();
+
+        string unique = $"{fieldId}{index}";
+        listIUCNonSystemGen[index].ListQuestionAnswer.Where(x => x.UniqueId.Equals(unique)).ToList().ForEach(x => x.Answer = e.Value.ToString());
+        //listIUCNonSystemGen[index].ListQuestionAnswer.Where(x => x.UniqueId.Equals(int.Parse(unique))).ToList().ForEach(x => x.Answer = e.Value.ToString());
+
+
+        //var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(listIUCNonSystemGen);
+        //System.Diagnostics.Debug.WriteLine(jsonData);
+
+
+        //userInput.Where(x => x.StrQuestion.ToLower().Contains("time duration")).ToList().ForEach(x => x.StrAnswer = value);
+
+        //pass update to QuestionnaireComponent.razor
+        FinalIUCNonSystemGen finalList = new FinalIUCNonSystemGen();
+        finalList.Item = listIUCNonSystemGen;
+        finalList.roundName = roundName;
+        ReturnIUCNonSystem.InvokeAsync(finalList);
+
+        this.StateHasChanged();
+    }
+
+
+}

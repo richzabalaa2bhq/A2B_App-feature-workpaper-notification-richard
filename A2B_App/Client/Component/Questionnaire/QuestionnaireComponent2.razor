@@ -1,0 +1,3897 @@
+﻿
+@using BlazorDateRangePicker
+@using A2B_App.Client.Services;
+@using A2B_App.Shared.Sox
+@using Newtonsoft.Json
+@using A2B_App.Client.Component.SampleSelection
+@using System.Text
+@using System;
+@using System.Text.RegularExpressions;
+@using A2B_App.Client.Component.Utilities
+@inject NavigationManager NavigationManager
+@inject IToastService toastService
+@inject IJSRuntime JSRuntime
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+
+
+
+
+@if (listQuestion != null && listQuestion.Count > 0 && roundSet != null)
+{
+
+    <table class="table is-fullwidth">
+        <thead>
+            <tr>
+                <th style="width: 33%;">Round 1</th>
+                <th style="width: 33%;">Round 2</th>
+                <th style="width: 33%;">Round 3</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @*Checkbox to use round*@
+            <tr>
+                <td style="border:0">
+                    <label class="checkbox">
+                        <input type="checkbox" @bind="isRound1">
+                        Generate data for Round 1
+                    </label>
+                </td>
+                <td style="border:0">
+                    <label class="checkbox">
+                        <input type="checkbox" @bind="isRound2">
+                        Generate data for Round 2
+                    </label>
+                </td>
+                <td style="border:0">
+                    <label class="checkbox">
+                        <input type="checkbox" @bind="isRound3">
+                        Generate data for Round 3
+                    </label>
+                </td>
+            </tr>
+
+            <tr>
+                <td style="border:0">
+                    <QuestionnaireFirstSet roundName="Round 1"
+                                           listUserInput="@listAnswer1stSetR1"
+                                           listQuestion="@listQuestion1stSet"
+                                           sampleSelection="@sampleSel1"
+                                           sampleSelection1="@sampleSel2"
+                                           sampleSelection2="@sampleSel3"
+                                           percentRound1="@percentRound1"
+                                           percentRound2="@percentRound2"
+                                           listRoundQA="@listQA"
+                                           SeventeenList="@SeventeenList"
+                                           rcm="@rcm"
+                                           ReturnSampleSelectionByRound="ReturnSampleSelection">
+
+                    </QuestionnaireFirstSet>
+                </td>
+                <td style="border:0">
+                    <QuestionnaireFirstSet roundName="Round 2"
+                                           listUserInput="@listAnswer1stSetR2"
+                                           listQuestion="@listQuestion1stSet"
+                                           sampleSelection="@sampleSel1"
+                                           sampleSelection1="@sampleSel2"
+                                           sampleSelection2="@sampleSel3"
+                                           percentRound1="@percentRound1"
+                                           percentRound2="@percentRound2"
+                                           listRoundQA="@listQA"
+                                           SeventeenList="@SeventeenList"
+                                           rcm="@rcm"
+                                           ReturnSampleSelectionByRound="ReturnSampleSelection">
+
+                    </QuestionnaireFirstSet>
+                </td>
+                <td style="border:0">
+                    <QuestionnaireFirstSet roundName="Round 3"
+                                           listUserInput="@listAnswer1stSetR3"
+                                           listQuestion="@listQuestion1stSet"
+                                           sampleSelection="@sampleSel1"
+                                           sampleSelection1="@sampleSel2"
+                                           sampleSelection2="@sampleSel3"
+                                           percentRound1="@percentRound1"
+                                           percentRound2="@percentRound2"
+                                           listRoundQA="@listQA"
+                                           SeventeenList="@SeventeenList"
+                                           rcm="@rcm"
+                                           ReturnSampleSelectionByRound="ReturnSampleSelection">
+
+                    </QuestionnaireFirstSet>
+                </td>
+            </tr>
+
+
+            <tr>
+                <td colspan="3" style="border:0">
+                    <TestRoundComponent2 listRoundQA="@listQA"
+                                         listUniqueNotes="@listUniqueNotes"
+                                         generalNote="@generalNote"
+                                         listIPENote="@listIPENote"
+                                         listHeaderNote="@listHeaderNote"
+                                         listRoundItem1="@listRound1"
+                                         listRoundItem2="@listRound2"
+                                         listRoundItem3="@listRound3"
+                                         ReturnAddRound="ReturnAddRound"
+                                         controlId="@rcm.ControlId"
+                                         listUserInput="@listAnswer1stSetR1"
+                                         listQuestion="@listQuestion1stSet"
+                                         @bind-Answer1="@Answer1"
+                                         @bind-Answer2="@Answer2"
+                                         @bind-Answer3="@Answer3"
+                                         @bind-Answer4="@Answer4"
+                                         @bind-Answer5="@Answer5"
+                                         @bind-Answer6="@Answer6"
+                                         @bind-Answer7="@Answer7"
+                                         @bind-Answer8="@Answer8"
+                                         @bind-Answer9="@Answer9"
+                                         @bind-Answer10="@Answer10"
+                                         @bind-Answer11="@Answer11"
+                                         @bind-Answer12="@Answer12"
+                                         @bind-Answer13="@Answer13"
+                                         @bind-Answer14="@Answer14"
+                                         @bind-Answer15="@Answer15"
+                                         SeventeenList="@SeventeenList"
+                                         ReturnNotesItem="@((e) => { ReturnNotesItem(e); })">
+                    </TestRoundComponent2>
+                </td>
+
+            </tr>
+
+            <tr>
+                <td style="border:0">
+                    <QuestionnaireSecondSet roundName="Round 1"
+                                            listUserInput="@listAnswer2ndSetR1"
+                                            listQuestion="@listQuestion2ndSet"
+                                            ReturnCountIUCSystemGen="@((e) => { SetIUCSystemGen(e); })"
+                                            ReturnCountIUCNonSystemGen="@((e) => { SetIUCNonSystemGen(e); })"></QuestionnaireSecondSet>
+                </td>
+                <td style="border:0">
+                    <QuestionnaireSecondSet roundName="Round 2"
+                                            listUserInput="@listAnswer2ndSetR2"
+                                            listQuestion="@listQuestion2ndSet"
+                                            ReturnCountIUCSystemGen="@((e) => { SetIUCSystemGen(e); })"
+                                            ReturnCountIUCNonSystemGen="@((e) => { SetIUCNonSystemGen(e); })"></QuestionnaireSecondSet>
+                </td>
+                <td style="border:0">
+                    <QuestionnaireSecondSet roundName="Round 3"
+                                            listUserInput="@listAnswer2ndSetR3"
+                                            listQuestion="@listQuestion2ndSet"
+                                            ReturnCountIUCSystemGen="@((e) => { SetIUCSystemGen(e); })"
+                                            ReturnCountIUCNonSystemGen="@((e) => { SetIUCNonSystemGen(e); })"></QuestionnaireSecondSet>
+                </td>
+
+            </tr>
+
+            <tr>
+                <td style="border:0">
+                    <IUCSystemComponent listIUCSystemGen="@listIUCSystemGen1"
+                                        ReturnIUCSystem="@((e) => { ReturnIUCSystemGen(e); })"
+                                        roundName="Round 1">
+                    </IUCSystemComponent>
+
+                    <IUCNonSystemComponent listIUCNonSystemGen="@listIUCNonSystemGen1"
+                                           roundName="Round 1">
+                    </IUCNonSystemComponent>
+                </td>
+                <td style="border:0">
+                    <IUCSystemComponent listIUCSystemGen="@listIUCSystemGen2"
+                                        roundName="Round 2">
+                    </IUCSystemComponent>
+
+                    <IUCNonSystemComponent listIUCNonSystemGen="@listIUCNonSystemGen2"
+                                           roundName="Round 2">
+                    </IUCNonSystemComponent>
+                </td>
+                <td style="border:0">
+                    <IUCSystemComponent listIUCSystemGen="@listIUCSystemGen3"
+                                        roundName="Round 3">
+                    </IUCSystemComponent>
+
+                    <IUCNonSystemComponent listIUCNonSystemGen="@listIUCNonSystemGen3"
+                                           roundName="Round 3">
+                    </IUCNonSystemComponent>
+                </td>
+            </tr>
+
+        </tbody>
+
+        <tfoot>
+
+        </tfoot>
+    </table>
+
+
+
+    @*//Timer component
+        <QuestionnaireElapsedTimeComponent startTimer="@startTimer"
+                                           ReturnTimeValue="ReturnTimeValue">
+
+        </QuestionnaireElapsedTimeComponent>*@
+
+    <ElapsedTime startTimer="@startTimer"
+                 ReturnTimeValue="ReturnTimeValue">
+
+    </ElapsedTime>
+
+    //Save button
+    <br />
+    <div class="row">
+        <div class="col-10">
+            <div class="form-group">
+                <button class="button is-success @(isSavingState ? "is-loading" : string.Empty)" @onclick="StopTimer" disabled="@(isSavingState ? true : false)">Save Workpaper</button>
+                @*<FileDownload @ref="fileDownload"></FileDownload>*@
+                @*<button class="btn btn-primary has-text-white @(fileName != "" ? "" : "hidden-field")" @onclick="DownloadFile">Download File</button>*@
+                <a class="button is-info @(fileName != "" ? "" : "hidden-field")" target="_top" download="@fileName" href="@DownloadFile2(fileName)">Download File</a>
+                <button class="btn btn-primary" @onclick="Show">View Workpaper</button>
+            </div>
+        </div>
+    </div>
+
+
+    @if (display)
+    {
+        <div class="modal is-active">
+            <div class="modal-background"></div>
+            <div class="modal-card" style="width:1500px">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Work paper</p>
+                    <button class="delete" aria-label="close" @onclick="Close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <div class="simple-form">
+
+                        <table cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td height="17" align="left" valign=bottom><b><font face="Arial">@roundSet.Rcm.ClientName </font></b></td>
+                            </tr>
+                            <tr>
+                                <td height="17" align="left" valign=bottom bgcolor="#FFFFFF"><b><font face="Arial">Testing Workpapers</font></b></td>
+                            </tr>
+                            <tr>
+                                <td height="17" align="left" valign=bottom><b><font face="Arial">@roundSet.Rcm.Process</font></b></td>
+                            </tr>
+                            <tr>
+                                <td height="17" align="left" valign=bottom><b><font face="Arial">@roundSet.Rcm.FY</font></b></td>
+                            </tr>
+                            <tr>
+                                <td style="border-top: 2px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Process:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=bottom bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@roundSet.Rcm.Process</font></b></td>
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="20" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Control Owner:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=bottom bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@ControlOwner</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Control Id:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=bottom bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@regHtml.Replace(roundSet.Rcm.ControlId, "")</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="80" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Control Description</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@regHtml.Replace(roundSet.Rcm.ControlActivityFy19, "")</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="80" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Control Short Description:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@if (roundSet.Rcm.ShortDescription == null) { } else { regHtml.Replace(roundSet.Rcm.ShortDescription, ""); }</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="80" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Test Validation Approach:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@regHtml.Replace(roundSet.Rcm.TestProc, "")</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Test Method Used:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@TestProcedures</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Control Frequency:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@ControlHappen</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Control In Place Date:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@PlaceDate</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Risk Assessment:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@RiskLevel</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Sample Period:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@SelectingSamples</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Population Size:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@PopulationSize</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="41" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Sample Derivation:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">@RoundOne14</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Electronic Audit Evidence</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 align="left" valign=top bgcolor="#FFFFFF"><b><font face="Arial" color="#000000">{Question string that contains &quot;(ipe)&quot;} - {Hide if empty}</font></b></td>
+
+                            </tr>
+                            <tr>
+
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="center" valign=middle><b><font face="Arial"></font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="center" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Round 1</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="center" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Round 2</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="center" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Round 3</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="45" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Sample Size:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@RoundOne14</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@RoundTwo14</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@RoundThree14</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="427" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Source File (document name, hardcopy/softcopy &amp; provided by):</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="center" valign=middle><b><font face="Arial">@SourceFile1</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="center" valign=middle><b><font face="Arial">@SourceFile2</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="center" valign=middle><b><font face="Arial">@SourceFile3</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="28" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Test Performed By:</font></b></td>
+                                <td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@performedByR1</font></b></td>
+                                <td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@performedByR2</font></b></td>
+                                <td style="border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@performedByR3</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="102" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Date Testing Performed:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@DateTestPerformedR1</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@DateTestPerformedR2</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@DateTestPerformedR3</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="107" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Test of Design (TOD):</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@TOD1</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@TOD2</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@TOD3</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="65" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Test of Operating Effectiveness (TOE):</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@TOE1</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@TOE2</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@TOE3</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Reviewer:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@reviewer1</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@reviewer2</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@reviewer3</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="47" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Review Date:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@DateTestPerformedR1</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@DateTestPerformedR2</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@DateTestPerformedR3</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Test Findings Assessment:</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@TestingStatus1</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@TestingStatus2</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 align="left" valign=top><b><font face="Arial">@TestingStatus3</font></b></td>
+
+                            </tr>
+
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" height="153" align="center" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Sample #</font></b></td>
+                                @foreach (var item in listQA)
+                                {
+
+                                    <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">@item.Question.Replace("(RT)", "")</font></b></td>
+
+                                }
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=@listQA.Count+1 height="17" align="left" valign=bottom bgcolor="#F2F2F2"><b><font face="Arial">Round 1</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" height="40" align="center" valign=middle><font face="Arial">1</font></td>
+
+
+
+                                @foreach (var item in listQA)
+                                {
+                                    @if (item.Position.Equals("1"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer1</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("2"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("3"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("4"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer4</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("5"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer5</font></b></td>
+                                    }
+
+                                    @if (item.Position.Equals("6"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer6</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("7"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer7</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("8"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer8</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("9"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer9</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("10"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer10</font></b></td>
+                                    }
+
+                                    @if (item.Position.Equals("11"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer11</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("12"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer12</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("13"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer13</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("14"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer14</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("15"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer15</font></b></td>
+                                    }
+
+
+                                }
+
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=@listQA.Count+1 height="17" align="left" valign=bottom bgcolor="#F2F2F2"><b><font face="Arial">Round 2</font></b></td>
+
+                            </tr>
+
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" height="40" align="center" valign=middle><font face="Arial">1</font></td>
+                                @foreach (var item in listQA)
+                                {
+                                    @if (item.Position.Equals("1"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer1R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("2"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer2R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("3"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer3R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("4"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer4R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("5"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer5R2</font></b></td>
+                                    }
+
+                                    @if (item.Position.Equals("6"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer6R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("7"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer7R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("8"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer8R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("9"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer9R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("10"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer10R2</font></b></td>
+                                    }
+
+                                    @if (item.Position.Equals("11"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer11R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("12"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer12R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("13"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer13R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("14"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer14R2</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("15"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer15R2</font></b></td>
+                                    }
+                                }
+
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=@listQA.Count+1 height="17" align="left" valign=bottom bgcolor="#F2F2F2"><b><font face="Arial">Round 3</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" height="40" align="center" valign=middle><font face="Arial">1</font></td>
+                                @foreach (var item in listQA)
+                                {
+                                    @if (item.Position.Equals("1"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer1R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("2"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer2R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("3"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer3R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("4"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer4R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("5"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer5R3</font></b></td>
+                                    }
+
+                                    @if (item.Position.Equals("6"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer6R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("7"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer7R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("8"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer8R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("9"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer9R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("10"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer10R3</font></b></td>
+                                    }
+
+                                    @if (item.Position.Equals("11"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer11R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("12"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer12R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("13"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer13R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("14"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer14R3</font></b></td>
+                                    }
+                                    @if (item.Position.Equals("15"))
+                                    {
+                                        <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle><b><font face="Arial">@eighteenAnswer15R3</font></b></td>
+                                    }
+                                }
+
+
+                            </tr>
+
+                            <tr>
+                                <td></td>
+                            </tr>
+
+                            <tr>
+                                <td style="border-top: 2px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=2 height="17" align="left" valign=bottom bgcolor="#D9D9D9"><b><font face="Arial">Legend</font></b></td>
+
+                            </tr>
+
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=6 height="17" align="center" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">IUC</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" height="17" align="center" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Name of Report</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">IUC Type</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="center" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">Source Control</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" colspan=3 align="center" valign=middle bgcolor="#D9D9D9"><b><font face="Arial">IUC Validation</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" rowspan=7 height="408" align="left" valign=top><b><font face="Arial">@IUCReportName</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" rowspan=7 align="left" valign=top><font face="Arial">System Generated</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" rowspan=7 align="left" valign=top><b><font face="Arial">@UICSourceControl</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">General</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">Description of How the IUC Is Generated</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><b><font face="Arial">@UseInControl</font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">Report Parameters</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">Evidence Obtained to Address Completeness and Accuracy of User-Entered Parameters</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><b><font face="Arial">@IUCEvidence </font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" rowspan=3 align="left" valign=top><font face="Arial">Source Data</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">Control(s) Addressing Completeness and Accuracy (describe how)</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><b><font face="Arial">@ControlAddress </font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">Is Control(s) Designed and Operating Effectively (completeness)?</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><b><font face="Arial">@ControlDesign </font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">Is Control(s) Designed and Operating Effectively (accuracy)?</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><b><font face="Arial">@ControlDesignAccuracy </font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" rowspan=2 align="left" valign=top><font face="Arial">Report Logic</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">Control(s) Addressing the Report Logic</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><b><font face="Arial">@ControlAddressReport </font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">Is Control(s) Designed and Operating Effectively?</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><b><font face="Arial">@ControlDesignEffective </font></b></td>
+
+                            </tr>
+                            <tr>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" height="102" align="left" valign=top><b><font face="Arial">@IUCReportName</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">Non System Generated</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><b><font face="Arial">@RelyControl</font></b></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">General</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><font face="Arial">Describe how the controls that addresses the completeness and accuracy of the Non-System-Generated Report</font></td>
+                                <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" align="left" valign=top><b><font face="Arial">@DescribeControlAddress </font></b></td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button" @onclick="Close">Cancel</button>
+                </footer>
+            </div>
+        </div>
+
+    }
+
+
+
+}
+
+
+@code {
+
+    [Parameter] public List<QuestionnaireQuestion> listQuestion { get; set; }
+    [Parameter] public Rcm rcm { get; set; }
+    [Parameter] public IUCSystemGen objIUCSystemGen { get; set; }
+    [Parameter] public IUCNonSystemGen objIUCNonSystemGen { get; set; }
+    [Parameter] public QuestionnaireRoundSet roundSet { get; set; }
+    [Parameter] public string percentRound1 { get; set; }
+    [Parameter] public string percentRound2 { get; set; }
+    [Parameter] public string version { get; set; }
+
+    private bool isSavingState { get; set; }
+
+    private List<RoundItem> listRoundItem, listRound1, listRound2, listRound3;
+    private List<NotesItem> listUniqueNotes;
+    private List<QuestionnaireQuestion> listQuestion1stSet, listQuestion2ndSet;
+    //First Set of Question with User Answer
+    private List<QuestionnaireUserAnswer> listAnswer1stSetR1, listAnswer1stSetR2, listAnswer1stSetR3;
+    //Second Set of Question with User Answer
+    private List<QuestionnaireUserAnswer> listAnswer2ndSetR1, listAnswer2ndSetR2, listAnswer2ndSetR3;
+    //Consolidated User Answer (First Set and Second Set)
+    private List<QuestionnaireUserAnswer> listAnswerR1, listAnswerR2, listAnswerR3;
+    private List<RoundQA> listQA;
+    private List<HeaderNote> listHeaderNote;
+    private List<IUCSystemGenAnswer> listIUCSystemGen1, listIUCSystemGen2, listIUCSystemGen3;
+    private List<IUCNonSystemGenAnswer> listIUCNonSystemGen1, listIUCNonSystemGen2, listIUCNonSystemGen3;
+    private SampleSelection sampleSel1, sampleSel2, sampleSel3;
+    private QuestionnaireService QuestionnaireService;
+    private FormatService FormatService = new FormatService();
+    private ClientSettings settings;
+    private GeneralNote generalNote { get; set; }
+    private ListIPENote listIPENote { get; set; }
+    private List<string> SeventeenList = new List<string>();
+
+    private QuestionaireAddedInputs AddedInputss { get; set; } //keyword to search: mark
+    private string SeventeenA { get; set; }
+    private string SeventeenB { get; set; }
+    private string SeventeenC { get; set; }
+    private string SeventeenD { get; set; }
+    private string SeventeenE { get; set; }
+    private string SeventeenF { get; set; }
+
+    private string Answer1 { get; set; }
+    private string Answer2 { get; set; }
+    private string Answer3 { get; set; }
+    private string Answer4 { get; set; }
+    private string Answer5 { get; set; }
+    private string Answer6 { get; set; }
+    private string Answer7 { get; set; }
+    private string Answer8 { get; set; }
+    private string Answer9 { get; set; }
+    private string Answer10 { get; set; }
+    private string Answer11 { get; set; }
+    private string Answer12 { get; set; }
+    private string Answer13 { get; set; }
+    private string Answer14 { get; set; }
+    private string Answer15 { get; set; }
+
+    private string RoundOne14 { get; set; }
+    private string RoundTwo14 { get; set; }
+    private string RoundThree14 { get; set; }
+    private string SourceFile1 { get; set; }
+    private string SourceFile2 { get; set; }
+    private string SourceFile3 { get; set; }
+    private string performedByR1 { get; set; }
+    private string performedByR2 { get; set; }
+    private string performedByR3 { get; set; }
+    private string DateTestPerformedR1 { get; set; }
+    private string DateTestPerformedR2 { get; set; }
+    private string DateTestPerformedR3 { get; set; }
+    private string TOD1 { get; set; }
+    private string TOD2 { get; set; }
+    private string TOD3 { get; set; }
+    private string reviewer1 { get; set; }
+    private string reviewer2 { get; set; }
+    private string reviewer3 { get; set; }
+    private string reviewDate1 { get; set; }
+    private string reviewDate2 { get; set; }
+    private string reviewDate3 { get; set; }
+    private string assessment1 { get; set; }
+    private string assessment2 { get; set; }
+    private string assessment3 { get; set; }
+    private string ControlOwner { get; set; }
+    private string TestProcedures { get; set; }
+    private string ControlHappen { get; set; }
+    private string PlaceDate { get; set; }
+    private string RiskLevel { get; set; }
+    private string SelectingSamples { get; set; }
+    private string PopulationSize { get; set; }
+    private string TOE1 { get; set; }
+    private string TOE2 { get; set; }
+    private string TOE3 { get; set; }
+    private string TestingStatus1 { get; set; }
+    private string TestingStatus2 { get; set; }
+    private string TestingStatus3 { get; set; }
+    private string IUCReportName { get; set; }
+    private string UseInControl { get; set; }
+    private string UICSourceControl { get; set; }
+    private string IUCEvidence { get; set; }
+    private string ControlAddress { get; set; }
+    private string ControlDesign { get; set; }
+    private string ControlDesignAccuracy { get; set; }
+    private string ControlAddressReport { get; set; }
+    private string ControlDesignEffective { get; set; }
+    private string DescribeControlAddress { get; set; }
+    private string RelyControl { get; set; }
+    private int index { get; set; }
+    private int position { get; set; }
+
+    System.Text.RegularExpressions.Regex regHtml = new System.Text.RegularExpressions.Regex("<[^>]*>");
+
+    private string eighteenAnswer1 { get; set; } = "";
+    private string eighteenAnswer2 { get; set; } = "";
+    private string eighteenAnswer3 { get; set; } = "";
+    private string eighteenAnswer4 { get; set; } = "";
+    private string eighteenAnswer5 { get; set; } = "";
+    private string eighteenAnswer6 { get; set; } = "";
+    private string eighteenAnswer7 { get; set; } = "";
+    private string eighteenAnswer8 { get; set; } = "";
+    private string eighteenAnswer9 { get; set; } = "";
+    private string eighteenAnswer10 { get; set; } = "";
+    private string eighteenAnswer11 { get; set; } = "";
+    private string eighteenAnswer12 { get; set; } = "";
+    private string eighteenAnswer13 { get; set; } = "";
+    private string eighteenAnswer14 { get; set; } = "";
+    private string eighteenAnswer15 { get; set; } = "";
+
+    private string eighteenAnswer1R2 { get; set; } = "";
+    private string eighteenAnswer2R2 { get; set; } = "";
+    private string eighteenAnswer3R2 { get; set; } = "";
+    private string eighteenAnswer4R2 { get; set; } = "";
+    private string eighteenAnswer5R2 { get; set; } = "";
+    private string eighteenAnswer6R2 { get; set; } = "";
+    private string eighteenAnswer7R2 { get; set; } = "";
+    private string eighteenAnswer8R2 { get; set; } = "";
+    private string eighteenAnswer9R2 { get; set; } = "";
+    private string eighteenAnswer10R2 { get; set; } = "";
+    private string eighteenAnswer11R2 { get; set; } = "";
+    private string eighteenAnswer12R2 { get; set; } = "";
+    private string eighteenAnswer13R2 { get; set; } = "";
+    private string eighteenAnswer14R2 { get; set; } = "";
+    private string eighteenAnswer15R2 { get; set; } = "";
+
+    private string eighteenAnswer1R3 { get; set; } = "";
+    private string eighteenAnswer2R3 { get; set; } = "";
+    private string eighteenAnswer3R3 { get; set; } = "";
+    private string eighteenAnswer4R3 { get; set; } = "";
+    private string eighteenAnswer5R3 { get; set; } = "";
+    private string eighteenAnswer6R3 { get; set; } = "";
+    private string eighteenAnswer7R3 { get; set; } = "";
+    private string eighteenAnswer8R3 { get; set; } = "";
+    private string eighteenAnswer9R3 { get; set; } = "";
+    private string eighteenAnswer10R3 { get; set; } = "";
+    private string eighteenAnswer11R3 { get; set; } = "";
+    private string eighteenAnswer12R3 { get; set; } = "";
+    private string eighteenAnswer13R3 { get; set; } = "";
+    private string eighteenAnswer14R3 { get; set; } = "";
+    private string eighteenAnswer15R3 { get; set; } = "";
+
+
+
+
+    //------------------------------------
+    //variable only use in PTP 1.1
+    //------------------------------------
+    private List<DateTime> listDateTimeR1, listDateTimeR2, listDateTimeR3;
+    private List<int> listDtCheckPTPR1, listDtCheckPTPR2, listDtCheckPTPR3;
+
+    private string elapseTime = string.Empty;
+    private string fileName;
+    private FileDownload fileDownload;
+    private string downloadUri;
+    private bool startTimer = false;
+    private int posTime, countClick;
+    //private int countIUCR1, countIUCR2, countIUCR3, countIUCNonR1, countIUCNonR2, countIUCNonR3;
+    bool isRound1, isRound2, isRound3, isNew;
+    //string roundName;
+    string roundId;
+
+    private bool display = false;
+
+    public void Show()
+    {
+
+
+
+        listAnswerR1.Clear();
+        listAnswerR1.AddRange(listAnswer1stSetR1);
+        listAnswerR1.AddRange(listAnswer2ndSetR1);
+        //WriteLog(listAnswerR1);
+        System.Diagnostics.Debug.WriteLine($"Round 1 Added");
+
+        listAnswerR2.Clear();
+        listAnswerR2.AddRange(listAnswer1stSetR2);
+        listAnswerR2.AddRange(listAnswer2ndSetR2);
+        //WriteLog(listAnswerR2);
+        System.Diagnostics.Debug.WriteLine($"Round 2 Added");
+
+        listAnswerR3.Clear();
+        listAnswerR3.AddRange(listAnswer1stSetR3);
+        listAnswerR3.AddRange(listAnswer2ndSetR3);
+        //WriteLog(listAnswerR3);
+        System.Diagnostics.Debug.WriteLine($"Round 3 Added");
+
+        listRoundItem.Clear();
+        listRoundItem.AddRange(listRound1);
+        listRoundItem.AddRange(listRound2);
+        listRoundItem.AddRange(listRound3);
+
+        //Set ID to zero (0), system will generate the ID once save in database
+        //listRoundItem.Select(c => { c.Id = 0; return c; }).ToList();
+        System.Diagnostics.Debug.WriteLine($"List Round Added");
+        System.Diagnostics.Debug.WriteLine(generalNote);
+
+        roundSet.isRound1 = isRound1;
+        roundSet.isRound2 = isRound2;
+        roundSet.isRound3 = isRound3;
+        roundSet.ListUserInputRound1 = listAnswerR1;
+        roundSet.ListUserInputRound2 = listAnswerR2;
+        roundSet.ListUserInputRound3 = listAnswerR3;
+        roundSet.ListUniqueNotes = listUniqueNotes;
+        roundSet.ListRoundItem = listRoundItem;
+        roundSet.ListIUCNonSystemGen1 = listIUCNonSystemGen1;
+        roundSet.ListIUCSystemGen1 = listIUCSystemGen1;
+        roundSet.ListIUCNonSystemGen2 = listIUCNonSystemGen2;
+        roundSet.ListIUCSystemGen2 = listIUCSystemGen2;
+        roundSet.ListIUCNonSystemGen3 = listIUCNonSystemGen3;
+        roundSet.ListIUCSystemGen3 = listIUCSystemGen3;
+        roundSet.ListUserQuestion = listQuestion;
+        roundSet.ListHeaderNote = listHeaderNote;
+        if (sampleSel1 != null && sampleSel1.PodioItemId != 0)
+            roundSet.sampleSel1 = sampleSel1;
+        if (sampleSel2 != null && sampleSel2.PodioItemId != 0)
+            roundSet.sampleSel2 = sampleSel2;
+        if (sampleSel3 != null && sampleSel3.PodioItemId != 0)
+            roundSet.sampleSel3 = sampleSel3;
+
+        System.Text.RegularExpressions.Regex regHtml = new System.Text.RegularExpressions.Regex("<[^>]*>");
+
+        roundSet.Rcm = rcm;
+
+
+        #region
+
+        //'14. What is the Sub-sample size? Enter a number.'
+        var check = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("what is the sub-sample size? enter a number")).FirstOrDefault();
+
+        if (check != null)
+        {
+            RoundOne14 = regHtml.Replace(check.StrAnswer, "");
+        }
+        else
+        {
+            RoundOne14 = "";
+        }
+
+        var check2 = listAnswerR2.Where(x => x.StrQuestion.ToLower().Contains("what is the sub-sample size? enter a number")).FirstOrDefault();
+        if (check2 != null)
+        {
+            RoundTwo14 = regHtml.Replace(check2.StrAnswer, "");
+        }
+        else
+        {
+            RoundTwo14 = "";
+        }
+
+        var check3 = listAnswerR3.Where(x => x.StrQuestion.ToLower().Contains("what is the sub-sample size? enter a number")).FirstOrDefault();
+        if (check3 != null)
+        {
+            RoundThree14 = regHtml.Replace(check3.StrAnswer, "");
+        }
+        else
+        {
+            RoundThree14 = "";
+        }
+
+
+        //16.A.What type is/ are the source file / s ?
+        var checkSourceFile = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("what type is/are the source file/s?")).FirstOrDefault();
+        if (checkSourceFile != null)
+        {
+            SourceFile1 = regHtml.Replace(checkSourceFile.StrAnswer, "");
+        }
+        else
+        {
+            SourceFile1 = "";
+        }
+
+        var checkSourceFile2 = listAnswerR2.Where(x => x.StrQuestion.ToLower().Contains("what type is/are the source file/s?")).FirstOrDefault();
+        if (checkSourceFile2 != null)
+        {
+            SourceFile2 = regHtml.Replace(checkSourceFile2.StrAnswer, "");
+        }
+        else
+        {
+            SourceFile2 = "";
+        }
+
+        var checkSourceFile3 = listAnswerR3.Where(x => x.StrQuestion.ToLower().Contains("what type is/are the source file/s?")).FirstOrDefault();
+        if (checkSourceFile3 != null)
+        {
+            SourceFile3 = regHtml.Replace(checkSourceFile3.StrAnswer, "");
+        }
+        else
+        {
+            SourceFile3 = "";
+        }
+
+
+        //23. Who performed the testing? Enter first and last name.
+        var testPerformed1 = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("who performed the testing? enter first and last name.")).FirstOrDefault();
+        if (testPerformed1 != null)
+        {
+            performedByR1 = regHtml.Replace(testPerformed1.StrAnswer, "");
+        }
+        else
+        {
+            performedByR1 = "";
+        }
+
+
+        var testPerformed2 = listAnswerR2.Where(x => x.StrQuestion.ToLower().Contains("who performed the testing? enter first and last name.")).FirstOrDefault();
+        if (testPerformed2 != null)
+        {
+            performedByR2 = regHtml.Replace(testPerformed2.StrAnswer, "");
+        }
+        else
+        {
+            performedByR2 = "";
+        }
+
+        var testPerformed3 = listAnswerR3.Where(x => x.StrQuestion.ToLower().Contains("who performed the testing? enter first and last name.")).FirstOrDefault();
+        if (testPerformed3 != null)
+        {
+            performedByR3 = regHtml.Replace(testPerformed3.StrAnswer, "");
+        }
+        else
+        {
+            performedByR3 = "";
+        }
+
+
+        var whenPerformed1 = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("when is the date the testing was reviewed?")).FirstOrDefault();
+        if (whenPerformed1 != null)
+        {
+            DateTestPerformedR1 = regHtml.Replace(whenPerformed1.StrAnswer, "");
+        }
+        else
+        {
+            DateTestPerformedR1 = "";
+        }
+
+        var whenPerformed2 = listAnswerR2.Where(x => x.StrQuestion.ToLower().Contains("when is the date the testing was reviewed?")).FirstOrDefault();
+        if (whenPerformed2 != null)
+        {
+            DateTestPerformedR2 = regHtml.Replace(whenPerformed2.StrAnswer, "");
+        }
+        else
+        {
+            DateTestPerformedR2 = "";
+        }
+
+        var whenPerformed3 = listAnswerR3.Where(x => x.StrQuestion.ToLower().Contains("when is the date the testing was reviewed?")).FirstOrDefault();
+        if (whenPerformed3 != null)
+        {
+            DateTestPerformedR3 = regHtml.Replace(whenPerformed3.StrAnswer, "");
+        }
+        else
+        {
+            DateTestPerformedR3 = "";
+        }
+
+
+        //19. What is the Testing Result - Test of Design (TOD)?
+        var TodSearch1 = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("what is the testing result - test of design (tod)?")).FirstOrDefault();
+        if (TodSearch1 != null)
+        {
+            TOD1 = regHtml.Replace(TodSearch1.StrAnswer, "");
+        }
+        else
+        {
+            TOD1 = "";
+        }
+
+        var TodSearch2 = listAnswerR2.Where(x => x.StrQuestion.ToLower().Contains("what is the testing result - test of design (tod)?")).FirstOrDefault();
+        if (TodSearch2 != null)
+        {
+            TOD2 = regHtml.Replace(TodSearch2.StrAnswer, "");
+        }
+        else
+        {
+            TOD2 = "";
+        }
+
+
+        var TodSearch3 = listAnswerR3.Where(x => x.StrQuestion.ToLower().Contains("what is the testing result - test of design (tod)?")).FirstOrDefault();
+        if (TodSearch3 != null)
+        {
+            TOD3 = regHtml.Replace(TodSearch3.StrAnswer, "");
+        }
+        else
+        {
+            TOD3 = "";
+        }
+
+        var vargetOwner = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("who is the control owner?")).FirstOrDefault();
+        if (vargetOwner != null)
+        {
+            ControlOwner = regHtml.Replace(vargetOwner.StrAnswer, "");
+        }
+        else
+        {
+            ControlOwner = "";
+        }
+
+        var testProceedures = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("what procedures did you use to select the samples?")).FirstOrDefault();
+        if (testProceedures != null)
+        {
+            TestProcedures = regHtml.Replace(testProceedures.StrAnswer, "");
+        }
+        else
+        {
+            TestProcedures = "";
+        }
+
+
+
+        //How often does this control happen?
+        var checkControlHappen = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("how often does this control happen?")).FirstOrDefault();
+        if (checkControlHappen != null)
+        {
+            ControlHappen = regHtml.Replace(checkControlHappen.StrAnswer, "");
+        }
+        else
+        {
+            ControlHappen = "";
+        }
+
+        var checkplaceDate = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("when was the control first put in place")).FirstOrDefault();
+        if (checkplaceDate != null)
+        {
+            PlaceDate = regHtml.Replace(checkplaceDate.StrAnswer, "");
+        }
+        else
+        {
+            PlaceDate = "";
+        }
+
+        var checkRisk = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("what is the level of risk for the control?")).FirstOrDefault();
+        if (checkRisk != null)
+        {
+            RiskLevel = regHtml.Replace(checkRisk.StrAnswer, "");
+        }
+        else
+        {
+            RiskLevel = "";
+        }
+
+        var SelectSample = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("what date ranges are you selecting samples?")).FirstOrDefault();
+        if (SelectSample != null)
+        {
+            SelectingSamples = regHtml.Replace(SelectSample.StrAnswer, "");
+        }
+        else
+        {
+            SelectingSamples = "";
+        }
+
+        var CheckPopulationSize = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("what is the population size?")).FirstOrDefault();
+        if (CheckPopulationSize != null)
+        {
+            PopulationSize = regHtml.Replace(CheckPopulationSize.StrAnswer, "");
+        }
+        else
+        {
+            PopulationSize = "";
+        }
+
+        var CheckToe1 = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("what is the testing result")).FirstOrDefault();
+        if (CheckToe1 != null)
+        {
+            TOE1 = regHtml.Replace(CheckToe1.StrAnswer, "");
+        }
+        else
+        {
+            TOE1 = "";
+        }
+
+        var CheckToe2 = listAnswerR2.Where(x => x.StrQuestion.ToLower().Contains("what is the testing result")).FirstOrDefault();
+        if (CheckToe2 != null)
+        {
+            TOE2 = regHtml.Replace(CheckToe2.StrAnswer, "");
+        }
+        else
+        {
+            TOE2 = "";
+        }
+
+        var CheckToe3 = listAnswerR3.Where(x => x.StrQuestion.ToLower().Contains("what is the testing result")).FirstOrDefault();
+        if (CheckToe3 != null)
+        {
+            TOE3 = regHtml.Replace(CheckToe3.StrAnswer, "");
+        }
+        else
+        {
+            TOE3 = "";
+        }
+
+
+        var CheckTestingStatus = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("what is the testing status?")).FirstOrDefault();
+        if (CheckTestingStatus != null)
+        {
+            TestingStatus1 = regHtml.Replace(CheckTestingStatus.StrAnswer, "");
+        }
+        else
+        {
+            TestingStatus1 = "";
+        }
+
+        var CheckTestingStatus2 = listAnswerR2.Where(x => x.StrQuestion.ToLower().Contains("what is the testing status?")).FirstOrDefault();
+        if (CheckTestingStatus2 != null)
+        {
+            TestingStatus2 = regHtml.Replace(CheckTestingStatus2.StrAnswer, "");
+        }
+        else
+        {
+            TestingStatus2 = "";
+        }
+
+        var CheckTestingStatus3 = listAnswerR2.Where(x => x.StrQuestion.ToLower().Contains("what is the testing status?")).FirstOrDefault();
+        if (CheckTestingStatus3 != null)
+        {
+            TestingStatus3 = regHtml.Replace(CheckTestingStatus3.StrAnswer, "");
+        }
+        else
+        {
+            TestingStatus3 = "";
+        }
+
+        var checkReviewer1 = listAnswerR1.Where(x => x.StrQuestion.ToLower().Contains("who performed the review?")).FirstOrDefault();
+        if (checkReviewer1 != null)
+        {
+            reviewer1 = regHtml.Replace(checkReviewer1.StrAnswer, "");
+        }
+        else
+        {
+            reviewer1 = "";
+        }
+
+        var checkReviewer2 = listAnswerR2.Where(x => x.StrQuestion.ToLower().Contains("who performed the review?")).FirstOrDefault();
+        if (checkReviewer2 != null)
+        {
+            reviewer2 = regHtml.Replace(checkReviewer2.StrAnswer, "");
+        }
+        else
+        {
+            reviewer2 = "";
+        }
+
+        var checkReviewer3 = listAnswerR3.Where(x => x.StrQuestion.ToLower().Contains("who performed the review?")).FirstOrDefault();
+        if (checkReviewer3 != null)
+        {
+            reviewer3 = regHtml.Replace(checkReviewer3.StrAnswer, "");
+        }
+        else
+        {
+            reviewer3 = "";
+        }
+        #endregion
+
+
+        foreach (var item in listRound1)
+        {
+
+            //Console.WriteLine(item);
+            if (item.Answer1 != null)
+            {
+                eighteenAnswer1 = item.Answer1;
+            }
+            if (item.Answer2 != null)
+            {
+                eighteenAnswer2 = item.Answer2;
+            }
+            if (item.Answer3 != null)
+            {
+                eighteenAnswer3 = item.Answer3;
+            }
+            if (item.Answer4 != null)
+            {
+                eighteenAnswer4 = item.Answer4;
+            }
+            if (item.Answer5 != null)
+            {
+                eighteenAnswer5 = item.Answer5;
+            }
+
+            if (item.Answer6 != null)
+            {
+                eighteenAnswer6 = item.Answer6;
+            }
+            if (item.Answer7 != null)
+            {
+                eighteenAnswer7 = item.Answer7;
+            }
+            if (item.Answer8 != null)
+            {
+                eighteenAnswer8 = item.Answer8;
+            }
+            if (item.Answer9 != null)
+            {
+                eighteenAnswer9 = item.Answer9;
+            }
+            if (item.Answer10 != null)
+            {
+                eighteenAnswer10 = item.Answer10;
+            }
+
+            if (item.Answer11 != null)
+            {
+                eighteenAnswer11 = item.Answer11;
+            }
+            if (item.Answer12 != null)
+            {
+                eighteenAnswer12 = item.Answer12;
+            }
+            if (item.Answer13 != null)
+            {
+                eighteenAnswer13 = item.Answer13;
+            }
+            if (item.Answer14 != null)
+            {
+                eighteenAnswer14 = item.Answer14;
+            }
+            if (item.Answer15 != null)
+            {
+                eighteenAnswer15 = item.Answer15;
+            }
+        }
+
+        foreach (var item in listRound2)
+        {
+
+            //Console.WriteLine(item);
+            if (item.Answer1 != null)
+            {
+                eighteenAnswer1R2 = item.Answer1;
+            }
+            if (item.Answer2 != null)
+            {
+                eighteenAnswer2R2 = item.Answer2;
+            }
+            if (item.Answer3 != null)
+            {
+                eighteenAnswer3R2 = item.Answer3;
+            }
+            if (item.Answer4 != null)
+            {
+                eighteenAnswer4R2 = item.Answer4;
+            }
+            if (item.Answer5 != null)
+            {
+                eighteenAnswer5R2 = item.Answer5;
+            }
+
+            if (item.Answer6 != null)
+            {
+                eighteenAnswer6R2 = item.Answer6;
+            }
+            if (item.Answer7 != null)
+            {
+                eighteenAnswer7R2 = item.Answer7;
+            }
+            if (item.Answer8 != null)
+            {
+                eighteenAnswer8R2 = item.Answer8;
+            }
+            if (item.Answer9 != null)
+            {
+                eighteenAnswer9R2 = item.Answer9;
+            }
+            if (item.Answer10 != null)
+            {
+                eighteenAnswer10R2 = item.Answer10;
+            }
+
+            if (item.Answer11 != null)
+            {
+                eighteenAnswer11R2 = item.Answer11;
+            }
+            if (item.Answer12 != null)
+            {
+                eighteenAnswer12R2 = item.Answer12;
+            }
+            if (item.Answer13 != null)
+            {
+                eighteenAnswer13R2 = item.Answer13;
+            }
+            if (item.Answer14 != null)
+            {
+                eighteenAnswer14R2 = item.Answer14;
+            }
+            if (item.Answer15 != null)
+            {
+                eighteenAnswer15R2 = item.Answer15;
+            }
+        }
+
+
+        foreach (var item in listRound3)
+        {
+
+            //Console.WriteLine(item);
+            if (item.Answer1 != null)
+            {
+                eighteenAnswer1R3 = item.Answer1;
+            }
+            if (item.Answer2 != null)
+            {
+                eighteenAnswer2R3 = item.Answer2;
+            }
+            if (item.Answer3 != null)
+            {
+                eighteenAnswer3R3 = item.Answer3;
+            }
+            if (item.Answer4 != null)
+            {
+                eighteenAnswer4R3 = item.Answer4;
+            }
+            if (item.Answer5 != null)
+            {
+                eighteenAnswer5R3 = item.Answer5;
+            }
+
+            if (item.Answer6 != null)
+            {
+                eighteenAnswer6R3 = item.Answer6;
+            }
+            if (item.Answer7 != null)
+            {
+                eighteenAnswer7R3 = item.Answer7;
+            }
+            if (item.Answer8 != null)
+            {
+                eighteenAnswer8R3 = item.Answer8;
+            }
+            if (item.Answer9 != null)
+            {
+                eighteenAnswer9R3 = item.Answer9;
+            }
+            if (item.Answer10 != null)
+            {
+                eighteenAnswer10R3 = item.Answer10;
+            }
+
+            if (item.Answer11 != null)
+            {
+                eighteenAnswer11R3 = item.Answer11;
+            }
+            if (item.Answer12 != null)
+            {
+                eighteenAnswer12R3 = item.Answer12;
+            }
+            if (item.Answer13 != null)
+            {
+                eighteenAnswer13R3 = item.Answer13;
+            }
+            if (item.Answer14 != null)
+            {
+                eighteenAnswer14R3 = item.Answer14;
+            }
+            if (item.Answer15 != null)
+            {
+                eighteenAnswer15R3 = item.Answer15;
+            }
+        }
+
+
+
+
+        if (listIUCSystemGen1 != null && listIUCSystemGen1.Count > 0)
+        {
+
+            foreach (var item in listIUCSystemGen1.OrderBy(x => x.Position))
+            {
+
+                System.Diagnostics.Debug.WriteLine($"List Index: {item.Position}");
+                if (item.ListQuestionAnswer != null && item.ListQuestionAnswer.Count > 0)
+                {
+                    foreach (var inner in item.ListQuestionAnswer.OrderBy(x => x.Position))
+                    {
+                        if (!inner.Question.ToLower().Equals("position"))
+                        {
+
+                            if (inner.Question.ToLower().Contains("what is the report name?"))
+
+                            {
+                                IUCReportName = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+                            if (inner.Question.ToLower().Contains("which system did this report come from, if any?"))
+                            {
+                                UICSourceControl = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+                            if (inner.Question.ToLower().Contains("how is the information used in control (iuc)"))
+                            {
+                                UseInControl = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+                            if (inner.Question.ToLower().Contains("what evidence can you get to show the report parameters used such as report date or data filter?"))
+                            {
+                                IUCEvidence = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+
+                            if (inner.Question.ToLower().Contains("did the control owner check that the report they used is complete and accurate?"))
+                            {
+                                ControlAddress = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+
+                            if (inner.Question.ToLower().Contains("is/are the control(s) designed and operating effectively for data completeness?"))
+                            {
+                                ControlDesign = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+
+                            if (inner.Question.ToLower().Contains("is/are the control(s) designed and operating effectively for data accuracy?"))
+                            {
+                                ControlDesignAccuracy = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+                            //
+                            if (inner.Question.ToLower().Contains("how does/do the control(s) address the report logic or formulas used?"))
+                            {
+                                ControlAddressReport = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+
+
+                            if (inner.Question.ToLower().Contains("is/are the control(s) designed and operating effectively for report logic or formulas used?"))
+                            {
+                                ControlDesignEffective = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+
+
+                            if (inner.Question.ToLower().Contains("address the completeness and accuracy of the non-system-generated report?"))
+                            {
+                                DescribeControlAddress = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+
+                            if (inner.Question.ToLower().Contains("does this control rely on another control for this control to work? what is the source control?"))
+                            {
+                                RelyControl = listIUCSystemGen1[item.Position].ListQuestionAnswer.ToList()[inner.Position - 1].Answer;
+                            }
+                        }
+                    }
+
+                }
+
+                index++;
+
+            }
+
+        }
+
+
+        isSavingState = false;
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Initialize();
+
+        this.StateHasChanged();
+
+        base.OnParametersSet();
+    }
+
+
+
+    private async void Initialize()
+    {
+        settings = await _getSettings;
+        //FormatService = new FormatService();
+        QuestionnaireService = new QuestionnaireService(settings);
+        if (listQuestion != null && listQuestion.Count > 0)
+        {
+            #region variable initialization
+            fileName = string.Empty;
+            downloadUri = "api/Questionnaire/download/";
+            posTime = 0;
+            //posIUCSystemGen = 0;
+            //posIUCNonSystemGen = 0;
+            countClick = 0;
+            generalNote = new GeneralNote();
+            listIPENote = new ListIPENote();
+            generalNote.GeneralNoteText = "General Note";
+            //AddedInputss = new AddedInputs();
+            listHeaderNote = new List<HeaderNote>();
+            listQA = new List<RoundQA>();
+            listRoundItem = new List<RoundItem>();
+            listUniqueNotes = new List<NotesItem>();
+            isNew = true;
+
+            listIUCSystemGen1 = new List<IUCSystemGenAnswer>();
+            listIUCNonSystemGen1 = new List<IUCNonSystemGenAnswer>();
+            listIUCSystemGen2 = new List<IUCSystemGenAnswer>();
+            listIUCNonSystemGen2 = new List<IUCNonSystemGenAnswer>();
+            listIUCSystemGen3 = new List<IUCSystemGenAnswer>();
+            listIUCNonSystemGen3 = new List<IUCNonSystemGenAnswer>();
+
+            listQuestion1stSet = new List<QuestionnaireQuestion>();
+            listQuestion2ndSet = new List<QuestionnaireQuestion>();
+
+            listAnswer1stSetR1 = new List<QuestionnaireUserAnswer>();
+            listAnswer1stSetR2 = new List<QuestionnaireUserAnswer>();
+            listAnswer1stSetR3 = new List<QuestionnaireUserAnswer>();
+
+            listAnswer2ndSetR1 = new List<QuestionnaireUserAnswer>();
+            listAnswer2ndSetR2 = new List<QuestionnaireUserAnswer>();
+            listAnswer2ndSetR3 = new List<QuestionnaireUserAnswer>();
+
+            listAnswerR1 = new List<QuestionnaireUserAnswer>();
+            listAnswerR2 = new List<QuestionnaireUserAnswer>();
+            listAnswerR3 = new List<QuestionnaireUserAnswer>();
+
+            sampleSel1 = new SampleSelection();
+            sampleSel2 = new SampleSelection();
+            sampleSel3 = new SampleSelection();
+
+            listRound1 = new List<RoundItem>();
+            listRound2 = new List<RoundItem>();
+            listRound3 = new List<RoundItem>();
+            #endregion
+
+            GenerateQuestionSet(listQuestion);
+
+            if (listQuestion1stSet.Count > 0)
+            {
+                listAnswer1stSetR1 = GenerateQuestionWithAnswer1(listQuestion1stSet, "Round 1");
+                listAnswer1stSetR2 = GenerateQuestionWithAnswer1(listQuestion1stSet, "Round 2");
+                listAnswer1stSetR3 = GenerateQuestionWithAnswer1(listQuestion1stSet, "Round 3");
+            }
+            if (listQuestion2ndSet.Count > 0)
+            {
+                listAnswer2ndSetR1 = GenerateQuestionWithAnswer2(listQuestion2ndSet, "Round 1");
+                listAnswer2ndSetR2 = GenerateQuestionWithAnswer2(listQuestion2ndSet, "Round 2");
+                listAnswer2ndSetR3 = GenerateQuestionWithAnswer2(listQuestion2ndSet, "Round 3");
+            }
+
+            listIPENote = GenerateIPENote(version);
+
+            if (roundSet != null && roundSet.UniqueId != string.Empty)
+            {
+                System.Diagnostics.Debug.WriteLine($"Set data to existing round set");
+
+                PopulateExistingQuestionnaire();
+                isNew = false;
+            }
+
+            if (rcm.ControlId == "PTP 1.1")
+            {
+                listDateTimeR1 = new List<DateTime>();
+                listDateTimeR2 = new List<DateTime>();
+                listDateTimeR3 = new List<DateTime>();
+
+                listDtCheckPTPR1 = new List<int>();
+                listDtCheckPTPR2 = new List<int>();
+                listDtCheckPTPR3 = new List<int>();
+            }
+
+
+
+            StartTimer();
+            this.StateHasChanged();
+        }
+        //moved to child component
+        /*
+        if (listAnswer1stSetR1 != null && listQuestion != null)
+        {
+
+            foreach (var item2 in listQuestion)
+            {
+                if (item2.QuestionString.Contains("17."))
+                {
+                    string stringSentence = listAnswer1stSetR1[item2.Position - 1].StrAnswer;
+
+                    Console.WriteLine(listAnswer1stSetR1[item2.Position - 1].StrAnswer);
+
+                    if (stringSentence.Contains("A. ") || stringSentence.Contains("B. ") ||
+                        stringSentence.Contains("C. ") || stringSentence.Contains("D. ") ||
+                        stringSentence.Contains("E. ") || stringSentence.Contains("F. "))
+                    {
+
+                        if (stringSentence.Contains("A. "))
+                        {
+
+                            string[] array = stringSentence.Split("B. ");
+                            foreach (string value in array)
+                            {
+                                Console.WriteLine($"Part: {value}");
+                                SeventeenA = value;
+                                if (SeventeenList.Contains(SeventeenA))
+                                {
+
+                                }
+                                else
+                                {
+                                    SeventeenList.Add(SeventeenA);
+                                }
+                                break; //Loop only once to get the A
+                            }
+
+                        }
+
+                        if (stringSentence.Contains("B. "))
+                        {
+                            string[] array2 = stringSentence.Split("B. ");
+                            foreach (string value in array2)
+                            {
+
+                                Console.WriteLine($"Part: {value}");
+                                if (value.Contains("A. "))
+                                {
+                                    //Loop twice skipped.
+                                }
+                                else
+                                {
+
+                                    string GetThatB = value;
+                                    string[] arrayNiGetThatB = GetThatB.Split("C. ");
+                                    foreach (string value2 in arrayNiGetThatB)
+                                    {
+                                        SeventeenB = "B. " + value2; //Split b and loop once to get B.
+                                        if (SeventeenList.Contains(SeventeenB))
+                                        {
+
+                                        }
+                                        else
+                                        {
+                                            SeventeenList.Add(SeventeenB);
+                                        }
+                                        break;
+                                    }
+
+                                }
+
+                            }
+                        }
+
+                        if (stringSentence.Contains("C. "))
+                        {
+                            string[] arrayForC = stringSentence.Split("C. ");
+                            {
+                                foreach (string value in arrayForC)
+                                    if (value.Contains("A. "))
+                                    {
+
+                                    }
+                                    else
+                                    {
+
+                                        string[] array2forC = value.Split("D. ");
+                                        foreach (string valueforC in array2forC)
+                                        {
+                                            SeventeenC = "C. " + valueforC;
+                                            if (SeventeenList.Contains(SeventeenC))
+                                            {
+
+                                            }
+                                            else
+                                            {
+                                                SeventeenList.Add(SeventeenC);
+                                            }
+                                            break;
+                                        }
+
+
+                                    }
+
+                            }
+                        }
+
+                        if (stringSentence.Contains("D. "))
+                        {
+
+                            string[] arrayForD = stringSentence.Split("D. ");
+                            foreach (string value in arrayForD)
+                            {
+
+                                if (value.Contains("A. "))
+                                {
+
+                                }
+                                else
+                                {
+                                    string[] array2forD = value.Split("E. ");
+                                    foreach (string valueforD in array2forD)
+                                    {
+                                        SeventeenD = "D. " + valueforD;
+                                        if (SeventeenList.Contains(SeventeenD))
+                                        {
+
+                                        }
+                                        else
+                                        {
+                                            SeventeenList.Add(SeventeenD);
+                                        }
+                                        break;
+                                    }
+                                }
+
+                            }
+
+                        }
+
+                        if (stringSentence.Contains("E. "))
+                        {
+
+                            string[] arrayForE = stringSentence.Split("E. ");
+                            foreach (string value in arrayForE)
+                            {
+
+                                if (value.Contains("A. "))
+                                {
+
+                                }
+                                else
+                                {
+
+                                    string[] array2forE = value.Split("F. ");
+                                    foreach (string valueforE in array2forE)
+                                    {
+                                        SeventeenE = "E. " + valueforE;
+                                        if (SeventeenList.Contains(SeventeenE))
+                                        {
+
+                                        }
+                                        else
+                                        {
+                                            SeventeenList.Add(SeventeenE);
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+
+                        }
+
+                        if (stringSentence.Contains("E. "))
+                        {
+                            string[] arrayForF = stringSentence.Split("F. ");
+                            foreach (string value in arrayForF)
+                            {
+
+                                if (value.Contains("A. "))
+                                {
+
+                                }
+                                else
+                                {
+                                    SeventeenF = "F. " + value;
+                                    if (SeventeenList.Contains(SeventeenF))
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        SeventeenList.Add(SeventeenF);
+                                    }
+                                    break;
+                                }
+
+                            }
+                        }
+
+
+                    }
+
+
+                }
+            }
+        }
+
+        */
+
+    }
+
+    private void GenerateQuestionSet(List<QuestionnaireQuestion> listQuestion)
+    {
+        List<QuestionnaireQuestion> listSetQuestion = new List<QuestionnaireQuestion>();
+        bool isRtFound = false;
+        int count = 1;
+        int countQA = 0;
+
+        foreach (var item in listQuestion)
+        {
+            //Get first set question (upper), testing attributes (middle), and second set question (bottom)
+            if (!isRtFound && !item.QuestionString.ToLower().Contains("(rt)"))
+            {
+                //First Set of Question
+                listQuestion1stSet.Add(item);
+
+            }
+            if (isRtFound && !item.QuestionString.ToLower().Contains("(rt)"))
+            {
+                //Second Set of Question
+                item.Position = count;
+                listQuestion2ndSet.Add(item);
+                count++;
+            }
+            else if (item.QuestionString.ToLower().Contains("(rt)")
+                && !item.QuestionString.ToLower().Contains("(r1)")
+                && !item.QuestionString.ToLower().Contains("(r2)")
+                && !item.QuestionString.ToLower().Contains("(r3)"))
+            {
+                isRtFound = true;
+                countQA++;
+                RoundQA roundQA = new RoundQA();
+                roundQA.Question = item.QuestionString;
+                roundQA.Position = countQA.ToString();
+                roundQA.Type = item.Type;
+                roundQA.Options = item.Options;
+                roundQA.DtEndRequire = item.DtEndRequire;
+                listQA.Add(roundQA);
+                listHeaderNote.Add(new HeaderNote { HeaderNoteText = string.Empty, Description = string.Empty, Position = countQA });
+
+            }
+
+        }
+
+    }
+
+    private List<QuestionnaireUserAnswer> GenerateQuestionWithAnswer1(List<QuestionnaireQuestion> listQuestion, string roundName)
+    {
+        List<QuestionnaireUserAnswer> userInput = new List<QuestionnaireUserAnswer>();
+        foreach (var item in listQuestion)
+        {
+            QuestionnaireUserAnswer questionnaireInput = new QuestionnaireUserAnswer();
+            questionnaireInput.StrQuestion = item.QuestionString.ToLower().Contains("(ro)") ? item.QuestionString.Replace("(RO)", string.Empty) : item.QuestionString;
+            questionnaireInput.StrAnswer = string.Empty;
+            questionnaireInput.FieldId = item.FieldId;
+            questionnaireInput.Position = item.Position;
+            questionnaireInput.AppId = item.AppId;
+            questionnaireInput.Type = item.Type;
+            questionnaireInput.CreatedOn = DateTime.Now;
+            questionnaireInput.UpdatedOn = DateTime.Now;
+            questionnaireInput.Description = item.Description;
+            questionnaireInput.DtEndRequire = item.DtEndRequire;
+            questionnaireInput.RoundName = roundName;
+            questionnaireInput.IsDisabled = item.QuestionString.ToLower().Contains("(ro)") ? true : false;
+
+            //System.Diagnostics.Debug.WriteLine($"Found Description = {item.Description}");
+            //System.Diagnostics.Debug.WriteLine($"Found 1st Set Question Text = {item.QuestionString}");
+
+
+            #region Populate RCM fields if not null
+            if (rcm != null && item.Type != "image")
+            {
+                switch (item.QuestionString.ToLower())
+                {
+                    case string s when s.Contains("1. what is the client name?"):
+                        if (rcm.ClientName != null && rcm.ClientName != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(rcm.ClientName);
+                        }
+                        break;
+                    case string s when s.Contains("what is the purpose of this control?"):
+                        if (rcm.SpecificRisk != null && rcm.SpecificRisk != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(rcm.SpecificRisk);
+                        }
+                        break;
+                    case string s when s.Contains("what is the control id?"):
+                        if (rcm.ControlId != null && rcm.ControlId != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(rcm.ControlId);
+                        }
+                        break;
+                    case string s when s.Contains("what is the control activity?"):
+                        if (rcm.ControlActivityFy19 != null && rcm.ControlActivityFy19 != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(rcm.ControlActivityFy19);
+                        }
+                        break;
+                    case string s when s.Contains("who is the control owner?"):
+                        if (rcm.ControlOwner != null && rcm.ControlOwner != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(rcm.ControlOwner);
+                        }
+                        break;
+                    case string s when
+                    s.Contains("what are the procedures to test this control") ||
+                    s.Contains("what are the procedures to test control"):
+                        if (rcm.TestProc != null && rcm.TestProc != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(rcm.TestProc);
+                        }
+                        break;
+                    case string s when s.Contains("when was the control first put in place?"):
+                        if (rcm.ControlPlaceDate != null && rcm.ControlPlaceDate != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(rcm.ControlPlaceDate);
+                        }
+                        break;
+                    case string s when s.Contains("what is the date range you are testing?"):
+                        if (rcm.TestingPeriod != null && rcm.TestingPeriod != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(rcm.TestingPeriod);
+                        }
+                        break;
+                    case string s when s.Contains("what is the level of risk for the control?"):
+                        if (rcm.RiskLvl != null && rcm.RiskLvl != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(rcm.RiskLvl);
+                        }
+                        break;
+                    case string s when s.Contains("how often does this control happen?"):
+                        if (rcm.ControlFrequency != null && rcm.ControlFrequency != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(rcm.ControlFrequency);
+                        }
+                        break;
+                    case string s when s.Contains("select the testing phase"):
+                        if (roundName != null && roundName != string.Empty)
+                        {
+                            questionnaireInput.StrAnswer = FormatService.ReplaceTagHtmlParagraph(roundName);
+                        }
+                        break;
+                }
+            }
+            questionnaireInput.StrDefaultAnswer = questionnaireInput.StrAnswer; //set default answer
+            #endregion
+
+            //System.Diagnostics.Debug.WriteLine($"Found 1st Set Question Text = {questionnaireInput.StrQuestion} | {questionnaireInput.Position}");
+
+            userInput.Add(questionnaireInput);
+        }
+
+        return userInput;
+    }
+
+    private List<QuestionnaireUserAnswer> GenerateQuestionWithAnswer2(List<QuestionnaireQuestion> listQuestion, string roundName)
+    {
+        //The second set of question with answer' Position will start at 1
+        List<QuestionnaireUserAnswer> userInput = new List<QuestionnaireUserAnswer>();
+        int count = 1;
+        foreach (var item in listQuestion)
+        {
+
+            QuestionnaireUserAnswer questionnaireInput = new QuestionnaireUserAnswer();
+            questionnaireInput.StrQuestion = item.QuestionString;
+            questionnaireInput.StrAnswer = string.Empty;
+            questionnaireInput.FieldId = item.FieldId;
+            questionnaireInput.Position = count;
+            questionnaireInput.AppId = item.AppId;
+            questionnaireInput.Type = item.Type;
+            questionnaireInput.CreatedOn = DateTime.Now;
+            questionnaireInput.UpdatedOn = DateTime.Now;
+            questionnaireInput.Description = item.Description;
+            questionnaireInput.DtEndRequire = item.DtEndRequire;
+            questionnaireInput.RoundName = roundName;
+            questionnaireInput.IsDisabled = item.QuestionString.ToLower().Contains("(ro)") ? true : false;
+
+            if (item.QuestionString.ToLower().Contains("time duration"))
+            {
+                System.Diagnostics.Debug.WriteLine($"Time Duration Postion: {item.Position}");
+                posTime = item.Position;
+            }
+
+            questionnaireInput.StrDefaultAnswer = questionnaireInput.StrAnswer; //set default answer
+
+            //System.Diagnostics.Debug.WriteLine($"Found Description = {item.Description}");
+            System.Diagnostics.Debug.WriteLine($"Found 2nd Set Question Text = {questionnaireInput.StrQuestion} | {questionnaireInput.Position}");
+
+            userInput.Add(questionnaireInput);
+            count++;
+        }
+
+        return userInput;
+    }
+
+    private void PopulateExistingQuestionnaire()
+    {
+
+        roundId = roundSet.UniqueId;
+
+        isRound1 = roundSet.isRound1;
+        isRound2 = roundSet.isRound2;
+        isRound3 = roundSet.isRound3;
+
+        if (roundSet.sampleSel1 != null)
+            sampleSel1 = roundSet.sampleSel1;
+        if (roundSet.sampleSel2 != null)
+            sampleSel2 = roundSet.sampleSel2;
+        if (roundSet.sampleSel3 != null)
+            sampleSel3 = roundSet.sampleSel3;
+
+        if (roundSet.ListIUCNonSystemGen1 != null && roundSet.ListIUCNonSystemGen1.Count > 0)
+            listIUCNonSystemGen1 = roundSet.ListIUCNonSystemGen1.OrderBy(x => x.Position).ToList();
+        if (roundSet.ListIUCNonSystemGen2 != null && roundSet.ListIUCNonSystemGen2.Count > 0)
+            listIUCNonSystemGen2 = roundSet.ListIUCNonSystemGen2.OrderBy(x => x.Position).ToList();
+        if (roundSet.ListIUCNonSystemGen3 != null && roundSet.ListIUCNonSystemGen3.Count > 0)
+            listIUCNonSystemGen3 = roundSet.ListIUCNonSystemGen3.OrderBy(x => x.Position).ToList();
+
+        if (roundSet.ListIUCSystemGen1 != null && roundSet.ListIUCSystemGen1.Count > 0)
+            listIUCSystemGen1 = roundSet.ListIUCSystemGen1.OrderBy(x => x.Position).ToList();
+        if (roundSet.ListIUCSystemGen2 != null && roundSet.ListIUCSystemGen2.Count > 0)
+            listIUCSystemGen2 = roundSet.ListIUCSystemGen2.OrderBy(x => x.Position).ToList();
+        if (roundSet.ListIUCSystemGen3 != null && roundSet.ListIUCSystemGen3.Count > 0)
+            listIUCSystemGen3 = roundSet.ListIUCSystemGen3.OrderBy(x => x.Position).ToList();
+
+        if (roundSet.ListHeaderNote != null && roundSet.ListHeaderNote.Count > 0)
+            listHeaderNote = roundSet.ListHeaderNote.ToList();
+        if (roundSet.ListUniqueNotes != null && roundSet.ListUniqueNotes.Count > 0)
+        {
+            listUniqueNotes = roundSet.ListUniqueNotes.ToList();
+
+            //Set general notes and other notes
+            var checkOtherNotes = listUniqueNotes.Where(notes =>
+                    notes.Notes.Equals("General Note") ||
+                    notes.Notes.Equals("IPE Note") ||
+                    notes.Notes.Equals("Information Provided by Entity (IPE)/Validation of PBC Reports (Completeness/Accuracy) Walkthrough") ||
+                    notes.Notes.Equals("Information Provided by Entity (IPE)/Validation of PBC Reports (Completeness/Accuracy) Round 1") ||
+                    notes.Notes.Equals("Information Provided by Entity (IPE)/Validation of PBC Reports (Completeness/Accuracy) Round 2") ||
+                    notes.Notes.Equals("Information Provided by Entity (IPE)/Validation of PBC Reports (Completeness/Accuracy) Round 3")
+                );
+            if (checkOtherNotes != null && checkOtherNotes.Any())
+            {
+                foreach (var itemNotes in checkOtherNotes)
+                {
+                    switch (itemNotes.Notes)
+                    {
+                        case "General Note":
+                            generalNote.Display = true;
+                            generalNote.Description = itemNotes.Description;
+                            break;
+                        case "IPE Note":
+                            var ipeNote = listIPENote.ListNotes.Where(note => note.Note.Equals("IPE Note")).FirstOrDefault();
+                            if (ipeNote != null)
+                            {
+                                ipeNote.Display = true; ;
+                                ipeNote.Description = itemNotes.Description;
+                            }
+                            break;
+                        case "IPE/Validation of PBC Reports (Completeness/Accuracy) Walkthrough":
+                            var ipeNote1 = listIPENote.ListNotes.Where(note => note.Note.Equals("IPE/Validation of PBC Reports (Completeness/Accuracy) Walkthrough")).FirstOrDefault();
+                            if (ipeNote1 != null)
+                            {
+                                ipeNote1.Display = true; ;
+                                ipeNote1.Description = itemNotes.Description;
+                            }
+                            break;
+                        case "IPE/Validation of PBC Reports (Completeness/Accuracy) Round 1":
+                            var ipeNote2 = listIPENote.ListNotes.Where(note => note.Note.Equals("IPE/Validation of PBC Reports (Completeness/Accuracy) Round 1")).FirstOrDefault();
+                            if (ipeNote2 != null)
+                            {
+                                ipeNote2.Display = true; ;
+                                ipeNote2.Description = itemNotes.Description;
+                            }
+                            break;
+                        case "IPE/Validation of PBC Reports (Completeness/Accuracy) Round 2":
+                            var ipeNote3 = listIPENote.ListNotes.Where(note => note.Note.Equals("IPE/Validation of PBC Reports (Completeness/Accuracy) Round 2")).FirstOrDefault();
+                            if (ipeNote3 != null)
+                            {
+                                ipeNote3.Display = true; ;
+                                ipeNote3.Description = itemNotes.Description;
+                            }
+                            break;
+                        case "IPE/Validation of PBC Reports (Completeness/Accuracy) Round 3":
+                            var ipeNote4 = listIPENote.ListNotes.Where(note => note.Note.Equals("IPE/Validation of PBC Reports (Completeness/Accuracy) Round 3")).FirstOrDefault();
+                            if (ipeNote4 != null)
+                            {
+                                ipeNote4.Display = true; ;
+                                ipeNote4.Description = itemNotes.Description;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+            }
+
+
+        }
+
+
+        //Set testing round
+        if (roundSet.ListRoundItem != null && roundSet.ListRoundItem.Count > 0)
+        {
+            listRound1.Clear();
+            listRound2.Clear();
+            listRound3.Clear();
+            foreach (var item in roundSet.ListRoundItem)
+            {
+                switch (item.RoundName)
+                {
+                    case "Round 1":
+                        listRound1.Add(item);
+                        break;
+                    case "Round 2":
+                        listRound2.Add(item);
+                        break;
+                    case "Round 3":
+                        listRound3.Add(item);
+                        break;
+                }
+            }
+        }
+
+        #region Round 1 List Question and Answer
+
+        if (listAnswer1stSetR1 != null && listAnswer1stSetR1.Count > 0)
+        {
+            foreach (var item in listAnswer1stSetR1)
+            {
+                var checkQuestion = roundSet.ListUserInputRound1.FirstOrDefault(x => x.StrQuestion.ToLower().Equals(item.StrQuestion.ToLower()));
+                if (checkQuestion != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Question : {item.StrQuestion} - Answer : {checkQuestion.StrAnswer}");
+                    item.Id = checkQuestion.Id;
+                    item.StrAnswer = checkQuestion.StrAnswer != null && checkQuestion.StrAnswer != string.Empty ? FormatService.ReplaceTagHtmlParagraph(checkQuestion.StrAnswer) : string.Empty;
+                    item.StrAnswer2 = checkQuestion.StrAnswer2;
+                    item.Description = checkQuestion.Description;
+                    item.Position = checkQuestion.Position;
+                    item.AppId = checkQuestion.AppId;
+                    item.FieldId = checkQuestion.FieldId;
+                    item.ItemId = checkQuestion.ItemId;
+                    item.Type = checkQuestion.Type;
+                    item.DtEndRequire = checkQuestion.DtEndRequire;
+                    item.RoundName = checkQuestion.RoundName;
+                }
+            }
+        }
+
+        if (listAnswer2ndSetR1 != null && listAnswer2ndSetR1.Count > 0)
+        {
+            foreach (var item in listAnswer2ndSetR1)
+            {
+
+                var checkQuestion = roundSet.ListUserInputRound1.FirstOrDefault(x => x.StrQuestion.ToLower().Equals(item.StrQuestion.ToLower()));
+                if (checkQuestion != null)
+                {
+
+                    item.Id = checkQuestion.Id;
+                    item.StrAnswer = checkQuestion.StrAnswer != null && checkQuestion.StrAnswer != string.Empty ? FormatService.ReplaceTagHtmlParagraph(checkQuestion.StrAnswer) : string.Empty;
+                    item.StrAnswer2 = checkQuestion.StrAnswer2;
+                    item.Description = checkQuestion.Description;
+                    item.Position = checkQuestion.Position;
+                    item.AppId = checkQuestion.AppId;
+                    item.FieldId = checkQuestion.FieldId;
+                    item.ItemId = checkQuestion.ItemId;
+                    item.Type = checkQuestion.Type;
+                    item.DtEndRequire = checkQuestion.DtEndRequire;
+                    item.RoundName = checkQuestion.RoundName;
+                }
+
+            }
+        }
+
+        #endregion
+
+        #region Round 2 List Question and Answer
+
+        if (listAnswer1stSetR2 != null && listAnswer1stSetR2.Count > 0)
+        {
+            foreach (var item in listAnswer1stSetR2)
+            {
+                var checkQuestion = roundSet.ListUserInputRound2.FirstOrDefault(x => x.StrQuestion.ToLower().Equals(item.StrQuestion.ToLower()));
+                if (checkQuestion != null)
+                {
+                    item.Id = checkQuestion.Id;
+                    item.StrAnswer = checkQuestion.StrAnswer != null && checkQuestion.StrAnswer != string.Empty ? FormatService.ReplaceTagHtmlParagraph(checkQuestion.StrAnswer) : string.Empty;
+                    item.StrAnswer2 = checkQuestion.StrAnswer2;
+                    item.Description = checkQuestion.Description;
+                    item.Position = checkQuestion.Position;
+                    item.AppId = checkQuestion.AppId;
+                    item.FieldId = checkQuestion.FieldId;
+                    item.ItemId = checkQuestion.ItemId;
+                    item.Type = checkQuestion.Type;
+                    item.DtEndRequire = checkQuestion.DtEndRequire;
+                    item.RoundName = checkQuestion.RoundName;
+                }
+            }
+        }
+
+        if (listAnswer2ndSetR2 != null && listAnswer2ndSetR2.Count > 0)
+        {
+            foreach (var item in listAnswer2ndSetR2)
+            {
+                var checkQuestion = roundSet.ListUserInputRound2.FirstOrDefault(x => x.StrQuestion.ToLower().Equals(item.StrQuestion.ToLower()));
+                if (checkQuestion != null)
+                {
+                    item.Id = checkQuestion.Id;
+                    item.StrAnswer = checkQuestion.StrAnswer != null && checkQuestion.StrAnswer != string.Empty ? FormatService.ReplaceTagHtmlParagraph(checkQuestion.StrAnswer) : string.Empty;
+                    item.StrAnswer2 = checkQuestion.StrAnswer2;
+                    item.Description = checkQuestion.Description;
+                    item.Position = checkQuestion.Position;
+                    item.AppId = checkQuestion.AppId;
+                    item.FieldId = checkQuestion.FieldId;
+                    item.ItemId = checkQuestion.ItemId;
+                    item.Type = checkQuestion.Type;
+                    item.DtEndRequire = checkQuestion.DtEndRequire;
+                    item.RoundName = checkQuestion.RoundName;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Round 3 List Question and Answer
+
+        if (listAnswer1stSetR3 != null && listAnswer1stSetR3.Count > 0)
+        {
+            foreach (var item in listAnswer1stSetR3)
+            {
+                var checkQuestion = roundSet.ListUserInputRound3.FirstOrDefault(x => x.StrQuestion.ToLower().Equals(item.StrQuestion.ToLower()));
+                if (checkQuestion != null)
+                {
+                    item.Id = checkQuestion.Id;
+                    item.StrAnswer = checkQuestion.StrAnswer != null && checkQuestion.StrAnswer != string.Empty ? FormatService.ReplaceTagHtmlParagraph(checkQuestion.StrAnswer) : string.Empty;
+                    item.StrAnswer2 = checkQuestion.StrAnswer2;
+                    item.Description = checkQuestion.Description;
+                    item.Position = checkQuestion.Position;
+                    item.AppId = checkQuestion.AppId;
+                    item.FieldId = checkQuestion.FieldId;
+                    item.ItemId = checkQuestion.ItemId;
+                    item.Type = checkQuestion.Type;
+                    item.DtEndRequire = checkQuestion.DtEndRequire;
+                    item.RoundName = checkQuestion.RoundName;
+                }
+            }
+        }
+
+        if (listAnswer2ndSetR3 != null && listAnswer2ndSetR3.Count > 0)
+        {
+            foreach (var item in listAnswer2ndSetR3)
+            {
+                var checkQuestion = roundSet.ListUserInputRound3.FirstOrDefault(x => x.StrQuestion.ToLower().Equals(item.StrQuestion.ToLower()));
+                if (checkQuestion != null)
+                {
+                    item.Id = checkQuestion.Id;
+                    item.StrAnswer = checkQuestion.StrAnswer != null && checkQuestion.StrAnswer != string.Empty ? FormatService.ReplaceTagHtmlParagraph(checkQuestion.StrAnswer) : string.Empty;
+                    item.StrAnswer2 = checkQuestion.StrAnswer2;
+                    item.Description = checkQuestion.Description;
+                    item.Position = checkQuestion.Position;
+                    item.AppId = checkQuestion.AppId;
+                    item.FieldId = checkQuestion.FieldId;
+                    item.ItemId = checkQuestion.ItemId;
+                    item.Type = checkQuestion.Type;
+                    item.DtEndRequire = checkQuestion.DtEndRequire;
+                    item.RoundName = checkQuestion.RoundName;
+                }
+            }
+        }
+
+        #endregion
+
+
+    }
+
+    private void InitSave()
+    {
+        if (startTimer)
+            startTimer = false;
+
+        //Save();
+    }
+
+    private async void Save()
+    {
+
+        listAnswerR1.Clear();
+        listAnswerR1.AddRange(listAnswer1stSetR1);
+        listAnswerR1.AddRange(listAnswer2ndSetR1);
+        //WriteLog(listAnswerR1);
+        System.Diagnostics.Debug.WriteLine($"Round 1 Added");
+
+        listAnswerR2.Clear();
+        listAnswerR2.AddRange(listAnswer1stSetR2);
+        listAnswerR2.AddRange(listAnswer2ndSetR2);
+        //WriteLog(listAnswerR2);
+        System.Diagnostics.Debug.WriteLine($"Round 2 Added");
+
+        listAnswerR3.Clear();
+        listAnswerR3.AddRange(listAnswer1stSetR3);
+        listAnswerR3.AddRange(listAnswer2ndSetR3);
+        //WriteLog(listAnswerR3);
+        System.Diagnostics.Debug.WriteLine($"Round 3 Added");
+
+        listRoundItem.Clear();
+        listRoundItem.AddRange(listRound1);
+        listRoundItem.AddRange(listRound2);
+        listRoundItem.AddRange(listRound3);
+
+        //Set ID to zero (0), system will generate the ID once save in database
+        //listRoundItem.Select(c => { c.Id = 0; return c; }).ToList();
+        System.Diagnostics.Debug.WriteLine($"List Round Added");
+
+
+        roundSet.isRound1 = isRound1;
+        roundSet.isRound2 = isRound2;
+        roundSet.isRound3 = isRound3;
+        roundSet.ListUserInputRound1 = listAnswerR1;
+        roundSet.ListUserInputRound2 = listAnswerR2;
+        roundSet.ListUserInputRound3 = listAnswerR3;
+        roundSet.ListUniqueNotes = listUniqueNotes;
+        roundSet.ListRoundItem = listRoundItem;
+        roundSet.ListIUCNonSystemGen1 = listIUCNonSystemGen1;
+        roundSet.ListIUCSystemGen1 = listIUCSystemGen1;
+        roundSet.ListIUCNonSystemGen2 = listIUCNonSystemGen2;
+        roundSet.ListIUCSystemGen2 = listIUCSystemGen2;
+        roundSet.ListIUCNonSystemGen3 = listIUCNonSystemGen3;
+        roundSet.ListIUCSystemGen3 = listIUCSystemGen3;
+        roundSet.ListUserQuestion = listQuestion;
+        roundSet.ListHeaderNote = listHeaderNote;
+        if (sampleSel1 != null && sampleSel1.PodioItemId != 0)
+            roundSet.sampleSel1 = sampleSel1;
+        if (sampleSel2 != null && sampleSel2.PodioItemId != 0)
+            roundSet.sampleSel2 = sampleSel2;
+        if (sampleSel3 != null && sampleSel3.PodioItemId != 0)
+            roundSet.sampleSel3 = sampleSel3;
+
+        roundSet.Rcm = rcm;
+
+        if (isNew)
+        {
+            Guid guid = Guid.NewGuid();
+            roundSet.UniqueId = guid.ToString();
+
+            //Set ID to zero (0), system will generate the ID once save in database
+            roundSet.ListIUCNonSystemGen1 = roundSet.ListIUCNonSystemGen1.Select(c => { c.Id = 0; return c; }).ToList();
+            roundSet.ListIUCNonSystemGen2 = roundSet.ListIUCNonSystemGen2.Select(c => { c.Id = 0; return c; }).ToList();
+            roundSet.ListIUCNonSystemGen3 = roundSet.ListIUCNonSystemGen3.Select(c => { c.Id = 0; return c; }).ToList();
+            roundSet.ListIUCSystemGen1 = roundSet.ListIUCSystemGen1.Select(c => { c.Id = 0; return c; }).ToList();
+            roundSet.ListIUCSystemGen2 = roundSet.ListIUCSystemGen2.Select(c => { c.Id = 0; return c; }).ToList();
+            roundSet.ListIUCSystemGen3 = roundSet.ListIUCSystemGen3.Select(c => { c.Id = 0; return c; }).ToList();
+            roundSet.ListRoundItem = roundSet.ListRoundItem.Select(c => { c.Id = 0; return c; }).ToList();
+            roundSet.ListUniqueNotes = roundSet.ListUniqueNotes.Select(c => { c.Id = 0; return c; }).ToList();
+            roundSet.ListUserQuestion = roundSet.ListUserQuestion.Select(c => { c.Id = 0; return c; }).ToList();
+            foreach (var item in roundSet.ListUserQuestion)
+            {
+                if (item.Options != null && item.Options.Count > 0)
+                {
+                    foreach (var inner in item.Options)
+                    {
+                        inner.Id = 0;
+                    }
+                }
+            }
+
+
+            //----------------------------------------
+            //Save to podio
+            //----------------------------------------
+            #region Save to podio
+            //podio will return item id for each reference and questionnaire created
+
+            var tempRoundSet = await SaveToPodio(roundSet);
+            roundSet.ListUniqueNotes = tempRoundSet.ListUniqueNotes;
+            roundSet.ListRoundItem = tempRoundSet.ListRoundItem;
+            roundSet.ListIUCNonSystemGen1 = tempRoundSet.ListIUCNonSystemGen1;
+            roundSet.ListIUCSystemGen1 = tempRoundSet.ListIUCSystemGen1;
+            roundSet.ListIUCNonSystemGen2 = tempRoundSet.ListIUCNonSystemGen2;
+            roundSet.ListIUCSystemGen2 = tempRoundSet.ListIUCSystemGen2;
+            roundSet.ListIUCNonSystemGen3 = tempRoundSet.ListIUCNonSystemGen3;
+            roundSet.ListIUCSystemGen3 = tempRoundSet.ListIUCSystemGen3;
+            roundSet.ListUserInputRound1 = tempRoundSet.ListUserInputRound1;
+            roundSet.ListUserInputRound2 = tempRoundSet.ListUserInputRound2;
+            roundSet.ListUserInputRound3 = tempRoundSet.ListUserInputRound3;
+
+            #endregion
+
+
+        }
+
+        //WriteLog writeLog = new WriteLog();
+        //writeLog.Display(roundSet);
+
+
+        //----------------------------------------
+        //Save to database
+        //----------------------------------------
+        #region Save to database
+
+        await HttpRequestSaveQuestionnaireAdditionalInputs();
+        roundSet = await HttpRequestSaveQuestionnaire(roundSet);
+
+        #endregion
+
+
+        //----------------------------------------
+        //Generate output file
+        //----------------------------------------
+        #region Generate output file
+
+        await HttpRequestCreateExcelAsync(roundSet);
+        await HttpRequestCreateSOXTrackerDataAsync(roundSet);
+        //re-Initialize data
+        PopulateExistingQuestionnaire();
+
+        #endregion
+
+        //WriteLog writeLog = new WriteLog();
+        //writeLog.Display(roundSet);
+        isSavingState = false;
+        this.StateHasChanged();
+    }
+
+    private async Task<QuestionaireAddedInputs> HttpRequestSaveQuestionnaireAdditionalInputs()
+    {
+
+        QuestionaireAddedInputs _AddedInputss = new QuestionaireAddedInputs();
+
+        _AddedInputss.ClientName = rcm.ClientName;
+        _AddedInputss.ClientCode = rcm.ClientCode;
+        _AddedInputss.ClientItemId = (int)rcm.ClientItemId;
+        _AddedInputss.roundset = roundSet.UniqueId;
+        _AddedInputss.Answer1 = Answer1;
+        _AddedInputss.Answer2 = Answer2;
+        _AddedInputss.Answer3 = Answer3;
+        _AddedInputss.Answer4 = Answer4;
+        _AddedInputss.Answer5 = Answer5;
+        _AddedInputss.Answer6 = Answer6;
+        _AddedInputss.Answer7 = Answer7;
+        _AddedInputss.Answer8 = Answer8;
+        _AddedInputss.Answer9 = Answer9;
+        _AddedInputss.Answer10 = Answer10;
+        _AddedInputss.Answer11 = Answer11;
+        _AddedInputss.Answer12 = Answer12;
+        _AddedInputss.Answer13 = Answer13;
+        _AddedInputss.Answer14 = Answer14;
+        _AddedInputss.Answer15 = Answer15;
+        var httpResponse = await QuestionnaireService.AddQuestionaireAdditionalInputs(_AddedInputss, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                toastService.ShowSuccess($"Successfully save additional inputs to database");
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to save additional inputs to database");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to save additional inputs to database");
+
+        }
+        return AddedInputss;
+    }
+
+    private async Task<QuestionnaireRoundSet> HttpRequestSaveQuestionnaire(QuestionnaireRoundSet roundSet)
+    {
+        var httpResponse = await QuestionnaireService.SaveQuestionnaireAsync(roundSet, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                //questionnaireRoundSet = new QuestionnaireRoundSet();
+                roundSet = JsonConvert.DeserializeObject<QuestionnaireRoundSet>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                toastService.ShowSuccess($"Successfully save questionnaire to database");
+                isNew = false;
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to save questionnaire to database");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to save questionnaire to database");
+
+        }
+
+        return roundSet;
+
+    }
+
+    private async Task<QuestionnaireRoundSet> SaveToPodio(QuestionnaireRoundSet roundset)
+    {
+        try
+        {
+            //1. save reference field first
+            //2. update object with return item id from podio
+            //3. save questionnaire with reference item id's
+
+            //Save unique notes reference and get return item id from podio
+            if (roundset.ListUniqueNotes != null && roundset.ListUniqueNotes.Count > 0)
+            {
+                var notesCreated = await HttpRequestCreatePodioNotes(roundset.ListUniqueNotes.ToList());
+                if (notesCreated != null && notesCreated.Count() > 0)
+                {
+                    roundset.ListUniqueNotes.Clear();
+                    roundset.ListUniqueNotes = notesCreated;
+                }
+            }
+
+
+            //Save round items reference and get return item id from podio
+            if (roundset.ListRoundItem != null && roundset.ListRoundItem.Count > 0)
+            {
+                var roundCreated = await HttpRequestCreatePodioTestRound(roundset.ListRoundItem.ToList());
+                if (roundCreated != null && roundCreated.Count() > 0)
+                {
+                    roundset.ListRoundItem.Clear();
+                    roundset.ListRoundItem = roundCreated;
+                }
+            }
+
+
+            //Save IUC system gen reference and get return item id from podio
+            #region IUC System Gen
+            if (roundset.ListIUCSystemGen1 != null && roundset.ListIUCSystemGen1.Count > 0)
+            {
+                var iucSysCreated1 = await HttpRequestCreatePodioIUCSystemGen(roundset.ListIUCSystemGen1.ToList());
+                if (iucSysCreated1 != null && iucSysCreated1.Count() > 0)
+                {
+                    roundset.ListIUCSystemGen1.Clear();
+                    roundset.ListIUCSystemGen1 = iucSysCreated1;
+                }
+            }
+
+
+            if (roundset.ListIUCSystemGen2 != null && roundset.ListIUCSystemGen2.Count > 0)
+            {
+                var iucSysCreated2 = await HttpRequestCreatePodioIUCSystemGen(roundset.ListIUCSystemGen2.ToList());
+                if (iucSysCreated2 != null && iucSysCreated2.Count() > 0)
+                {
+                    roundset.ListIUCSystemGen2.Clear();
+                    roundset.ListIUCSystemGen2 = iucSysCreated2;
+                }
+            }
+
+
+            if (roundset.ListIUCSystemGen3 != null && roundset.ListIUCSystemGen3.Count > 0)
+            {
+                var iucSysCreated3 = await HttpRequestCreatePodioIUCSystemGen(roundset.ListIUCSystemGen3.ToList());
+                if (iucSysCreated3 != null && iucSysCreated3.Count() > 0)
+                {
+                    roundset.ListIUCSystemGen3.Clear();
+                    roundset.ListIUCSystemGen3 = iucSysCreated3;
+                }
+            }
+
+            #endregion
+
+
+            //Save IUC non system gen reference and get return item id from podio
+            #region IUC Non System Gen
+            if (roundset.ListIUCNonSystemGen1 != null && roundset.ListIUCNonSystemGen1.Count > 0)
+            {
+                var iucNonSysCreated1 = await HttpRequestCreatePodioIUCNonSystemGen(roundset.ListIUCNonSystemGen1.ToList());
+                if (iucNonSysCreated1 != null && iucNonSysCreated1.Count() > 0)
+                {
+                    roundset.ListIUCNonSystemGen1.Clear();
+                    roundset.ListIUCNonSystemGen1 = iucNonSysCreated1;
+                }
+            }
+
+            if (roundset.ListIUCNonSystemGen2 != null && roundset.ListIUCNonSystemGen2.Count > 0)
+            {
+                var iucNonSysCreated2 = await HttpRequestCreatePodioIUCNonSystemGen(roundset.ListIUCNonSystemGen2.ToList());
+                if (iucNonSysCreated2 != null && iucNonSysCreated2.Count() > 0)
+                {
+                    roundset.ListIUCNonSystemGen2.Clear();
+                    roundset.ListIUCNonSystemGen2 = iucNonSysCreated2;
+                }
+            }
+
+            if (roundset.ListIUCNonSystemGen3 != null && roundset.ListIUCNonSystemGen3.Count > 0)
+            {
+                var iucNonSysCreated3 = await HttpRequestCreatePodioIUCNonSystemGen(roundset.ListIUCNonSystemGen3.ToList());
+                if (iucNonSysCreated3 != null && iucNonSysCreated3.Count() > 0)
+                {
+                    roundset.ListIUCNonSystemGen3.Clear();
+                    roundset.ListIUCNonSystemGen3 = iucNonSysCreated3;
+                }
+            }
+            #endregion
+
+
+            //Save Questionnaire reference and get return item id from podio
+            if (roundset != null)
+            {
+                var roundSetCreated = await HttpRequestCreatePodioQuestionnaire(roundset);
+                if (roundSetCreated != null)
+                {
+                    if (roundSetCreated.ListUserInputRound1.Where(x => x.ItemId != 0).FirstOrDefault() != null)
+                    {
+                        roundset.ListUserInputRound1 = roundSetCreated.ListUserInputRound1;
+                    }
+
+                    if (roundSetCreated.ListUserInputRound2.Where(x => x.ItemId != 0).FirstOrDefault() != null)
+                    {
+                        roundset.ListUserInputRound2 = roundSetCreated.ListUserInputRound2;
+                    }
+
+                    if (roundSetCreated.ListUserInputRound3.Where(x => x.ItemId != 0).FirstOrDefault() != null)
+                    {
+                        roundset.ListUserInputRound3 = roundSetCreated.ListUserInputRound3;
+                    }
+
+                }
+            }
+
+
+            toastService.ShowSuccess($"Successfully save items to Podio");
+
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError($"Failed to save items to Podio");
+            FileLog.Write(ex.ToString(), "ErrorQuestionnaireSaveToPodio");
+        }
+
+        return roundset;
+    }
+
+    private bool SaveToDatabase()
+    {
+        bool result = false;
+
+        try
+        {
+
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError($"Failed to save items to Database");
+            FileLog.Write(ex.ToString(), "ErrorQuestionnaireSaveToDatabase");
+        }
+
+        return result;
+    }
+
+    private void ReturnTimeValue(string value)
+    {
+        if (value != string.Empty && posTime > 0)
+        {
+            //userInput.Where(x => x.StrQuestion.ToLower().Contains("time duration")).ToList().ForEach(x => x.StrAnswer = value);
+            if (isRound1)
+                listAnswer2ndSetR1[posTime - 1].StrAnswer = value;
+            if (isRound2)
+                listAnswer2ndSetR2[posTime - 1].StrAnswer = value;
+            if (isRound3)
+                listAnswer2ndSetR3[posTime - 1].StrAnswer = value;
+
+            elapseTime = value;
+            Console.WriteLine($"Time Return: {value}");
+        }
+        else if (posTime == 0)
+            Console.WriteLine($"No time duration field for this workpaper. Timer data cannot be saved.");
+
+
+        if (isSavingState)
+            Save();
+
+        this.StateHasChanged();
+    }
+
+    private string DownloadFile2(string fileName)
+    {
+        return $"{NavigationManager.BaseUri}api/Questionnaire/download/{fileName}";
+
+    }
+
+    private void ReturnAddRound(string roundNum)
+    {
+        if (roundNum != string.Empty)
+        {
+            switch (roundNum)
+            {
+                case "1":
+                    listRound1 = AddRoundItem(listRound1, "Round 1");
+                    break;
+                case "-1":
+                    listRound1 = RemoveRoundItem(listRound1);
+                    break;
+                case "2":
+                    listRound2 = AddRoundItem(listRound2, "Round 2");
+                    break;
+                case "-2":
+                    listRound2 = RemoveRoundItem(listRound2);
+                    break;
+                case "3":
+                    listRound3 = AddRoundItem(listRound3, "Round 3");
+                    break;
+                case "-3":
+                    listRound3 = RemoveRoundItem(listRound3);
+                    break;
+                default:
+                    break;
+            }
+
+            this.StateHasChanged();
+        }
+    }
+
+    private List<RoundItem> AddRoundItem(List<RoundItem> listRoundItem, string roundName)
+    {
+        if (listRoundItem != null)
+        {
+            if (listRoundItem.Count == 0)
+            {
+                RoundItem roundItem = new RoundItem();
+                roundItem.AppId = listQuestion.Select(x => x.AppId).FirstOrDefault();
+                roundItem.A2Q2Samples = "1";
+                roundItem.RoundName = roundName;
+                roundItem.Position = "1";
+                roundItem.Id = 0;
+
+                listRoundItem.Add(roundItem);
+            }
+            else
+            {
+                var lastElementAdded = listRoundItem.OrderByDescending(x => int.Parse(x.A2Q2Samples)).FirstOrDefault();
+                if (lastElementAdded != null)
+                {
+                    int a2q2Sample = 0;
+                    if (int.TryParse(lastElementAdded.A2Q2Samples, out a2q2Sample))
+                    {
+                        a2q2Sample++;
+                        RoundItem roundItem = new RoundItem();
+                        roundItem.AppId = listQuestion.Select(x => x.AppId).FirstOrDefault();
+                        roundItem.A2Q2Samples = a2q2Sample.ToString();
+                        roundItem.RoundName = roundName;
+                        roundItem.Position = a2q2Sample.ToString();
+                        roundItem.Id = 0;
+
+
+                        listRoundItem.Add(roundItem);
+                    }
+
+
+                }
+            }
+
+
+        }
+
+        return listRoundItem;
+    }
+
+    private List<RoundItem> LoadSampleSelectionTestRound(List<RoundItem> listRoundItem, SampleSelection sampleSelection)
+    {
+        //WriteLog writelog = new WriteLog();
+        //writelog.Display("Testtesteagjsdjasdhjsdhjsadjsadhjasdkadskllkasd");
+        if (sampleSelection.ListTestRound != null && sampleSelection.ListTestRound.Count > 0)
+        {
+
+            //listRoundItem.Clear();
+            foreach (var item in sampleSelection.ListTestRound)
+            {
+                //WriteLog writelog = new WriteLog();
+                //writelog.Display(item);
+                RoundItem roundItem = new RoundItem();
+                roundItem.AppId = listQuestion.Select(x => x.AppId).FirstOrDefault();
+                //roundItem.RoundQA = templistRoundQuestion1;
+                roundItem.A2Q2Samples = item.A2Q2Samples;
+                roundItem.RoundName = item.TestingRound;
+                roundItem.Position = item.A2Q2Samples;
+                roundItem.Id = 0;
+
+                roundItem.Answer1 = item.ContentDisplay1;
+                roundItem.Answer2 = item.ContentDisplay2;
+                roundItem.Answer3 = item.ContentDisplay3;
+                roundItem.Answer4 = item.ContentDisplay4;
+                roundItem.Answer5 = item.ContentDisplay5;
+                roundItem.Answer6 = item.ContentDisplay6;
+                roundItem.Answer7 = item.ContentDisplay7;
+                roundItem.Answer8 = item.ContentDisplay8;
+                roundItem.Answer9 = item.ContentDisplay9;
+                roundItem.Answer10 = item.ContentDisplay10;
+
+
+                listRoundItem.Add(roundItem);
+
+            }
+        }
+        return listRoundItem;
+    }
+
+    private List<RoundItem> RemoveRoundItem(List<RoundItem> listRoundItem)
+    {
+        if (listRoundItem != null && listRoundItem.Count > 0)
+        {
+            var lastElementAdded = listRoundItem.OrderByDescending(x => int.Parse(x.A2Q2Samples)).FirstOrDefault();
+            if (lastElementAdded != null)
+            {
+                listRoundItem.Remove(lastElementAdded);
+            }
+        }
+        return listRoundItem;
+    }
+
+    private void SetIUCNonSystemGen(IUCNonSystemGenCount iUCNonSystemGenCount)
+    {
+
+        switch (iUCNonSystemGenCount.roundName)
+        {
+            case "Round 1":
+                listIUCNonSystemGen1 = GenerateIUCNonSystem(listIUCNonSystemGen1, iUCNonSystemGenCount.count);
+                break;
+            case "Round 2":
+                listIUCNonSystemGen2 = GenerateIUCNonSystem(listIUCNonSystemGen2, iUCNonSystemGenCount.count);
+                break;
+            case "Round 3":
+                listIUCNonSystemGen3 = GenerateIUCNonSystem(listIUCNonSystemGen3, iUCNonSystemGenCount.count);
+                break;
+        }
+        //this.StateHasChanged();
+    }
+
+    private void SetIUCSystemGen(IUCSystemGenCount iUCSystemGenCount)
+    {
+
+        switch (iUCSystemGenCount.roundName)
+        {
+            case "Round 1":
+                listIUCSystemGen1 = GenerateIUCSystem(listIUCSystemGen1, iUCSystemGenCount.count);
+                break;
+            case "Round 2":
+                listIUCSystemGen2 = GenerateIUCSystem(listIUCSystemGen2, iUCSystemGenCount.count);
+                break;
+            case "Round 3":
+                listIUCSystemGen3 = GenerateIUCSystem(listIUCSystemGen3, iUCSystemGenCount.count);
+                break;
+        }
+
+        this.StateHasChanged();
+    }
+
+    private List<IUCSystemGenAnswer> GenerateIUCSystem(List<IUCSystemGenAnswer> iUCSystemGen, int count)
+    {
+        if (iUCSystemGen != null)
+        {
+            iUCSystemGen.Clear();
+            if (count > 0)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    IUCSystemGenAnswer tempIUCSystemGen = new IUCSystemGenAnswer();
+                    tempIUCSystemGen.AppId = objIUCSystemGen.AppId;
+                    tempIUCSystemGen.Position = i;
+                    List<IUCQuestionUserAnswer> listQA = new List<IUCQuestionUserAnswer>();
+
+                    foreach (var item in objIUCSystemGen.ListQuestionAnswer)
+                    {
+                        string unique = string.Empty;
+                        IUCQuestionUserAnswer qA = new IUCQuestionUserAnswer();
+                        qA.AppId = item.AppId;
+                        qA.FieldId = item.FieldId;
+                        qA.Position = item.Position;
+                        qA.Type = item.Type;
+                        qA.Question = item.Question;
+                        qA.Id = 0;
+                        qA.Answer = item.Answer;
+                        qA.Options = item.Options;
+                        unique = $"{item.FieldId}{tempIUCSystemGen.Position}";
+                        qA.UniqueId = unique;
+                        listQA.Add(qA);
+                    }
+
+                    tempIUCSystemGen.ListQuestionAnswer = listQA;
+                    iUCSystemGen.Add(tempIUCSystemGen);
+                }
+            }
+
+        }
+
+        return iUCSystemGen;
+    }
+
+    private List<IUCNonSystemGenAnswer> GenerateIUCNonSystem(List<IUCNonSystemGenAnswer> iUCNonSystemGen, int count)
+    {
+        if (iUCNonSystemGen != null)
+        {
+            iUCNonSystemGen.Clear();
+            if (count > 0)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    IUCNonSystemGenAnswer tempIUCNonSystemGen = new IUCNonSystemGenAnswer();
+                    tempIUCNonSystemGen.AppId = objIUCNonSystemGen.AppId;
+                    tempIUCNonSystemGen.Position = i;
+                    List<IUCQuestionUserAnswer> listQA = new List<IUCQuestionUserAnswer>();
+
+                    foreach (var item in objIUCNonSystemGen.ListQuestionAnswer)
+                    {
+                        string unique = string.Empty;
+                        IUCQuestionUserAnswer qA = new IUCQuestionUserAnswer();
+                        qA.AppId = item.AppId;
+                        qA.FieldId = item.FieldId;
+                        qA.Position = item.Position;
+                        qA.Type = item.Type;
+                        qA.Question = item.Question;
+                        qA.Id = 0;
+                        qA.Answer = item.Answer;
+                        qA.Options = item.Options;
+                        unique = $"{item.FieldId}{tempIUCNonSystemGen.Position}";
+                        qA.UniqueId = unique;
+                        listQA.Add(qA);
+                    }
+                    tempIUCNonSystemGen.ListQuestionAnswer = listQA;
+                    iUCNonSystemGen.Add(tempIUCNonSystemGen);
+                }
+            }
+
+        }
+
+        return iUCNonSystemGen;
+    }
+
+    private async Task<List<RoundItem>> HttpRequestCreatePodioTestRound(List<RoundItem> listRoundItem)
+    {
+        List<RoundItem> listRoundCreated = null;
+        var httpResponse = await QuestionnaireService.CreateQuestionnaireRoundsAsync(listRoundItem, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                listRoundCreated = new List<RoundItem>();
+                listRoundCreated = JsonConvert.DeserializeObject<List<RoundItem>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                toastService.ShowSuccess($"Successfully created test round in Podio");
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to create test round");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to create test round");
+        }
+
+        return listRoundCreated;
+
+    }
+
+    private async Task<List<NotesItem>> HttpRequestCreatePodioNotes(List<NotesItem> listNotesItem)
+    {
+        List<NotesItem> listNotesCreated = null;
+        var httpResponse = await QuestionnaireService.CreateQuestionnaireNotesAsync(listNotesItem, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                listNotesCreated = new List<NotesItem>();
+                listNotesCreated = JsonConvert.DeserializeObject<List<NotesItem>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                toastService.ShowSuccess($"Successfully created notes in Podio");
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to create notes");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to create notes");
+        }
+
+        return listNotesCreated;
+
+    }
+
+    private async Task<List<IUCSystemGenAnswer>> HttpRequestCreatePodioIUCSystemGen(List<IUCSystemGenAnswer> listIUC)
+    {
+        List<IUCSystemGenAnswer> listIUCCreated = null;
+        var httpResponse = await QuestionnaireService.CreateQuestionnaireIUCSystemGenAsync(listIUC, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                listIUCCreated = new List<IUCSystemGenAnswer>();
+                listIUCCreated = JsonConvert.DeserializeObject<List<IUCSystemGenAnswer>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                //toastService.ShowSuccess($"Successfully created IUC in Podio");
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to create IUC System Gen");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to create IUC System Gen");
+        }
+
+        return listIUCCreated;
+
+    }
+
+    private async Task<List<IUCNonSystemGenAnswer>> HttpRequestCreatePodioIUCNonSystemGen(List<IUCNonSystemGenAnswer> listIUC)
+    {
+        List<IUCNonSystemGenAnswer> listIUCCreated = null;
+        var httpResponse = await QuestionnaireService.CreateQuestionnaireIUCNonSystemGenAsync(listIUC, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                listIUCCreated = new List<IUCNonSystemGenAnswer>();
+                listIUCCreated = JsonConvert.DeserializeObject<List<IUCNonSystemGenAnswer>>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                //toastService.ShowSuccess($"Successfully created IUC in Podio");
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to create IUC System Gen");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to create IUC System Gen");
+        }
+
+        return listIUCCreated;
+
+    }
+
+    private async Task<QuestionnaireRoundSet> HttpRequestCreatePodioQuestionnaire(QuestionnaireRoundSet roundSet)
+    {
+        QuestionnaireRoundSet questionnaireRoundSet = null;
+        var httpResponse = await QuestionnaireService.CreateQuestionnaireAsync3(roundSet, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                questionnaireRoundSet = new QuestionnaireRoundSet();
+                questionnaireRoundSet = JsonConvert.DeserializeObject<QuestionnaireRoundSet>(httpResponse.Content.ReadAsStringAsync().Result.ToString());
+                //toastService.ShowSuccess($"Successfully created IUC in Podio");
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to create Podio Questionnaire");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to create Podio Questionnaire");
+        }
+
+        return questionnaireRoundSet;
+
+    }
+
+    private async Task HttpRequestCreateSOXTrackerDataAsync(QuestionnaireRoundSet roundSet)
+    {
+        var trackResponse = await QuestionnaireService.CreateSOXTrackerData(roundSet, Http);
+        if (trackResponse.StatusCode.ToString() == "OK")
+        {
+            toastService.ShowSuccess($"Successfully created sox tracker");
+        }
+        else
+        {
+            toastService.ShowError("Failed to create sox tracker");
+        }
+    }
+
+    private async Task HttpRequestCreateExcelAsync(QuestionnaireRoundSet roundSet)
+    {
+        var httpResponse = await QuestionnaireService.CreateExcelAsync3(roundSet, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                fileName = httpResponse.Content.ReadAsStringAsync().Result.ToString();
+                System.Diagnostics.Debug.WriteLine($"Filename: {fileName}");
+
+                //if (fileName != string.Empty)
+                //    fileDownload.Show(fileName, downloadUri);
+
+                toastService.ShowSuccess($"Successfully created output file");
+
+
+                //upload to sf
+                //SharefileItem sfItem = new SharefileItem();
+                //sfItem.FileName = fileName;
+                //sfItem.FilePath = string.Empty;
+                //UploadToSharefile(sfItem);
+
+
+            }
+            catch (Exception ex)
+            {
+                toastService.ShowError($"Failed to create output file {ex}");
+                //Console.WriteLine($"Failed to create output file {ex}");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError($"Failed to create excel file {httpResponse.Content}");
+            //Console.WriteLine($"Failed to create excel file {httpResponse.Content}");
+        }
+        this.StateHasChanged();
+
+    }
+
+    private void ReturnIUCSystemGen(FinalIUCSystemGen e)
+    {
+        if (e != null)
+        {
+            switch (e.roundName)
+            {
+                case "Round 1":
+                    if (e.Item != null && e.Item.Count > 0)
+                    {
+                        listIUCSystemGen1 = e.Item;
+
+                    }
+
+                    break;
+                case "Round 2":
+                    if (e.Item != null && e.Item.Count > 0)
+                    {
+                        listIUCSystemGen2 = e.Item;
+
+                    }
+
+                    break;
+                case "Round 3":
+                    if (e.Item != null && e.Item.Count > 0)
+                    {
+                        listIUCSystemGen3 = e.Item;
+
+                    }
+
+                    break;
+                default:
+                    break;
+            }
+            this.StateHasChanged();
+        }
+    }
+
+    private void ReturnIUCNonSystemGen(FinalIUCNonSystemGen e)
+    {
+
+        if (e != null)
+        {
+            switch (e.roundName)
+            {
+                case "Round 1":
+                    if (e.Item != null && e.Item.Count > 0)
+                    {
+                        listIUCNonSystemGen1 = e.Item;
+                        this.StateHasChanged();
+                    }
+
+                    break;
+                case "Round 2":
+                    if (e.Item != null && e.Item.Count > 0)
+                    {
+                        listIUCNonSystemGen2 = e.Item;
+                        this.StateHasChanged();
+                    }
+
+                    break;
+                case "Round 3":
+                    if (e.Item != null && e.Item.Count > 0)
+                    {
+                        listIUCNonSystemGen2 = e.Item;
+                        this.StateHasChanged();
+                    }
+
+                    break;
+                default:
+                    break;
+            }
+
+        }
+
+
+    }
+
+    private void ReturnNotesItem(FinalListUniqueNotes e)
+    {
+        if (e != null)
+        {
+            listUniqueNotes = e.Item;
+            this.StateHasChanged();
+        }
+
+    }
+
+    private void ReturnSampleSelection(SampleSelectionByRound e)
+    {
+        if (e != null)
+        {
+            switch (e.RoundName)
+            {
+                case "Round 1":
+                    sampleSel1 = e.SampleSelection;
+                    if (sampleSel1.ListTestRound.Any())
+                    {
+                        listRound1.Clear();
+                        listRound1 = LoadSampleSelectionTestRound(listRound1, sampleSel1);
+                    }
+                    break;
+                case "Round 2":
+                    sampleSel2 = e.SampleSelection;
+                    if (sampleSel2.ListTestRound.Any())
+                    {
+                        listRound2.Clear();
+                        listRound2 = LoadSampleSelectionTestRound(listRound2, sampleSel2);
+                    }
+                    break;
+                case "Round 3":
+                    sampleSel3 = e.SampleSelection;
+                    if (sampleSel3.ListTestRound.Any())
+                    {
+                        listRound3.Clear();
+                        listRound3 = LoadSampleSelectionTestRound(listRound3, sampleSel3);
+                    }
+                    break;
+            }
+            this.StateHasChanged();
+        }
+    }
+
+    private async void UploadToSharefile(SharefileItem sfItem)
+    {
+        //ERI
+        if (fileName.ToLower().Contains("eri"))
+        {
+            if (fileName.ToLower().Contains("elc"))
+            {
+                sfItem.Directory = "SoxWP_ERI_ELC";
+            }
+            else if (fileName.ToLower().Contains("hrp"))
+            {
+                sfItem.Directory = "SoxWP_ERI_HRP";
+            }
+            else if (fileName.ToLower().Contains("fcr"))
+            {
+                sfItem.Directory = "SoxWP_ERI_FCR";
+            }
+            else if (fileName.ToLower().Contains("ia"))
+            {
+                sfItem.Directory = "SoxWP_ERI_IA";
+            }
+            else if (fileName.ToLower().Contains("inv"))
+            {
+                sfItem.Directory = "SoxWP_ERI_INV";
+            }
+            else if (fileName.ToLower().Contains("ITGC"))
+            {
+                sfItem.Directory = "SoxWP_ERI_ITGC";
+            }
+            else if (fileName.ToLower().Contains("otc"))
+            {
+                sfItem.Directory = "SoxWP_ERI_OTC";
+            }
+            else if (fileName.ToLower().Contains("ptp"))
+            {
+                sfItem.Directory = "SoxWP_ERI_PTP";
+            }
+            else if (fileName.ToLower().Contains("tax"))
+            {
+                sfItem.Directory = "SoxWP_ERI_TAX";
+            }
+            else if (fileName.ToLower().Contains("fa"))
+            {
+                sfItem.Directory = "SoxWP_ERI_FA";
+            }
+            else if (fileName.ToLower().Contains("esa"))
+            {
+                sfItem.Directory = "SoxWP_ERI_ESA";
+            }
+
+        }
+        //ViewRay
+        else if (fileName.ToLower().Contains("viewray"))
+        {
+            if (fileName.ToLower().Contains("esa"))
+            {
+                sfItem.Directory = "SoxWP_VR_ESA";
+            }
+            else if (fileName.ToLower().Contains("tcm"))
+            {
+                sfItem.Directory = "SoxWP_VR_TCM";
+            }
+            else if (fileName.ToLower().Contains("tax"))
+            {
+                sfItem.Directory = "SoxWP_VR_TAX";
+            }
+            else if (fileName.ToLower().Contains("fcr"))
+            {
+                sfItem.Directory = "SoxWP_VR_FCR";
+            }
+            else if (fileName.ToLower().Contains("elc"))
+            {
+                sfItem.Directory = "SoxWP_VR_ELC";
+            }
+            else if (fileName.ToLower().Contains("ptp"))
+            {
+                sfItem.Directory = "SoxWP_VR_PTP";
+            }
+            else if (fileName.ToLower().Contains("hrp"))
+            {
+                sfItem.Directory = "SoxWP_VR_HRP";
+            }
+            else if (fileName.ToLower().Contains("fa"))
+            {
+                sfItem.Directory = "SoxWP_VR_FA";
+            }
+            else if (fileName.ToLower().Contains("inv"))
+            {
+                sfItem.Directory = "SoxWP_VR_INV";
+            }
+            else if (fileName.ToLower().Contains("itgc"))
+            {
+                sfItem.Directory = "SoxWP_VR_ITGC";
+            }
+            else if (fileName.ToLower().Contains("otc"))
+            {
+                sfItem.Directory = "SoxWP_VR_OTC";
+            }
+        }
+
+        //Kindred
+        else if (fileName.ToLower().Contains("kindred"))
+        {
+            if (fileName.ToLower().Contains("tcm"))
+            {
+                sfItem.Directory = "SoxWP_KB_TCM";
+            }
+            else if (fileName.ToLower().Contains("tax"))
+            {
+                sfItem.Directory = "SoxWP_KB_TAX";
+            }
+            else if (fileName.ToLower().Contains("rev"))
+            {
+                sfItem.Directory = "SoxWP_KB_REV";
+            }
+            else if (fileName.ToLower().Contains("ptp"))
+            {
+                sfItem.Directory = "SoxWP_KB_PTP";
+            }
+            else if (fileName.ToLower().Contains("mec"))
+            {
+                sfItem.Directory = "SoxWP_KB_MEC";
+            }
+            else if (fileName.ToLower().Contains("itgc"))
+            {
+                sfItem.Directory = "SoxWP_KR_ITGC";
+            }
+            else if (fileName.ToLower().Contains("itgc"))
+            {
+                sfItem.Directory = "SoxWP_KR_ITGC";
+            }
+            else if (fileName.ToLower().Contains("inv"))
+            {
+                sfItem.Directory = "SoxWP_KB_INV";
+            }
+            else if (fileName.ToLower().Contains("hrp"))
+            {
+                sfItem.Directory = "SoxWP_KB_HRP";
+            }
+            else if (fileName.ToLower().Contains("fre"))
+            {
+                sfItem.Directory = "SoxWP_KB_FRE";
+            }
+            else if (fileName.ToLower().Contains("fa"))
+            {
+                sfItem.Directory = "SoxWP_KB_FA";
+            }
+            else if (fileName.ToLower().Contains("fa"))
+            {
+                sfItem.Directory = "SoxWP_KB_FA";
+            }
+            else if (fileName.ToLower().Contains("elc"))
+            {
+                sfItem.Directory = "SoxWP_KB_ELC";
+            }
+            else if (fileName.ToLower().Contains("esa"))
+            {
+                sfItem.Directory = "SoxWP_KB_ESA";
+            }
+            else if (fileName.ToLower().Contains("cta"))
+            {
+                sfItem.Directory = "SoxWP_KB_CTA";
+            }
+        }
+
+        //ChargePoint
+        else if (fileName.ToLower().Contains("chargepoint"))
+        {
+            if (fileName.ToLower().Contains("ptp"))
+            {
+                sfItem.Directory = "SoxWP_CP_PTP";
+            }
+            else if (fileName.ToLower().Contains("fa"))
+            {
+                sfItem.Directory = "SoxWP_CP_FA";
+            }
+            else if (fileName.ToLower().Contains("elc"))
+            {
+                sfItem.Directory = "SoxWP_CP_ELC";
+            }
+            else if (fileName.ToLower().Contains("itgc"))
+            {
+                sfItem.Directory = "SoxWP_CP_ITGC";
+            }
+            else if (fileName.ToLower().Contains("hrp"))
+            {
+                sfItem.Directory = "SoxWP_CP_HRP";
+            }
+            else if (fileName.ToLower().Contains("esa"))
+            {
+                sfItem.Directory = "SoxWP_CP_ESA";
+            }
+            else if (fileName.ToLower().Contains("fcr"))
+            {
+                sfItem.Directory = "SoxWP_CP_FCR";
+            }
+            else if (fileName.ToLower().Contains("otc"))
+            {
+                sfItem.Directory = "SoxWP_CP_OTC";
+            }
+            else if (fileName.ToLower().Contains("inv"))
+            {
+                sfItem.Directory = "SoxWP_CP_INV";
+            }
+            else if (fileName.ToLower().Contains("tax"))
+            {
+                sfItem.Directory = "SoxWP_CP_TAX";
+            }
+        }
+
+        //Techpoint
+        else if (fileName.ToLower().Contains("techpoint"))
+        {
+            if (fileName.ToLower().Contains("inv"))
+            {
+                sfItem.Directory = "SoxWP_TP_INV";
+            }
+            else if (fileName.ToLower().Contains("fcr"))
+            {
+                sfItem.Directory = "SoxWP_TP_FCR";
+            }
+            else if (fileName.ToLower().Contains("hrp"))
+            {
+                sfItem.Directory = "SoxWP_TP_HRP";
+            }
+            else if (fileName.ToLower().Contains("elc"))
+            {
+                sfItem.Directory = "SoxWP_TP_ELC";
+            }
+            else if (fileName.ToLower().Contains("fa"))
+            {
+                sfItem.Directory = "SoxWP_TP_FA";
+            }
+            else if (fileName.ToLower().Contains("tax"))
+            {
+                sfItem.Directory = "SoxWP_TP_TAX";
+            }
+            else if (fileName.ToLower().Contains("esa"))
+            {
+                sfItem.Directory = "SoxWP_TP_ESA";
+            }
+            else if (fileName.ToLower().Contains("tcm"))
+            {
+                sfItem.Directory = "SoxWP_TP_TCM";
+            }
+            else if (fileName.ToLower().Contains("ptp"))
+            {
+                sfItem.Directory = "SoxWP_TP_PTP";
+            }
+            else if (fileName.ToLower().Contains("itgc"))
+            {
+                sfItem.Directory = "SoxWP_TP_ITGC";
+            }
+            else if (fileName.ToLower().Contains("otc"))
+            {
+                sfItem.Directory = "SoxWP_TP_OTC";
+            }
+        }
+
+        //McGrath
+        else if (fileName.ToLower().Contains("mcgrath"))
+        {
+            if (fileName.ToLower().Contains("elc"))
+            {
+                sfItem.Directory = "SoxWP_MG_ELC";
+            }
+            else if (fileName.ToLower().Contains("inv"))
+            {
+                sfItem.Directory = "SoxWP_MG_INV";
+            }
+            else if (fileName.ToLower().Contains("fscp"))
+            {
+                sfItem.Directory = "SoxWP_MG_FSCP";
+            }
+            else if (fileName.ToLower().Contains("otc"))
+            {
+                sfItem.Directory = "SoxWP_MG_OTC";
+            }
+            else if (fileName.ToLower().Contains("fa"))
+            {
+                sfItem.Directory = "SoxWP_MG_FA";
+            }
+            else if (fileName.ToLower().Contains("esa"))
+            {
+                sfItem.Directory = "SoxWP_MG_ESA";
+            }
+            else if (fileName.ToLower().Contains("ptp"))
+            {
+                sfItem.Directory = "SoxWP_MG_PTP";
+            }
+            else if (fileName.ToLower().Contains("tcm"))
+            {
+                sfItem.Directory = "SoxWP_MG_TCM";
+            }
+            else if (fileName.ToLower().Contains("tax"))
+            {
+                sfItem.Directory = "SoxWP_MG_TAX";
+            }
+            else if (fileName.ToLower().Contains("otc"))
+            {
+                sfItem.Directory = "SoxWP_TP_OTC";
+            }
+        }
+
+        //Fastly
+        else if (fileName.ToLower().Contains("fastly"))
+        {
+            if (fileName.ToLower().Contains("ma"))
+            {
+                sfItem.Directory = "SoxWP_FAS_MA";
+            }
+            else if (fileName.ToLower().Contains("tcm"))
+            {
+                sfItem.Directory = "SoxWP_FAS_TCM";
+            }
+            else if (fileName.ToLower().Contains("tax"))
+            {
+                sfItem.Directory = "SoxWP_FAS_TAX";
+            }
+            else if (fileName.ToLower().Contains("ptp"))
+            {
+                sfItem.Directory = "SoxWP_FAS_PTP";
+            }
+            else if (fileName.ToLower().Contains("otc"))
+            {
+                sfItem.Directory = "SoxWP_FAS_OTC";
+            }
+            else if (fileName.ToLower().Contains("hrp"))
+            {
+                sfItem.Directory = "SoxWP_FAS_HRP";
+            }
+            else if (fileName.ToLower().Contains("fcr"))
+            {
+                sfItem.Directory = "SoxWP_FAS_FCR";
+            }
+            else if (fileName.ToLower().Contains("fa"))
+            {
+                sfItem.Directory = "SoxWP_FAS_FA";
+            }
+            else if (fileName.ToLower().Contains("esa"))
+            {
+                sfItem.Directory = "SoxWP_FAS_ESA";
+            }
+            else if (fileName.ToLower().Contains("elc"))
+            {
+                sfItem.Directory = "SoxWP_FAS_ELC";
+            }
+        }
+
+        //Cortexyme
+        else if (fileName.ToLower().Contains("cortexyme"))
+        {
+            if (fileName.ToLower().Contains("cmc"))
+            {
+                sfItem.Directory = "SoxWP_COR_CMC";
+            }
+            else if (fileName.ToLower().Contains("tcm"))
+            {
+                sfItem.Directory = "SoxWP_COR_TCM";
+            }
+            else if (fileName.ToLower().Contains("tax"))
+            {
+                sfItem.Directory = "SoxWP_COR_TAX";
+            }
+            else if (fileName.ToLower().Contains("ptp"))
+            {
+                sfItem.Directory = "SoxWP_COR_PTP";
+            }
+            else if (fileName.ToLower().Contains("itgc"))
+            {
+                sfItem.Directory = "SoxWP_COR_ITGC";
+            }
+            else if (fileName.ToLower().Contains("hrp"))
+            {
+                sfItem.Directory = "SoxWP_COR_HRP";
+            }
+            else if (fileName.ToLower().Contains("fcr"))
+            {
+                sfItem.Directory = "SoxWP_COR_FCR";
+            }
+            else if (fileName.ToLower().Contains("fa"))
+            {
+                sfItem.Directory = "SoxWP_COR_FA";
+            }
+            else if (fileName.ToLower().Contains("esa"))
+            {
+                sfItem.Directory = "SoxWP_COR_ESA";
+            }
+            else if (fileName.ToLower().Contains("elc"))
+            {
+                sfItem.Directory = "SoxWP_COR_ELC";
+            }
+            else if (fileName.ToLower().Contains("cta"))
+            {
+                sfItem.Directory = "SoxWP_COR_CTA";
+            }
+        }
+
+        //Ambarella
+        else if (fileName.ToLower().Contains("ambarella"))
+        {
+            if (fileName.ToLower().Contains("otc"))
+            {
+                sfItem.Directory = "SoxWP_AMB_QTC";
+            }
+            else if (fileName.ToLower().Contains("ptp"))
+            {
+                sfItem.Directory = "SoxWP_AMB_PTP";
+            }
+            else if (fileName.ToLower().Contains("itgc"))
+            {
+                sfItem.Directory = "SoxWP_AMB_ITGC";
+            }
+            else if (fileName.ToLower().Contains("inv"))
+            {
+                sfItem.Directory = "SoxWP_AMB_INV";
+            }
+            else if (fileName.ToLower().Contains("hrp"))
+            {
+                sfItem.Directory = "SoxWP_AMB_HRP";
+            }
+            else if (fileName.ToLower().Contains("fcr"))
+            {
+                sfItem.Directory = "SoxWP_AMB_FCR";
+            }
+            else if (fileName.ToLower().Contains("elc"))
+            {
+                sfItem.Directory = "SoxWP_AMB_ELC";
+            }
+        }
+
+        var uploadRes = await QuestionnaireService.UploadToSharefile(sfItem, Http);
+        if (uploadRes.StatusCode.ToString() == "OK")
+        {
+            string resultUpload = uploadRes.Content.ReadAsStringAsync().Result.ToString();
+
+
+            if (resultUpload != string.Empty)
+                fileDownload.Show(fileName, resultUpload);
+
+            //rcmOutput.FileName = resultUpload;
+            toastService.ShowSuccess($"Successfully uploaded in Sharefile");
+        }
+
+        else
+        {
+            toastService.ShowError($"Failed to upload in Sharefile");
+        }
+
+        this.StateHasChanged();
+    }
+
+    private ListIPENote GenerateIPENote(string control)
+    {
+        ListIPENote listIpeNote = new ListIPENote();
+        switch (control)
+        {
+            case "sox": //for sox business controls
+                listIpeNote.ListNotes = new List<IPENote>
+                {
+                    new IPENote
+                    {
+                        Name = "IPE Walkthrough",
+                        Note = "IPE/Validation of PBC Reports (Completeness/Accuracy) Walkthrough",
+                        Description = string.Empty,
+                        Display = false
+                    },
+                    new IPENote
+                    {
+                        Name = "IPE Round 1",
+                        Note = "IPE/Validation of PBC Reports (Completeness/Accuracy) Round 1",
+                        Description = string.Empty,
+                        Display = false
+                    },
+                    new IPENote
+                    {
+                        Name = "IPE Round 2",
+                        Note = "IPE/Validation of PBC Reports (Completeness/Accuracy) Round 2",
+                        Description = string.Empty,
+                        Display = false
+                    },
+                     new IPENote
+                    {
+                        Name = "IPE Round 3",
+                        Note = "IPE/Validation of PBC Reports (Completeness/Accuracy) Round 3",
+                        Description = string.Empty,
+                        Display = false
+                    }
+                };
+
+                break;
+            case "itgc": //for itgc controls
+                listIpeNote.ListNotes = new List<IPENote>
+                {
+                    new IPENote
+                    {
+                        Name = "IPE Note",
+                        Note = "IPE Note",
+                        Description = string.Empty,
+                        Display = false
+                    }
+                };
+
+                break;
+            default:
+                break;
+        }
+
+        return listIpeNote;
+    }
+
+    private void StartTimer()
+    {
+        if (!startTimer)
+        {
+            startTimer = true;
+            //refElapseTime.startTimer = true;
+        }
+        this.StateHasChanged();
+    }
+
+    private void StopTimer()
+    {
+        if (startTimer)
+        {
+            isSavingState = true;
+            startTimer = false;
+        }
+        //Save();
+        this.StateHasChanged();
+    }
+
+
+
+
+}

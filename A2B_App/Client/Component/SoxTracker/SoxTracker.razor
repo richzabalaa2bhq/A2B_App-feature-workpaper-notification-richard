@@ -1,0 +1,102 @@
+﻿<h3>SOX Controls</h3>
+<div class="border-top my-3"></div>
+
+<div class="tabs">
+
+    <ul>
+        <li class="@(activeTabControl == 0 ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(0); })">
+                <span class="icon is-small"><i class="oi oi-pencil" aria-hidden="true"></i></span>
+                <span>Tracker Control</span>
+            </a>
+        </li>
+        <li class="@(activeTabControl  == 1 ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(1); })">
+                <span class="icon is-small"><i class="oi oi-data-transfer-download" aria-hidden="true"></i></span>
+                <span>Download</span>
+            </a>
+        </li>
+        <li class="@(activeTabControl  == 2 ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(2); })">
+                <span class="icon is-small"><i class="oi oi-data-transfer-upload" aria-hidden="true"></i></span>
+                <span>Import</span>
+            </a>
+        </li>
+        <li class="@(activeTabControl  == 3 ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(3); })">
+                <span class="icon is-small"><i class="oi oi-zoom-in" aria-hidden="true"></i></span>
+                <span>View</span>
+            </a>
+        </li>
+    </ul>
+
+</div>
+
+<div class="container is-fluid">
+
+    @switch (activeTabControl)
+    {
+        case 0:
+            <div><SoxTrackerControl startTimer="@startTimer"></SoxTrackerControl></div>
+            break;
+        case 1:
+            <div><SoxTrackerDownload></SoxTrackerDownload></div>
+            break;
+        case 2:
+            <div><SoxTrackerImport></SoxTrackerImport></div>
+            break;
+        case 3:
+            <div><SoxTrackerView></SoxTrackerView></div>
+            break;
+        default:
+            break;
+    }
+
+  
+</div>
+
+
+
+@code {
+    
+    private bool startTimer { get; set; }
+    public int activeTabControl { get; set; }
+
+    //on page initialization
+    protected override Task OnInitializedAsync()
+    {
+        // set tab new control to true and the rest false
+        activeTabControl = 0;
+        startTimer = false;
+        TabControl(activeTabControl);
+        return base.OnInitializedAsync();
+    }
+
+    //handles tab control
+    private void TabControl(int activeControl)
+    {
+        switch (activeControl)
+        {
+            case 0:
+                activeTabControl = 0;
+                startTimer = true;
+                break;
+            case 1:
+                activeTabControl = 1;
+                startTimer = false;
+                break;
+            case 2:
+                activeTabControl = 2;
+                startTimer = false;
+                break;
+            case 3:
+                activeTabControl = 3;
+                startTimer = false;
+                break;
+            default:
+                break;
+        }
+        this.StateHasChanged();
+    }
+
+}

@@ -1,0 +1,58 @@
+﻿@using A2B_App.Client.Services
+@using A2B_App.Shared.Sox
+@using A2B_App.Shared.Podio
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+
+@if (display)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">@title</p>
+                <button class="delete" aria-label="close" @onclick="Close"></button>
+            </header>
+            <section class="modal-card-body">
+                <p>@message</p>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" @onclick="@(() => { SetReturnValue("No"); })">No</button>
+                <button class="button is-danger" @onclick="@(() => { SetReturnValue("Yes"); })">Yes</button>
+            </footer>
+        </div>
+    </div>
+
+}
+
+
+
+
+@code {
+
+    [Parameter] public EventCallback<string> ReturnValue { get; set; }
+    [Parameter] public string title { get; set; }
+    [Parameter] public string message { get; set; }
+
+    private void SetReturnValue(string answer)
+    {
+        ReturnValue.InvokeAsync(answer);
+        Close();
+    }
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+}

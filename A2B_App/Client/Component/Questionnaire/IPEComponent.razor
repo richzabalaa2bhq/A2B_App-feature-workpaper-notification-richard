@@ -1,0 +1,104 @@
+﻿@using A2B_App.Shared.Sox
+
+@if (display)
+{
+
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">IPE Notes</p>
+                <button class="delete" aria-label="close" @onclick="Close"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="simple-form">
+
+                    @if (ListIPENote != null && ListIPENote.ListNotes != null)
+                    {
+                        foreach (var item in ListIPENote.ListNotes)
+                        {
+                            <div class="form-group">
+                                <button class="btn @(item.Display ? btnColorDanger : btnColorPrimary)" @onclick="NoteEventHandler">@($"Add {item.Name}")</button>
+                            </div>
+                        }
+                    }
+
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" @onclick="Close">Cancel</button>
+            </footer>
+        </div>
+    </div>
+
+
+}
+
+
+
+
+@code {
+    [Parameter] public ListIPENote ListIPENote { get; set; }
+    [Parameter] public EventCallback<ListIPENote> ReturnGenNote { get; set; }
+
+    private string btnColorDanger { get; set; } = "btn-danger";
+    private string btnColorPrimary { get; set; } = "btn-primary";
+
+    private void NoteEventHandler()
+    {
+        //generalNote.Display = !generalNote.Display;
+        //ChangeButtonText();
+        //System.Diagnostics.Debug.WriteLine($"Display Gen Notes: {generalNote.Display}");
+        ReturnGenNote.InvokeAsync(ListIPENote);
+        this.StateHasChanged();
+    }
+
+    private void SetReturnValue()
+    {
+        ReturnGenNote.InvokeAsync(ListIPENote);
+        this.StateHasChanged();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        //if (generalNote != null)
+        //{
+        //    ChangeButtonText();
+        //}
+
+        return base.OnInitializedAsync();
+    }
+
+    private void ChangeButtonText()
+    {
+        //if (generalNote.Display)
+        //{
+        //    btnText = "Remove General Note";
+        //    btnColor = "btn-danger";
+        //}
+        //else
+        //{
+        //    btnText = "Add General Note";
+        //    btnColor = "btn-primary";
+        //}
+
+
+
+        this.StateHasChanged();
+    }
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+}

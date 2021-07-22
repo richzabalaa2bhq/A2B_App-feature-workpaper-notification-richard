@@ -1,0 +1,77 @@
+﻿
+@inject HttpClient Http
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject NavigationManager NavigationManager
+
+
+<h3>Segregation Of Duties (SOD)</h3>
+<hr />
+
+<div class="tabs">
+
+    <ul>
+        <li class="@(activeTabControl == 0 ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(0); })">
+                <span class="icon is-small"><i class="oi oi-pencil" aria-hidden="true"></i></span>
+                <span>Sod Manual</span>
+            </a>
+        </li>
+        <li class="@(activeTabControl == 1 ? "is-active": string.Empty)">
+            <a @onclick="@(() => { TabControl(1); })">
+                <span class="icon is-small"><i class="oi oi-data-transfer-download" aria-hidden="true"></i></span>
+                <span>NetSuite SoxRox</span>
+            </a>
+        </li>
+    </ul>
+
+</div>
+
+<div class="container is-fluid">
+
+    @switch (activeTabControl)
+    {
+        case 0:
+            <div><SodManual></SodManual></div>
+            break;
+        case 1:
+            <div><SodSoxRox></SodSoxRox></div>
+            break;
+    }
+</div>
+
+
+
+@code {
+
+    public bool tabSodManual { get; set; } = false;
+    public bool tabSodSoxRox { get; set; } = false;
+    public int activeTabControl { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        activeTabControl = 0;
+        base.OnInitialized();
+    }
+
+    private void TabControl(int activeControl)
+    {
+        switch (activeControl)
+        {
+            case 0:
+                activeTabControl = 0;
+                break;
+            case 1:
+                activeTabControl = 1;
+                break;
+            default:
+                break;
+        }
+        this.StateHasChanged();
+    }
+
+
+
+
+}

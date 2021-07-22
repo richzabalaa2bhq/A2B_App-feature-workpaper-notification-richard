@@ -1,0 +1,104 @@
+﻿@using A2B_App.Client.Services
+@using A2B_App.Shared.Sox
+
+@inject IToastService toastService
+
+<table class="table table-striped table-sm table-hover">
+    <thead>
+        <tr>
+            <th scope="col">Item Id</th>
+            <th scope="col">Client</th>
+            <th scope="col">External Auditor</th>
+            <th scope="col">Frequency</th>
+            <th scope="col">Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (_listSampleSelection != null && _listSampleSelection.Count > 0)
+        {
+            foreach (var item in _listSampleSelection)
+            {
+                <tr style="cursor: pointer;" @onclick="@(() => Edit(item.PodioItemId))">
+                    <td>@item.PodioItemId</td>
+                    <td>@item.ClientName</td>
+                    <td>@item.ExternalAuditor</td>
+                    <td>@item.Frequency</td>
+
+
+                    @switch (item.Version)
+                    {
+                        case "3":
+                            if (item.IsMateriality == "Yes")
+                            {
+                                <td>Materiality</td>
+                            }
+                            else
+                            {
+                                <td>Transactional</td>
+                            }
+
+                            break;
+                        case "2":
+                            if (item.Frequency == "Daily")
+                            {
+                                <td>Daily - Adjusted</td>
+                            }
+                            else if (item.Frequency == "Weekly")
+                            {
+                                <td>Weekly - Adjusted</td>
+                            }
+                            else if (item.Frequency == "Monthly")
+                            {
+                                <td>Monthly - Adjusted</td>
+                            }
+                            break;
+                        case "1":
+                            if (item.Frequency == "Daily")
+                            {
+                                <td>Daily - Full</td>
+                            }
+                            else if (item.Frequency == "Weekly")
+                            {
+                                <td>Weekly - Full</td>
+                            }
+                            else if (item.Frequency == "Monthly")
+                            {
+                                <td>Monthly - Full</td>
+                            }
+                            break;
+                    }
+
+
+                </tr>
+            }
+        }
+
+    </tbody>
+</table>
+
+
+
+@code {
+    [Parameter]
+    public List<SampleSelection> ListSampleSelection { get; set; }
+
+    private List<SampleSelection> _listSampleSelection { get; set; }
+
+    protected override void OnParametersSet()
+    {
+
+        if (ListSampleSelection != null)
+        {
+            _listSampleSelection = new List<SampleSelection>();
+            _listSampleSelection.AddRange(ListSampleSelection);
+            this.StateHasChanged();
+        }
+    }
+
+    private void Edit(int PodioItemId)
+    {
+        toastService.ShowInfo($"Edit item {PodioItemId} is not yet available");
+    }
+
+
+}

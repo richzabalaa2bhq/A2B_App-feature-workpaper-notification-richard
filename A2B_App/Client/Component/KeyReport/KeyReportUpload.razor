@@ -1,0 +1,106 @@
+﻿
+@using A2B_App.Client.Component.SoxTracker
+@using A2B_App.Shared.Sox
+@using System.IO
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject IToastService toastService
+@using System.Net.Http.Headers
+
+<h3>Key Report Upload Import</h3>
+
+<div class="columns">
+    <div class="column is-half">
+        <DragDropFile ReturnFiles="@((e) => { PreUpload(e); })"
+                      title="Upload Key Report Excel File"
+                      enableRemove="true"
+                      fileFormatAccepted="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+        </DragDropFile>
+    </div>
+    <div class="column is-half">
+        <button class="button is-primary"  @onclick="@(() => { SetReturnValue(true); })">
+            Upload
+        </button>
+    </div>
+    @if (display)
+    {
+        <div class="modal is-active">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <section class="modal-card-body">
+                    <p>Are you sure you have the correct KeyRport File?</p>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-danger" @onclick="@(() => { SetReturnValue(false); })">No</button>
+                    <button class="button is-primary" @onclick="@(() => { ReturnFiles(); })">Yes</button>
+                </footer>
+            </div>
+        </div>
+
+    }
+</div>
+
+
+@code {
+
+    private string status { get; set; }
+    //private FileImport fileImport { get; set; }
+    private FileService fileService { get; set; }
+    private ImportFields importFields { get; set; }
+    private bool display {get; set;}
+    private string file;
+    private FileUpload keyreportfileupload { get; set; }
+
+
+
+    protected override void OnInitialized()
+    {
+        //fileImport = new FileImport();
+        fileService = new FileService();
+        importFields = new ImportFields();
+        importFields.ListDatabaseColumns = new List<DBColumnVal>();
+        importFields.ListExcelColumns = new List<ColumnVal>();
+        base.OnInitialized();
+    }
+    private async void PreUpload(FileUpload fileUpload)
+    {
+        keyreportfileupload = fileUpload;
+    }
+    private async void SetReturnValue(bool e)
+    {
+        display = e;
+    }
+
+
+    private async void ReturnFiles()
+    {
+        display = false;
+        FileUpload fileUpload = keyreportfileupload;
+        if (fileUpload.IFileEntry != null)
+        {
+            var ms = new MemoryStream();
+            await fileUpload.IFileEntry.Data.CopyToAsync(ms);
+
+            //upload file and get response
+            var response = await fileService.UploadFileForImport(ms, fileUpload.IFileEntry.Name, 3, Http);
+
+            if (response.StatusCode.ToString() == "OK")
+            {
+                string result = response.Content.ReadAsStringAsync().Result.ToString();
+                importFields = result != string.Empty ? JsonConvert.DeserializeObject<ImportFields>(result) : null;
+                toastService.ShowSuccess($"Successfully upload excel file");
+                this.StateHasChanged();
+            }
+            else
+                toastService.ShowError($"Failed to read excel file");
+
+        }
+        else
+        {
+            importFields = new ImportFields();
+            importFields.ListDatabaseColumns = new List<DBColumnVal>();
+            importFields.ListExcelColumns = new List<ColumnVal>();
+        }
+    }
+}

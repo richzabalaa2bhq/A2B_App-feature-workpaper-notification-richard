@@ -1,0 +1,27 @@
+@page "/authentication/{action}"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+<RemoteAuthenticatorView Action="@Action" />
+
+@inject NavigationManager Navigation
+
+@code{
+    [Parameter] public string Action { get; set; }
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    if(this.Action == "logout-callback")
+    //    {
+    //        Navigation.NavigateTo("/");
+    //        //Navigation.NavigateTo("authentication/login");
+    //    }
+
+    //}
+
+    protected override void OnInitialized()
+    {
+        if (this.Action == "logout-callback")
+        {
+            Navigation.NavigateTo("/");
+            //Navigation.NavigateTo("authentication/login");
+        }
+    }
+}

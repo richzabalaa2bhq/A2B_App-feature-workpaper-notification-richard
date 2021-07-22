@@ -1,0 +1,544 @@
+﻿@page "/recordings"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using A2B_App.Client.Services
+@using BlazorDateRangePicker
+@using Newtonsoft.Json
+@using System.Text
+@using System.IO
+@using A2B_App.Shared.Sox
+@using A2B_App.Shared.Meeting
+@using System.Globalization
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize]
+@inject IToastService toastService
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime
+
+<h1>Meeting Recordings</h1>
+<div class="border-top my-3"></div>
+
+
+<div class="columns is-desktop">
+    <div class="column">
+        <button class="btn btn-primary" @onclick="(() =>
+                                                  {
+                                                      GetRecrodings();
+                                                  })">
+            Refresh
+        </button>
+    </div>
+</div>
+
+<div class="columns is-desktop">
+    <div class="column">
+        <div class="btn-group" role="group" aria-label="Basic example">
+
+
+
+            <DateRangePicker OnRangeSelect="OnRangeSelect1" @bind-StartDate="@StartDate" @bind-EndDate="@EndDate" Culture="@(System.Globalization.CultureInfo.GetCultureInfo("en-US"))">
+                <PickerTemplate>
+                    <div id="@context.Id" @onclick="context.Toggle" style="background: #fff; cursor: pointer; padding: 5px 10px; width: 250px; border: 1px solid #ccc;">
+                        <i class="oi oi-calendar"></i>&nbsp;
+                        <span>@context.FormattedRange @(string.IsNullOrEmpty(context.FormattedRange) ? "Choose dates..." : "")</span>
+
+                    </div>
+                </PickerTemplate>
+                <ButtonsTemplate>
+                    <button class="cancelBtn btn btn-sm btn-default"
+                            @onclick="@context.ClickCancel" type="button">
+                        Cancel
+                    </button>
+                    <button class="applyBtn btn btn-sm btn-primary" @onclick="@context.ClickApply"
+                            disabled="@(context.TStartDate == null || context.TEndDate == null)"
+                            type="button">
+                        Apply
+                    </button>
+                </ButtonsTemplate>
+            </DateRangePicker>
+
+
+
+            <button type="button" class="btn btn-outline-secondary" @onclick="(() =>
+                                                  {
+                                                      getTodayList();
+                                                  })">
+                Daily
+            </button>
+            <button type="button" class="btn btn-outline-secondary" @onclick="(() =>
+                                                  {
+                                                      getWeekList();
+                                                  })">
+                Weekly
+            </button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="(() =>
+                                                  {
+                                                      getMonthList();
+                                                  })">
+                Monthly
+            </button>
+                
+
+        </div>
+    </div>
+</div>
+
+
+<div class="columns is-desktop">
+    <div class="column">
+        <div class="table-container">
+            <table class="table is-bordered is-narrow is-hoverable is-fullwidth">
+                <thead>
+                    <tr>
+                        <th style="display:none;">Id</th>
+                        <th>Title</th>
+                        <th>Meeting Id</th>
+                        <th>Meeting type</th>
+                        <th>Duration</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+
+                    @if (ShowDaily == true)
+                    {
+                        @if (tempRecordingMeeting != null && tempRecordingMeeting.Any())
+                        {
+                            foreach (var item in tempRecordingMeeting)
+                            {
+                                <tr>
+                                    <td style="display:none;">@item.sys_id</td>
+                                    <td>@item.subject</td>
+                                    <td>@item.meeting_id </td>
+                                    <td>@item.meeting_type</td>
+                                    <td>@item.duration</td>
+                                    <td>@item.starttime</td>
+                                    <td>@item.endtime</td>
+                                    <td> <button class="btn btn-primary" @onclick="(() => {DownloadLink(item); })">Download</button></td>
+                                </tr>
+                            }
+                        }
+                    }
+                    @if (ShowWeekly == true)
+                    {
+                        @if (lisyWeeklyMeeting != null && lisyWeeklyMeeting.Any())
+                        {
+                            foreach (var item in lisyWeeklyMeeting)
+                            {
+                                <tr>
+                                    <td style="display:none;">@item.sys_id</td>
+                                    <td>@item.subject</td>
+                                    <td>@item.meeting_id </td>
+                                    <td>@item.meeting_type</td>
+                                    <td>@item.duration</td>
+                                    <td>@item.starttime</td>
+                                    <td>@item.endtime</td>
+                                    <td> <button class="btn btn-primary" @onclick="(() => {DownloadLink(item); })">Download</button></td>
+                                </tr>
+                            }
+                        }
+
+                    }
+
+
+                    @if (ShowMonthly == true)
+                    {
+                        @if (lisyMonthlyMeeting != null && lisyMonthlyMeeting.Any())
+                        {
+                            foreach (var item in lisyMonthlyMeeting)
+                            {
+                                <tr>
+                                    <td style="display:none;">@item.sys_id</td>
+                                    <td>@item.subject</td>
+                                    <td>@item.meeting_id </td>
+                                    <td>@item.meeting_type</td>
+                                    <td>@item.duration</td>
+                                    <td>@item.starttime</td>
+                                    <td>@item.endtime</td>
+                                    <td> <button class="btn btn-primary" @onclick="(() => {DownloadLink(item); })">Download</button></td>
+                                </tr>
+                            }
+                        }
+                    }
+
+                    @if (ShowDateRangeMonth == true)
+                    {
+                        @if (listDateRangeMeeting != null && listDateRangeMeeting.Any())
+                        {
+                            foreach (var item in listDateRangeMeeting)
+                            {
+                                <tr>
+                                    <td style="display:none;">@item.sys_id</td>
+                                    <td>@item.subject</td>
+                                    <td>@item.meeting_id </td>
+                                    <td>@item.meeting_type</td>
+                                    <td>@item.duration</td>
+                                    <td>@item.starttime</td>
+                                    <td>@item.endtime</td>
+                                    <td> <button class="btn btn-primary" @onclick="(() => {DownloadLink(item); })">Download</button></td>
+                                </tr>
+                            }
+                        }
+                    }
+
+
+
+                    @*
+                            @if (tempRecordingMeeting != null && tempRecordingMeeting.Any())
+                    {
+                        foreach (var item in tempRecordingMeeting)
+                        {
+                            <tr>
+                                <td style="display:none;">@item.sys_id</td>
+                                <td>@item.subject</td>
+                                <td>@item.meeting_id </td>
+                                <td>@item.meeting_type</td>
+                                <td>@item.duration</td>
+                                <td>@item.starttime</td>
+                                <td>@item.endtime</td>
+                                <td> <button class="btn btn-primary">Download</button></td>
+                            </tr>
+                        }
+                    }
+
+
+        @if (ShowMonthly == true)
+        {
+            @if (lisyMonthlyMeeting != null && lisyMonthlyMeeting.Any())
+            {
+                foreach (var item in lisyMonthlyMeeting)
+                {
+                    <tr>
+                        <td style="display:none;">@item.item_id</td>
+                        <td>@item.title</td>
+                        <td>@item.meeting_id</td>
+                        <td><a class="has-text-link" @onclick="@((e) => { Navigate(item.meeting_link); })">@item.platform</a></td>
+                        <td>@(item.timeonly)</td>
+                        <td>@item.account</td>
+                    </tr>
+                }
+            }
+        }
+
+        @if (ShowDateRangeMonth == true)
+        {
+            @if (listDateRangeMeeting != null && listDateRangeMeeting.Any())
+            {
+                foreach (var item in listDateRangeMeeting)
+                {
+                    <tr>
+                        <td style="display:none;">@item.item_id</td>
+                        <td>@item.title</td>
+                        <td>@item.meeting_id</td>
+                        <td><a class="has-text-link" @onclick="@((e) => { Navigate(item.meeting_link); })">@item.platform</a></td>
+                        <td>@(item.timeonly)</td>
+                        <td>@item.account</td>
+                    </tr>
+                }
+            }
+        }
+
+                    *@
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@*
+<div class="modal-backdrop fade show">
+    <div class="modal " tabindex="-1" role="dialog" style="display:inline">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Modal body text goes here.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+*@
+
+@code {
+
+    private ClientSettings settings;
+    private MeetingService meetingService;
+    private List<recording_gtm> listRecordingMeeting { get; set; }
+    private List<recording_gtm> tempRecordingMeeting { get; set; }
+    private TimeZoneService timeZoneService;
+    private DateTimeFormatService dtFormat;
+
+    DateTimeOffset? StartDate { get; set; }
+    DateTimeOffset? EndDate { get; set; }
+    DateTimeOffset? StartDate1 { get; set; } = null;
+    DateTimeOffset? EndDate1 { get; set; } = null;
+
+    private List<recording_gtm> lisyWeeklyMeeting { get; set; }
+    private List<recording_gtm> tempListWeeklyMeeting { get; set; }
+
+    private List<recording_gtm> lisyMonthlyMeeting { get; set; }
+    private List<recording_gtm> tempListMonthlyMeeting { get; set; }
+
+
+    private List<recording_gtm> listDateRangeMeeting { get; set; }
+    private List<recording_gtm> tempDateRangeMeeting { get; set; }
+
+
+
+    bool ShowDaily = true;
+    bool ShowWeekly = false;
+    bool ShowMonthly = false;
+    bool ShowDateRangeMonth = false;
+
+    private async void OnRangeSelect1(DateRange range)
+    {
+
+        //Console.WriteLine(StartDate1);
+        //Console.WriteLine(EndDate1);
+        DateRangeCustom DateCustomRange = new DateRangeCustom();
+
+        DateCustomRange.Start = range.Start.Date;
+        DateCustomRange.End = range.End.Date;
+        var response = await meetingService.GetRecordingsByDateRange(Http, DateCustomRange);
+        Console.WriteLine(response);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var result = response.Content.ReadAsStringAsync().Result.ToString();
+            listDateRangeMeeting = new List<recording_gtm>();
+
+            tempDateRangeMeeting = new List<recording_gtm>();
+            tempDateRangeMeeting = JsonConvert.DeserializeObject<List<recording_gtm>>(result);
+
+            string localTime = await GetTimePSTFormat24(DateTime.UtcNow.AddHours(-1).ToString());
+
+            foreach (var item in tempDateRangeMeeting)
+            {
+                string tempTime = await GetTimePSTFormat24(item.starttime);
+
+                listDateRangeMeeting.Add(item);
+            }
+        }
+        else
+            toastService.ShowWarning("Failed to get meetings/No Meetings or something went wrong");
+
+
+        ShowDaily = false;
+        ShowWeekly = false;
+        ShowMonthly = false;
+        ShowDateRangeMonth = true;
+        this.StateHasChanged();
+
+    }
+
+
+
+
+    private void getTodayList()
+    {
+        ShowDaily = true;
+        ShowWeekly = false;
+        ShowMonthly = false;
+        ShowDateRangeMonth = false;
+        this.StateHasChanged();
+    }
+
+    private async void getWeekList()
+    {
+        ShowDaily = false;
+        ShowWeekly = true;
+        ShowMonthly = false;
+        ShowDateRangeMonth = false;
+
+        var response = await meetingService.GetWeeklyRecordings(Http);
+        //lisyWeeklyMeeting.add(item);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var result = response.Content.ReadAsStringAsync().Result.ToString();
+            listRecordingMeeting = new List<recording_gtm>();
+
+            tempRecordingMeeting = new List<recording_gtm>();
+            tempRecordingMeeting = JsonConvert.DeserializeObject<List<recording_gtm>>(result);
+
+            string localTime = await GetTimePSTFormat24(DateTime.UtcNow.AddHours(-1).ToString());
+            foreach (var item in tempRecordingMeeting)
+            {
+                lisyWeeklyMeeting.Add(item);
+
+            }
+        }
+        else
+            toastService.ShowWarning("Failed to get all meeting, it's either no records yet or something went wrong");
+
+        this.StateHasChanged();
+
+    }
+
+    private async void  DownloadLink (recording_gtm item)
+    {
+        Console.WriteLine(item.meeting_id);
+        Console.WriteLine(item.meeting_id);
+
+        var response = await meetingService.GetDownload(Http, item);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var result = response.Content.ReadAsStringAsync().Result.ToString();
+            Navigate(result);
+
+        }
+        else
+            toastService.ShowWarning("Failed to get all meeting, it's either no download link yet or something went wrong");
+
+        this.StateHasChanged();
+
+    }
+
+    private async void getMonthList()
+    {
+        ShowDaily = false;
+        ShowWeekly = false;
+        ShowMonthly = true;
+        ShowDateRangeMonth = false;
+
+        var response = await meetingService.GetMonthlyRecording(Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var result = response.Content.ReadAsStringAsync().Result.ToString();
+            listRecordingMeeting = new List<recording_gtm>();
+
+            tempRecordingMeeting = new List<recording_gtm>();
+            tempRecordingMeeting = JsonConvert.DeserializeObject<List<recording_gtm>>(result);
+
+            string localTime = await GetTimePSTFormat24(DateTime.UtcNow.AddHours(-1).ToString());
+            foreach (var item in tempRecordingMeeting)
+            {
+                lisyMonthlyMeeting.Add(item);
+
+            }
+        }
+        else
+            toastService.ShowWarning("Failed to get all meeting, it's either no records yet or something went wrong");
+
+        this.StateHasChanged();
+    }
+
+
+    private async void GetRecrodings()
+    {
+        //upload file and get response
+        var response = await meetingService.GetAllRecordings(Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var result = response.Content.ReadAsStringAsync().Result.ToString();
+            listRecordingMeeting = new List<recording_gtm>();
+
+            tempRecordingMeeting = new List<recording_gtm>();
+            tempRecordingMeeting = JsonConvert.DeserializeObject<List<recording_gtm>>(result);
+
+            string localTime = await GetTimePSTFormat24(DateTime.UtcNow.AddHours(-1).ToString());
+            foreach (var item in tempRecordingMeeting)
+            {
+                listRecordingMeeting.Add(item);
+
+            }
+        }
+        else
+            toastService.ShowWarning("Failed to get all meeting, it's either norecords yet or something went wrong");
+
+        this.StateHasChanged();
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        //Initialize();
+        ShowDaily = true;
+        settings = await _getSettings;
+        listRecordingMeeting = new List<recording_gtm>();
+        lisyWeeklyMeeting = new List<recording_gtm>();
+        lisyMonthlyMeeting = new List<recording_gtm>();
+
+        tempRecordingMeeting = new List<recording_gtm>();
+        tempListWeeklyMeeting = new List<recording_gtm>();
+        tempListMonthlyMeeting = new List<recording_gtm>();
+
+        meetingService = new MeetingService(settings);
+        dtFormat = new DateTimeFormatService();
+        timeZoneService = new TimeZoneService(JSRuntime);
+    }
+
+    protected override void OnParametersSet()
+    {
+        ShowDaily = true;
+        ShowWeekly = false;
+        ShowMonthly = false;
+        GetRecrodings();
+        base.OnParametersSet();
+    }
+
+    private void Navigate(string meetingLink)
+    {
+        //NavManager.NavigateTo($"https://www.ddohq.com", forceLoad: true);
+        NavManager.NavigateTo($"{meetingLink}", forceLoad: true);
+    }
+
+    private async Task<string> GetTimePST(string strDate)
+    {
+        //string strTime;
+        //this function is for linux only
+        //TimeZoneInfo pacificZone = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles"); //linux
+        //TimeZoneInfo pacificZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time"); //Windows
+        DateTime dtStart = DateTime.Parse(strDate); //datetime without DateTimeKind specify
+        DateTime dtStartUTC = DateTime.SpecifyKind(dtStart, DateTimeKind.Utc); //datetime specify DateTimeKind UTC - start date is in UTC timezone
+        DateTimeOffset dtNow;
+        dtNow = await timeZoneService.GetLocalDateTime(dtStartUTC);
+
+        //strTime = dtStartPST.ToString("hh:mm tt", System.Globalization.CultureInfo.InvariantCulture);
+        return dtNow.ToString("hh:mm tt");
+    }
+
+    private async Task<string> GetTimePSTFormat24(string strDate)
+    {
+        //string strTime;
+        //this function is for linux only
+        //TimeZoneInfo pacificZone = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles"); //linux
+        //TimeZoneInfo pacificZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time"); //Windows
+        DateTime dtStart = DateTime.Parse(strDate); //datetime without DateTimeKind specify
+        DateTime dtStartUTC = DateTime.SpecifyKind(dtStart, DateTimeKind.Utc); //datetime specify DateTimeKind UTC - start date is in UTC timezone
+        DateTimeOffset dtNow;
+        dtNow = await timeZoneService.GetLocalDateTime(dtStartUTC);
+
+        //strTime = dtStartPST.ToString("hh:mm tt", System.Globalization.CultureInfo.InvariantCulture);
+        return dtNow.ToString("HH:mm:ss");
+    }
+
+    //public static bool IsBetween(TimeSpan time, TimeSpan startTime, TimeSpan endTime)
+    //{
+    //    if (time == startTime) return true;
+    //    if (time == endTime) return true;
+
+    //    if (startTime <= endTime)
+    //        return (time >= startTime && time <= endTime);
+    //    else
+    //        return !(time >= endTime && time <= startTime);
+    //}
+
+}

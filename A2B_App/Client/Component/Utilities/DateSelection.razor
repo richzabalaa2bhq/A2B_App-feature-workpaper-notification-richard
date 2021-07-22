@@ -1,0 +1,62 @@
+﻿
+@using BlazorDateRangePicker
+@using A2B_App.Shared.Utilities
+
+<DateRangePicker Culture="@(System.Globalization.CultureInfo.GetCultureInfo("en-US"))"
+                 @bind-StartDate="@startDate"
+                 @bind-EndDate="@endDate"  
+                 SingleDatePicker="@isDateRange"
+                 OnClosed="@(()=> {
+                                 if(startDate != null)
+                                {
+	                                DateRangeSelected dtSelected = new DateRangeSelected();
+	                                dtSelected.startDate = startDate.Value;
+                                    dtSelected.endDate = endDate.Value;
+	                                ReturnValue(dtSelected);
+                                }
+                             })">
+    <PickerTemplate>
+        <div id="@context.ParentId" @onclick="context.Toggle" style="background: #fff; cursor: pointer; padding: 5px 10px; width: 250px; border: 1px solid #ccc;" class="control is-expanded">
+            <i class="oi oi-calendar"></i>&nbsp;
+            @*<span>@context.FormattedRange @(string.IsNullOrEmpty(context.FormattedRange) ? "Select date" : "")</span>*@
+            @if (string.IsNullOrEmpty(context.FormattedRange))
+            {
+                <small><span>Select Date</span></small>
+            }
+            else
+            {
+                <small><span class="@classOverwrite">@(startDate.HasValue ? startDate.Value.ToString("MMM dd, yyyy") : string.Empty) @(endDate.HasValue ? $" - {endDate.Value.ToString("MMM dd, yyyy")}" : string.Empty) </span></small>
+            }
+            <i class="oi oi-chevron-bottom float-right"></i>
+        </div>
+    </PickerTemplate>
+</DateRangePicker>
+
+
+@code {
+
+    [Parameter] public DateTimeOffset? startDate { get; set; } = null;
+    [Parameter] public DateTimeOffset? endDate { get; set; } = null;
+    [Parameter] public bool isDateRange { get; set; }
+    [Parameter] public string classOverwrite { get; set; } = string.Empty;
+    [Parameter] public EventCallback<DateRangeSelected> OnDateChanged { get; set; }
+    private DateRangeSelected dtSelected { get; set; }
+    System.Globalization.CultureInfo customCulture = new System.Globalization.CultureInfo("en-US", true);
+
+    protected override void OnParametersSet()
+    {
+        dtSelected = new DateRangeSelected();
+        this.StateHasChanged();
+    }
+
+
+    private void ReturnValue(DateRangeSelected dtSelected)
+    {
+        if (dtSelected != null)
+        {
+            OnDateChanged.InvokeAsync(dtSelected);
+            this.StateHasChanged();
+        }
+    }
+
+}

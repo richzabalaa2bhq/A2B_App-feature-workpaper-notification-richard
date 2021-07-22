@@ -1,0 +1,90 @@
+[2021-07-02 11:49:49.624] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 12:39:18.131] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 12:51:02.626] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 13:04:11.245] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 13:04:21.751] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 13:05:25.959] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 14:24:54.332] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 14:25:22.999] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 14:26:12.533] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 15:12:29.691] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 15:14:44.514] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to Reviewer in Reviewer is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 15:39:20.680] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 15:46:51.778] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to TAX in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 15:51:53.328] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to Process in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469
+[2021-07-02 15:52:06.119] ==> PodioAPI.Exceptions.PodioBadRequestException: {"error_propagate":true,"error":"field.app.type","error_description":"The reference to Process in RCM Process is no longer valid","request":{"url":"http://api.podio.com/item/app/25886804/","query_string":"","method":"POST"}}
+   at PodioAPI.Podio.ProcessErrorResponse(HttpStatusCode statusCode, PodioError podioError)
+   at PodioAPI.Podio.Request[T](HttpRequestMessage httpRequest, Boolean isFileDownload, Boolean returnAsString)
+   at PodioAPI.Podio.Post[T](String url, Object requestData, Boolean isOAuthTokenRequest)
+   at PodioAPI.Services.ItemService.AddNewItem(Int32 appId, Item item, Nullable`1 spaceId, Boolean silent, Boolean hook)
+   at A2B_App.Server.Controllers.KeyReportController.SavePodioKeyReportIUCReportList(List`1 listUserInput) in C:\Users\admin\source\repos\Github\A2BHQ\A2B_App\A2B_App\Server\Controllers\KeyReportController.cs:line 4469

@@ -1,0 +1,1220 @@
+﻿@using System.Text
+@using A2B_App.Shared.Sox 
+
+@if (listRoundItem != null && listRoundItem.Count > 0 && countColumn > 0)
+{
+
+    //load policy change input for ELC 1.1
+    if (userInputPolicyChange != null)
+    {
+
+        foreach (var item in userInputPolicyChange)
+        {
+            System.Diagnostics.Debug.WriteLine($"Policy Change {item.Position}: {item.StrAnswer}");
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="@($"{item.FieldId}{item.Id}{item.AppId}")">@(RemoveRT(item.StrQuestion))</label>
+                        @*<input type="text" class="form-control" id="@($"{item.ClientName}{item.Id}{item.AppId}")" @bind-value="userInput[item.Position - 1].StrAnswer">*@
+
+                        <div class="field has-addons">
+                            <div class="control is-expanded">
+                                @if (item.DtEndRequire != "large")
+                                {
+                                    //if not multiline then we set as input field
+                                    <input type="text" class="input" id="@($"{item.FieldId}{item.Id}{item.AppId}")" @bind-value="@userInputPolicyChange[item.Position].StrAnswer">
+                                }
+                                else
+                                {
+                                    //if multi line then we set as textarea
+                                    <textarea rows="4" class="textarea" id="@($"{item.FieldId}{item.Id}{item.AppId}")" @bind="@userInputPolicyChange[item.Position].StrAnswer"></textarea>
+                                }
+                                <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                       @onchange="@((e)=> {
+                                                        //Console.WriteLine("Trigger Text Note");
+                                                        OnChangeEventHander(e, 5, 1, item.Position);
+                                                    })">
+
+                            </div>
+                            @if (item.Description != null && item.Description != string.Empty)
+                            {
+                                <p class="is-size-7 has-text-left has-text-grey-light">@userInputPolicyChange[item.Position].Description</p>
+                                @*<ButtonHelpGuideComponent description="@(userInput[item.Position - 1].Description)"></ButtonHelpGuideComponent>*@
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            countPolicyChange++;
+        }
+
+    }
+
+
+    //table for testing attributes
+    <table class="table table-active table-sm table-hover small">
+
+        <thead>
+            <tr class="table-info">
+                <td class="align-top"><p class="has-text-weight-semibold">Sample #</p></td>
+                @foreach (var roundQA in templistRoundQuestion1)
+                {
+                    <td class="align-top">
+                        <p class="has-text-weight-semibold">@(RemoveRT(roundQA.Question))</p>
+                        <input type="text" class="text-danger text-align-center input-inner-position-header input is-primary is-small" maxlength="3"
+                               @onchange="@((e)=> {
+                                                //Console.WriteLine("Trigger Header Note");
+                                                OnChangeEventHander(e, 4, 1, int.Parse(roundQA.Position.ToString()) - 1);
+                                            })">
+                    </td>
+                }
+
+            </tr>
+        </thead>
+
+        <tbody>
+
+
+            @*-------------------------------------------*@
+            @*Round 1*@
+            @*-------------------------------------------*@
+            <tr class="table-secondary">
+                @if (isManageRow)
+                {
+                    <td colspan="@(countColumn)">Round 1 </td>
+                }
+                else
+                {
+                    <td colspan="@(countColumn - 1)">Round 1 </td>
+                    <td>
+                        <div class="is-pulled-right">
+                            <button class="button is-link is-small" @onclick="@(()=> { AddRow(1); })"><span class="oi oi-plus"></span></button>
+                            @if (this.CheckCount("Round 1") > 1)
+                            {
+                                <button class="button is-danger is-small" @onclick="@(() => { AddRow(-1); })">
+                                    <span class="oi oi-minus"></span>
+                                </button>
+                            }
+                        </div>
+                        
+                    </td>
+                    
+                }
+            </tr>
+            @if (listRoundItem != null && listRoundItem.Count > 0)
+            {
+
+                a2q2Samples = 0;
+
+                @foreach (var item in listRoundItem)
+                {
+
+                    if (item.RoundName == "Round 1")
+                    {
+                        a2q2Samples++;
+                        item.A2Q2Samples = a2q2Samples.ToString();
+
+                        <tr class="table-light">
+
+                            <td style="text-align: center;">@item.A2Q2Samples</td>
+
+                            @foreach (var roundQA in templistRoundQuestion1)
+                            {
+                                switch (roundQA.Position.ToString())
+                                {
+                                    case "1":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer1"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 1, 1, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "2":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer2"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 2, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "3":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer3"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 3, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "4":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer4"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 4, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "5":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer5"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 5, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "6":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer6"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 6, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "7":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer7"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 7, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "8":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer8"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 8, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "9":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer9"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 9, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "10":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer10"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 10, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "11":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer11"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 11, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "12":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer12"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 12, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "13":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer13"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 13, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "14":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer14"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 14, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                    case "15":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer15"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                                    OnChangeEventHander(e, 1, 15, int.Parse(item.Position));
+                                                                                })">
+                                        </td>
+                                        break;
+                                }
+                            }
+
+                            
+                        </tr>
+
+                    }
+
+                }
+            }
+
+
+            @*-------------------------------------------*@
+            @*Round 2*@
+            @*-------------------------------------------*@
+            <tr class="table-secondary">
+                @if (isManageRow)
+                {
+                    <td colspan="@(countColumn)">Round 2</td>
+                }
+                else
+                {
+                    <td colspan="@(countColumn - 1)">Round 2</td>
+                    @*<td><button class="button is-small is-link is-pulled-right" @onclick="@(()=> { AddRow(2); })">Add Row</button></td>*@
+                    <td>
+                        <div class="is-pulled-right">
+                            <button class="button is-link is-small" @onclick="@(()=> { AddRow(2); })"><span class="oi oi-plus"></span></button>
+                            @if (this.CheckCount("Round 2") > 1)
+                            {
+                                <button class="button is-danger is-small" @onclick="@(() => { AddRow(-2); })">
+                                    <span class="oi oi-minus"></span>
+                                </button>
+                            }
+                        </div>
+                    </td>
+                }
+            </tr>
+            @if (listRoundItem != null && listRoundItem.Count > 0)
+            {
+                a2q2Samples = 0;
+                @foreach (var item in listRoundItem)
+                {
+                    if (item.RoundName == "Round 2")
+                    {
+                        a2q2Samples++;
+                        item.A2Q2Samples = a2q2Samples.ToString();
+
+                        <tr class="table-light">
+
+                            <td style="text-align: center;">@item.A2Q2Samples</td>
+
+                            @foreach (var roundQA in templistRoundQuestion1)
+                            {
+                                switch (roundQA.Position.ToString())
+                                {
+                                    case "1":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer1"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 1, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "2":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer2"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 2, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "3":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer3"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 3, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "4":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer4"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 4, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "5":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer5"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 5, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "6":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer6"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 6, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "7":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer7"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 7, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "8":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer8"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 8, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "9":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer9"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 9, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "10":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer10"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 10, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "11":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer11"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 11, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "12":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer12"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 12, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "13":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer13"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 13, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "14":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer14"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 14, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "15":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer15"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 2, 15, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                }
+
+                            }
+
+
+                        </tr>
+
+                    }
+                }
+            }
+
+
+            @*-------------------------------------------*@
+            @*Round 3*@
+            @*-------------------------------------------*@
+            <tr class="table-secondary">
+                @if (isManageRow)
+                {
+                    <td colspan="@(countColumn)">Round 3</td>
+                }
+                else
+                {
+                    <td colspan="@(countColumn - 1)">Round 3</td>
+                    @*<td><button class="button is-small is-link is-pulled-right" @onclick="@(()=> { AddRow(3); })">Add Row</button></td>*@
+                    <td>
+                        <div class="is-pulled-right">
+                            <button class="button is-link is-small" @onclick="@(()=> { AddRow(3); })"><span class="oi oi-plus"></span></button>
+                            @if (this.CheckCount("Round 3") > 1)
+                            {
+                                <button class="button is-danger is-small" @onclick="@(() => { AddRow(-3); })">
+                                    <span class="oi oi-minus"></span>
+                                </button>
+                            }
+                        </div>
+                    </td>
+                }
+            </tr>
+            @if (listRoundItem != null && listRoundItem.Count > 0)
+            {
+                a2q2Samples = 0;
+                @foreach (var item in listRoundItem)
+                {
+                    if (item.RoundName == "Round 3")
+                    {
+                        a2q2Samples++;
+                        item.A2Q2Samples = a2q2Samples.ToString();
+                        <tr class="table-light">
+
+                            <td style="text-align: center;">@item.A2Q2Samples</td>
+
+                            @foreach (var roundQA in templistRoundQuestion1)
+                            {
+                                switch (roundQA.Position.ToString())
+                                {
+                                    case "1":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer1"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 1, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "2":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer2"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 2, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "3":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer3"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 3, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "4":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer4"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 4, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "5":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer5"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 5, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "6":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer6"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 6, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "7":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer7"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 7, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "8":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer8"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 8, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "9":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer9"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 9, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "10":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer10"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 10, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "11":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer11"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 11, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "12":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer12"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 12, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "13":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer13"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 13, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "14":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer14"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 14, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                    case "15":
+                                        <td style="">
+                                            <textarea rows="3" class="form-control" @bind="item.Answer15"></textarea>
+                                            <input type="text" class="text-danger text-align-center input-inner-position" maxlength="3"
+                                                   @onchange="@((e)=> {
+                                                                    OnChangeEventHander(e, 3, 15, int.Parse(item.Position));
+                                                                })">
+                                        </td>
+                                        break;
+                                }
+
+                            }
+
+
+                        </tr>
+
+                    }
+                }
+            }
+
+
+        </tbody>
+
+    </table>
+
+    @if (displayGeneralNote)
+    {
+        <GeneralNotesComponent generalNote="@generalNote" ReturnGenNote="ReturnGeneralNotesValue"></GeneralNotesComponent>
+    }
+
+    @if (displayUniqueNote && (generalNote.Display || (listUniqueNotes != null && listUniqueNotes.Count > 0)))
+    {
+        <h3>Notes</h3>
+    }
+
+    @if (generalNote.Display && displayGeneralNote && displayUniqueNote)
+    {
+        System.Diagnostics.Debug.WriteLine($"Display Notes");
+        <div class="row">
+            <div class="col-2">
+                <div class="form-group">
+                    <input type="text" class="form-control has-text-centered" id="@(generalNote.GeneralNoteText)" maxlength="3" value="@(generalNote.GeneralNoteText)" readonly>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="form-group">
+                    <textarea rows="4" class="form-control" id="@($"desc{generalNote.GeneralNoteText}")" @bind="@(generalNote.Description)"></textarea>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (listUniqueNotes != null && listUniqueNotes.Count > 0 && displayUniqueNote)
+    {
+
+        @foreach (var uniqueNotes in listUniqueNotes)
+        {
+            @*<input type="hidden" id="@($"notes{item.Index}row")" name="@($"notes{item.Index}row")" value="@item.Index">*@
+            <div class="row">
+                <div class="col-2">
+                    <div class="form-group">
+                        <input type="text" class="form-control has-text-centered" id="@(uniqueNotes.Notes)" maxlength="3" value="@(uniqueNotes.Notes)" readonly>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <textarea rows="4" class="form-control" id="@($"desc{uniqueNotes.Notes}")" @bind="@(uniqueNotes.Description)"></textarea>
+                    </div>
+                </div>
+            </div>
+        }
+
+    }
+
+}
+
+@code {
+
+    [Parameter] public List<RoundItem> listRoundItem { get; set; }
+    //[Parameter] public RoundItem roundItem { get; set;}
+    [Parameter] public List<RoundQA> templistRoundQuestion1 { get; set; }
+    [Parameter] public List<NotesItem> listUniqueNotes { get; set; }
+    [Parameter] public List<NotesItem> listAddOnUniqueNotes { get; set; }
+    [Parameter] public List<NotesItem> listAddOnUniqueNotes2 { get; set; }
+    [Parameter] public GeneralNote generalNote { get; set; }
+    [Parameter] public EventCallback<string> ReturnAddRound { get; set; }
+    [Parameter] public EventCallback<UniqueNoteCallback> ReturnNotesItem { get; set; }
+    [Parameter] public bool isManageRow { get; set; }
+    [Parameter] public List<HeaderNote> listHeaderNote { get; set; }
+    [Parameter] public List<PolicyChanges> listPolicyChanges { get; set; }
+    [Parameter] public List<QuestionnaireUserInput> userInputPolicyChange { get; set; }
+    [Parameter] public bool displayGeneralNote { get; set; }
+    [Parameter] public bool displayUniqueNote { get; set; }
+    //private List<RoundQA> listRoundQuestion1 { get; set; }
+    //private List<RoundQA> listRoundQuestion2 { get; set; }
+    //private List<RoundQA> listRoundQuestion3 { get; set; }
+    private int countColumn { get; set; }
+    private int a2q2Samples { get; set; }
+    private int countPolicyChange { get; set; }
+    //public event NotesEventHandler NotesEvent;
+    public delegate void NotesEventHandler(string value, int position);
+    //private List<RoundItem> tempListRoundItem { get; set; }
+    //string[,] tempRoundQA;
+    List<NotesItem> tempNotesItem = new List<NotesItem>();
+
+    protected override void OnParametersSet()
+    {
+        //roundItem.RoundQA starts at zero (0) so we add one (1) to get total column
+        if (templistRoundQuestion1 != null && listRoundItem != null && listUniqueNotes != null)
+        {
+            countColumn = (templistRoundQuestion1.Count + 1);
+            //listUniqueNotes = new List<NotesItem>();
+        }
+
+        //check if either list unique notes in table 1 and table 2 is not null
+        //if ((listAddOnUniqueNotes != null && listAddOnUniqueNotes.Count > 0) ||
+        //    (listAddOnUniqueNotes2 != null && listAddOnUniqueNotes2.Count > 0))
+        //{
+        //    SetUniqueNotes();
+        //}
+
+        if (listAddOnUniqueNotes != null || listAddOnUniqueNotes2 != null)
+        {
+            SetUniqueNotes();
+        }
+
+        if (userInputPolicyChange != null)
+        {
+            //System.Diagnostics.Debug.WriteLine($"userInputPolicyChange Length: {userInputPolicyChange.Count}");
+            countPolicyChange = 0;
+        }
+
+        this.StateHasChanged();
+        base.OnParametersSet();
+    }
+
+    private void SetUniqueNotes()
+    {
+        listUniqueNotes.Clear();
+        if (listAddOnUniqueNotes != null)
+        {
+            foreach (var item in listAddOnUniqueNotes)
+            {
+                var checkNotes = listUniqueNotes.Where(x => x.Notes.Equals(item.Notes)).FirstOrDefault();
+                if (checkNotes == null && item.Notes != string.Empty)
+                    listUniqueNotes.Add(item);
+            }
+        }
+        if (listAddOnUniqueNotes2 != null)
+        {
+            foreach (var item in listAddOnUniqueNotes2)
+            {
+                var checkNotes = listUniqueNotes.Where(x => x.Notes.Equals(item.Notes)).FirstOrDefault();
+                if (checkNotes == null && item.Notes != string.Empty)
+                    listUniqueNotes.Add(item);
+            }
+        }
+
+        //unique notes for policy
+        if (listPolicyChanges != null)
+        {
+            //notes for policy change
+            foreach (var item in listPolicyChanges)
+            {
+                //System.Diagnostics.Debug.WriteLine($"Policy Note: {item.NoteText}");
+                var checkNotes = listUniqueNotes.Where(x => x.Notes.Equals(item.NoteText)).FirstOrDefault();
+                if (checkNotes == null && item.NoteText != string.Empty)
+                    listUniqueNotes.Add(new NotesItem { Notes = item.NoteText, Description = string.Empty });
+            }
+        }
+
+        //unique notes for header
+        if (listHeaderNote != null)
+        {
+            //notes for table header
+            foreach (var item in listHeaderNote)
+            {
+                //System.Diagnostics.Debug.WriteLine($"Header Note: {item.HeaderNoteText}");
+                var checkNotes = listUniqueNotes.Where(x => x.Notes.Equals(item.HeaderNoteText)).FirstOrDefault();
+                if (checkNotes == null && item.HeaderNoteText != string.Empty)
+                    listUniqueNotes.Add(new NotesItem { Notes = item.HeaderNoteText, Description = string.Empty });
+            }
+        }
+
+        //unique notes for testing attributes
+        if (listRoundItem != null)
+        {
+            //notes for table body
+            foreach (var item in listRoundItem)
+            {
+                if (item.Note1 != null)
+                {
+                    var checkNotes1 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note1)).FirstOrDefault();
+                    if (checkNotes1 == null && item.Note1 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note1, Description = string.Empty });
+                }
+
+                if (item.Note2 != null)
+                {
+                    var checkNotes2 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note2)).FirstOrDefault();
+                    if (checkNotes2 == null && item.Note2 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note2, Description = string.Empty });
+                }
+
+                if (item.Note3 != null)
+                {
+                    var checkNotes3 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note3)).FirstOrDefault();
+                    if (checkNotes3 == null && item.Note3 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note3, Description = string.Empty });
+                }
+
+                if (item.Note4 != null)
+                {
+                    var checkNotes4 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note4)).FirstOrDefault();
+                    if (checkNotes4 == null && item.Note4 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note4, Description = string.Empty });
+                }
+
+                if (item.Note5 != null)
+                {
+                    var checkNotes5 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note5)).FirstOrDefault();
+                    if (checkNotes5 == null && item.Note5 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note5, Description = string.Empty });
+                }
+
+                if (item.Note6 != null)
+                {
+                    var checkNotes6 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note6)).FirstOrDefault();
+                    if (checkNotes6 == null && item.Note6 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note6, Description = string.Empty });
+                }
+
+                if (item.Note7 != null)
+                {
+                    var checkNotes7 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note7)).FirstOrDefault();
+                    if (checkNotes7 == null && item.Note7 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note7, Description = string.Empty });
+                }
+
+                if (item.Note8 != null)
+                {
+                    var checkNotes8 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note8)).FirstOrDefault();
+                    if (checkNotes8 == null && item.Note8 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note8, Description = string.Empty });
+                }
+
+                if (item.Note9 != null)
+                {
+                    var checkNotes9 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note9)).FirstOrDefault();
+                    if (checkNotes9 == null && item.Note9 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note9, Description = string.Empty });
+                }
+
+                if (item.Note9 != null)
+                {
+                    var checkNotes9 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note9)).FirstOrDefault();
+                    if (checkNotes9 == null && item.Note9 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note9, Description = string.Empty });
+                }
+
+                if (item.Note9 != null)
+                {
+                    var checkNotes9 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note9)).FirstOrDefault();
+                    if (checkNotes9 == null && item.Note9 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note9, Description = string.Empty });
+                }
+
+                if (item.Note9 != null)
+                {
+                    var checkNotes9 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note9)).FirstOrDefault();
+                    if (checkNotes9 == null && item.Note9 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note9, Description = string.Empty });
+                }
+
+                if (item.Note9 != null)
+                {
+                    var checkNotes9 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note9)).FirstOrDefault();
+                    if (checkNotes9 == null && item.Note9 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note9, Description = string.Empty });
+                }
+
+                if (item.Note9 != null)
+                {
+                    var checkNotes9 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note9)).FirstOrDefault();
+                    if (checkNotes9 == null && item.Note9 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note9, Description = string.Empty });
+                }
+
+                if (item.Note10 != null)
+                {
+                    var checkNotes10 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note10)).FirstOrDefault();
+                    if (checkNotes10 == null && item.Note10 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note10, Description = string.Empty });
+                }
+
+                if (item.Note11 != null)
+                {
+                    var checkNotes11 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note11)).FirstOrDefault();
+                    if (checkNotes11 == null && item.Note11 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note11, Description = string.Empty });
+                }
+
+                if (item.Note12 != null)
+                {
+                    var checkNotes12 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note12)).FirstOrDefault();
+                    if (checkNotes12 == null && item.Note12 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note12, Description = string.Empty });
+                }
+
+                if (item.Note13 != null)
+                {
+                    var checkNotes13 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note13)).FirstOrDefault();
+                    if (checkNotes13 == null && item.Note13 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note13, Description = string.Empty });
+                }
+
+                if (item.Note14 != null)
+                {
+                    var checkNotes14 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note14)).FirstOrDefault();
+                    if (checkNotes14 == null && item.Note14 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note14, Description = string.Empty });
+                }
+
+                if (item.Note15 != null)
+                {
+                    var checkNotes15 = listUniqueNotes.Where(x => x.Notes.Equals(item.Note15)).FirstOrDefault();
+                    if (checkNotes15 == null && item.Note15 != string.Empty)
+                        listUniqueNotes.Add(new NotesItem { Notes = item.Note15, Description = string.Empty });
+                }
+
+            }
+        }
+
+        this.StateHasChanged();
+
+    }
+
+    private void OnTextChanged(EventArgs e)
+    {
+
+        //System.Diagnostics.Debug.WriteLine($"Notes trigger");
+        listUniqueNotes = new List<NotesItem>();
+        SetUniqueNotes();
+        this.StateHasChanged();
+    }
+
+    private void OnKeyUpChanged(KeyboardEventArgs e)
+    {
+        //System.Diagnostics.Debug.WriteLine($"Notes trigger");
+        SetUniqueNotes();
+    }
+
+    private void OnChangeEventHander(ChangeEventArgs e, int round, int note, int position)
+    {
+        //System.Diagnostics.Debug.WriteLine($"value: {e.Value}");
+        //System.Diagnostics.Debug.WriteLine($"note: {note}");
+        //System.Diagnostics.Debug.WriteLine($"position: {position}");
+
+        switch (round)
+        {
+            case 1:
+                switch (note)
+                {
+                    case 1:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note1 = e.Value.ToString());
+                        break;
+                    case 2:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note2 = e.Value.ToString());
+                        break;
+                    case 3:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note3 = e.Value.ToString());
+                        break;
+                    case 4:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note4 = e.Value.ToString());
+                        break;
+                    case 5:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note5 = e.Value.ToString());
+                        break;
+                    case 6:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note6 = e.Value.ToString());
+                        break;
+                    case 7:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note7 = e.Value.ToString());
+                        break;
+                    case 8:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note8 = e.Value.ToString());
+                        break;
+                    case 9:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note9 = e.Value.ToString());
+                        break;
+                    case 10:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note10 = e.Value.ToString());
+                        break;
+                    case 11:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note11 = e.Value.ToString());
+                        break;
+                    case 12:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note12 = e.Value.ToString());
+                        break;
+                    case 13:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note13 = e.Value.ToString());
+                        break;
+                    case 14:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note14 = e.Value.ToString());
+                        break;
+                    case 15:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 1")).ToList().ForEach(x => x.Note15 = e.Value.ToString());
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case 2:
+                switch (note)
+                {
+                    case 1:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note1 = e.Value.ToString());
+                        break;
+                    case 2:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note2 = e.Value.ToString());
+                        break;
+                    case 3:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note3 = e.Value.ToString());
+                        break;
+                    case 4:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note4 = e.Value.ToString());
+                        break;
+                    case 5:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note5 = e.Value.ToString());
+                        break;
+                    case 6:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note6 = e.Value.ToString());
+                        break;
+                    case 7:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note7 = e.Value.ToString());
+                        break;
+                    case 8:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note8 = e.Value.ToString());
+                        break;
+                    case 9:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note9 = e.Value.ToString());
+                        break;
+                    case 10:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note10 = e.Value.ToString());
+                        break;
+                    case 11:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note11 = e.Value.ToString());
+                        break;
+                    case 12:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note12 = e.Value.ToString());
+                        break;
+                    case 13:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note13 = e.Value.ToString());
+                        break;
+                    case 14:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note14 = e.Value.ToString());
+                        break;
+                    case 15:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 2")).ToList().ForEach(x => x.Note15 = e.Value.ToString());
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case 3:
+                switch (note)
+                {
+                    case 1:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note1 = e.Value.ToString());
+                        break;
+                    case 2:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note2 = e.Value.ToString());
+                        break;
+                    case 3:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note3 = e.Value.ToString());
+                        break;
+                    case 4:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note4 = e.Value.ToString());
+                        break;
+                    case 5:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note5 = e.Value.ToString());
+                        break;
+                    case 6:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note6 = e.Value.ToString());
+                        break;
+                    case 7:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note7 = e.Value.ToString());
+                        break;
+                    case 8:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note8 = e.Value.ToString());
+                        break;
+                    case 9:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note9 = e.Value.ToString());
+                        break;
+                    case 10:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note10 = e.Value.ToString());
+                        break;
+                    case 11:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note11 = e.Value.ToString());
+                        break;
+                    case 12:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note12 = e.Value.ToString());
+                        break;
+                    case 13:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note13 = e.Value.ToString());
+                        break;
+                    case 14:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note14 = e.Value.ToString());
+                        break;
+                    case 15:
+                        listRoundItem.Where(x => x.Position.Equals(position.ToString()) && x.RoundName.Equals("Round 3")).ToList().ForEach(x => x.Note15 = e.Value.ToString());
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case 4:
+                if (listHeaderNote != null)
+                    listHeaderNote.Where(x => x.Position.Equals(position)).ToList().ForEach(x => x.HeaderNoteText = e.Value.ToString());
+                break;
+            case 5:
+                if (listPolicyChanges != null)
+                    listPolicyChanges.Where(x => x.Position.Equals(position)).ToList().ForEach(x => x.NoteText = e.Value.ToString());
+                break;
+            default:
+                break;
+        }
+
+        //this will get unique notes
+        SetUniqueNotes();
+
+        //pass the unique notes to QuestionnaireComponent.razor
+        UniqueNoteCallback unique = new UniqueNoteCallback();
+        unique.Item = listUniqueNotes;
+        ReturnNotesItem.InvokeAsync(unique);
+
+        this.StateHasChanged();
+
+    }
+
+    private void ReturnGeneralNotesValue(GeneralNote genNote)
+    {
+        if (genNote != null)
+        {
+            generalNote = genNote;
+            this.StateHasChanged();
+        }
+    }
+
+    private void AddRow(int i)
+    {
+
+        ReturnAddRound.InvokeAsync($"Round {i}");
+        //switch (i)
+        //{
+        //    case 1:
+        //        ReturnAddRound.InvokeAsync($"Round {1}");
+        //        break;
+        //    case 2:
+        //        ReturnAddRound.InvokeAsync($"Round {2}");
+        //        break;
+        //    case 3:
+        //        ReturnAddRound.InvokeAsync($"Round {3}");
+        //        break;
+        //    default:
+        //        break;
+        //}
+    }
+
+    private string RemoveRT(string s)
+    {
+        StringBuilder sb = new StringBuilder(s);
+
+        sb.Replace("(RT)", "");
+        sb.Replace("(RT2)", "");
+        sb.Replace("(RT3)", "");
+
+        return sb.ToString();
+    }
+
+    private int CheckCount(string round)
+    {
+        if (listRoundItem != null)
+            return listRoundItem.Where(x => x.RoundName.Equals(round)).ToList().Count;
+        return 0;
+    }
+
+
+}

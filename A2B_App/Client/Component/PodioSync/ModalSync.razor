@@ -1,0 +1,111 @@
+﻿@using BlazorDateRangePicker
+@using A2B_App.Client.Services
+@using A2B_App.Shared.Podio
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+
+@if (display)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Sync @title</p>
+                <button class="delete" aria-label="close" @onclick="Close"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="simple-form">
+
+                    <div class="form-group">
+                        <label for="round1Range">Created Date Range</label>
+                        <DateRangePicker OnRangeSelect="OnRangeSelect1" @bind-StartDate="startDate" @bind-EndDate="endDate" id="round1range" class="form-control bg-white" />
+                    </div>
+
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success" @onclick="@(() => { SetReturnValue(); })">Sync Podio Items</button>
+                <button class="button" @onclick="Close">Cancel</button>
+            </footer>
+        </div>
+    </div>
+
+
+}
+
+
+
+
+@code {
+
+    [Parameter] public EventCallback<SyncDateRange> ReturnValue { get; set; }
+    [Parameter] public string title { get; set; }
+
+    private PodioSyncService PodioSyncServices;
+    private ClientSettings settings;
+    private HttpResponseMessage httpResponseMessage { get; set; }
+    private SyncDateRange syncDate = new SyncDateRange();
+    private DateTimeOffset? startDate { get; set; } = null;
+    private DateTimeOffset? endDate { get; set; } = null;
+
+    private async void Initialize()
+    {
+        settings = await _getSettings;
+        PodioSyncServices = new PodioSyncService(settings);
+    }
+
+    private void SetReturnValue()
+    {
+        ReturnValue.InvokeAsync(syncDate);
+        Close();
+    }
+
+    private async void GetApiResponse()
+    {
+        if (PodioSyncServices != null)
+        {
+            var httpResponse = await PodioSyncServices.SyncPodioRcmAsync(syncDate, Http);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+                    toastService.ShowError("Successfully sync podio items");
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError("Failed to sync podio items");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError("Failed to sync podio items");
+            }
+        }
+        this.StateHasChanged();
+    }
+
+    public void OnRangeSelect1(DateRange range)
+    {
+        syncDate.startDate = range.Start.Date;
+        syncDate.endDate = range.End.Date;
+
+        System.Diagnostics.Debug.WriteLine($"Start: {syncDate.startDate.Value.Date} - End: {syncDate.endDate.Value.Date}");
+    }
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+}

@@ -1,0 +1,12 @@
+﻿<button class="button is-success" @onclick="@(() =>
+                                               {
+                                                    modalTracker.Show();
+                                               })">
+    SOX Tracker Import
+</button>
+
+<ModalTrackerFileUpload @ref="modalTracker"></ModalTrackerFileUpload>
+
+@code {
+    private ModalTrackerFileUpload modalTracker;
+}

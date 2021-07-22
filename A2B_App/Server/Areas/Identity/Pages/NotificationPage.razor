@@ -1,0 +1,30 @@
+﻿@if (display)
+{
+    <h3>NotificationPage</h3><div class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            @message
+        </div>
+        <button class="modal-close is-medium" aria-label="close" @onclick="Close"></button>
+    </div>
+}
+
+
+@code {
+    [Parameter] public string message { get; set; }
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+}

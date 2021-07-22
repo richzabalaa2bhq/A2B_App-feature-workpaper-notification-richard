@@ -1,0 +1,234 @@
+﻿@page "/view-sox-tracker/{FY}/{ClientName}/"
+@using Microsoft.AspNetCore.Authorization
+@using A2B_App.Client.Services
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+
+@using Newtonsoft.Json
+@using System.Text
+@using System.IO
+@using System.Linq;
+@using A2B_App.Shared.Sox
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@attribute [Authorize(Roles = "Admin, IT, Accounting")]
+<!-- 1:1 aspect ratio -->
+<!--<div class="embed-responsive embed-responsive-1by1">
+    <iframe class="embed-responsive-item" src="@rcmUri" frameborder="0" allowfullscreen></iframe>
+</div>-->
+@*<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">*@
+
+<div class="table-container px-4" style="overflow: scroll !important; width: 100vw; max-height: 1000px; margin-right: -650px;">
+    @ClientName<br>
+    Sox Tracker<br />
+    @FY<br /><br />
+    <table class="table is-bordered is-fullwidth is-scrollable">
+        <thead>
+            <tr>
+                <th class="has-text-centered" colspan="6" style="background-color: lightgray;">
+                    Consolidated RCM
+                </th>
+                <th class="has-text-centered has-text-white" colspan="9" style="background-color: darkred;">
+                    Master PBC
+                </th>
+                <th class="has-text-centered" colspan="16" style="background-color: #32cd32; ">
+
+                </th>
+                <th colspan="1" style="background-color: steelblue; ">
+
+
+                </th>
+                <th colspan="1" style="background-color: #FFA500; ">
+
+                </th>
+            </tr>
+            <tr>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: lightgray; ">Process</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="min-width: 180px; background-color: lightgray; ">Sub-Process</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="min-width: 500px; background-color: lightgray; ">Control ID</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: lightgray; ">Control Activity</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: lightgray; ">Control Owner</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: lightgray; ">Test Procedures</th>
+                <th class="is-vcentered has-text-centered is-size-6 has-text-white" style="min-width: 500px; background-color: darkred;">PBC</th>
+                <th class="is-vcentered has-text-centered is-size-6 has-text-white" style="min-width: 180px; background-color: darkred;">PBC Owner</th>
+                <th class="is-vcentered has-text-centered is-size-6 has-text-white" style="background-color: darkred; min-width: 350px">Population File Request</th>
+                <th class="is-vcentered has-text-centered is-size-6 has-text-white" style="background-color: darkred; min-width: 350px">Sample selection/sub-selection</th>
+                <th class="is-vcentered has-text-centered is-size-6 has-text-white" style="background-color: darkred; min-width: 350px;">R3 sample testing required</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #32cd32; min-width: 350px;">WT PBC Status</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #32cd32; min-width: 350px;">Round 1 PBC Status</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #FF8C00; min-width: 350px;">Round 2 PBC Status</th>
+                <th class="is-vcentered has-text-centered is-size-6 has-text-white" style="min-width: 350px; background-color: darkred;">Round 3 PBC Status</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #32cd32; min-width: 350px;">WT Tester </th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #32cd32; min-width: 350px;">WT 1st Level Reviewer</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #32cd32; min-width: 350px;">WT 2nd Level Reviewer</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #32cd32; min-width: 350px;">WT Status</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #32cd32; min-width: 300px;">Round 1 Tester</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #32cd32; min-width: 350px;">R1 1st Level Reviewer</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #32cd32; min-width: 350px;">R1 2nd Level Reviewer</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #32cd32; min-width: 300px;">Round 1 Status</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #FFA500">Round 2 Tester</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #FFA500">R2 1st Level Reviewer</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #FFA500">R2 2nd Level Reviewer</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #FFA500">Round 2 Status</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #FFA500">Round 3 Tester</th>
+                <th class="is-vcentered has-text-centered is-size-6 has-text-white" style="background-color: darkred">R3 1st Level Reviewer</th>
+                <th class="is-vcentered has-text-centered is-size-6 has-text-white" style="background-color: darkred">R3 2nd Level Reviewer</th>
+                <th class="is-vcentered has-text-centered is-size-6 has-text-white" style="background-color: darkred">Round 3 Status</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: steelblue">Notes for client status</th>
+                <th class="is-vcentered has-text-centered is-size-6" style="background-color: #FFA500">Status Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in viewAccessSoxTracker)
+            {
+            <tr>
+                <td>@(item.Process != null ? item.Process.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.Subprocess != null ? item.Subprocess.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.ControlId != null ? item.ControlId.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                @if (viewAccessRcm != null && item.ControlId != null)
+                {
+                    //Console.WriteLine(item.ControlId + "test");
+                    try
+                    {
+                        var rcm_access = viewAccessRcm.Where(x => x.ControlId.Equals(item.ControlId));
+                        if (rcm_access.Any())
+                        {
+
+                            var rcm = rcm_access.FirstOrDefault();
+                            //specificRcm.Add(rcm);
+                            <td>@(rcm.ControlActivityFy19 != null ? rcm.ControlActivityFy19.Replace("<p>", "").Replace("</p>", "").Replace("<br/>", "\n").Replace("<ol>", "").Replace("</ol>", "").Replace("<li>", "").Replace("</li>", "") : string.Empty)</td>
+                            <td>@(rcm.ControlOwner != null ? rcm.ControlOwner.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                            <td>@(rcm.TestProc != null ? rcm.TestProc.Replace("<p>", "").Replace("</p>", "").Replace("<br/>", "\n").Replace("<ol>", "").Replace("</ol>", "").Replace("<li>", "").Replace("</li>", "") : string.Empty)</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    }
+
+                    //}
+
+                }
+                else
+                {
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                }
+                <td>@(item.PBC != null ? item.PBC.Replace("<p>", "").Replace("</p>", "").Replace("<br/>", "\n").Replace("<ol>", "").Replace("</ol>", "").Replace("<li>", "").Replace("</li>", "") : string.Empty)</td>
+                <td>@(item.PBCOwner != null ? item.PBCOwner.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.PopulationFileRequest != null ? item.PopulationFileRequest.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.SampleSelection != null ? item.SampleSelection.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R3Sample != null ? item.R3Sample.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.WTPBC != null ? item.WTPBC.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R1PBC != null ? item.R1PBC.Replace("<p>", "").Replace("</p>", "") : string.Empty) </td>
+                <td>@(item.R2PBC != null ? item.R2PBC.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R3PBC != null ? item.R3PBC.Replace("<p>", "").Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.WTTestingStatus != null ? item.WTTestingStatus.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R1Tester != null ? item.R1Tester.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R11LReviewer != null ? item.R11LReviewer.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R12LReviewer != null ? item.R12LReviewer.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R1TestingStatus != null ? item.R1TestingStatus.Replace("<p>", "").Replace("</p>", "") : string.Empty) </td>
+                <td>@(item.R2Tester != null ? item.R2Tester.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.WTTester != null ? item.WTTester.Replace("<p>", "").Replace("</p>", "") : string.Empty) </td>
+                <td>@(item.WT1LReviewer != null ? item.WT1LReviewer.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.WT2LReviewer != null ? item.WT2LReviewer.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R21LReviewer != null ? item.R21LReviewer.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R22LReviewer != null ? item.R22LReviewer.Replace("<p>", "").Replace("</p>", "") : string.Empty) </td>
+                <td>@(item.R2TestingStatus != null ? item.R2TestingStatus.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R3Tester != null ? item.R3Tester.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R31LReviewer != null ? item.R31LReviewer.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R32LReviewer != null ? item.R32LReviewer.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td>@(item.R3TestingStatus != null ? item.R3TestingStatus.Replace("<p>", "").Replace("</p>", "") : string.Empty)</td>
+                <td></td>
+                <td></td>
+            </tr>
+                // if(rcm != null) { }
+                //if (item.ControlId == "ELC 1.2" || item.ControlId == "ESA 0.1" || item.ControlId == "ESA 0.3" || item.ControlId == "ESA 0.4" || item.ControlId == "ESA 1.1")
+                //{
+                //    break;
+
+                //}
+            }
+            </tbody>
+    </table>
+</div>
+
+
+
+
+@code {
+    private List<string> listFy = new List<string>();
+    private List<SoxTracker> viewAccessSoxTracker = new List<SoxTracker>();
+    private List<RcmViewAccess> viewAccessRcm = new List<RcmViewAccess>();
+    private List<RcmViewAccess> specificRcm = new List<RcmViewAccess>();
+
+    private string Fy { get; set; } = string.Empty;
+    private ClientSettings settings;
+    private RcmService RcmService;
+    private SoxTrackerService SoxTrackerService;
+    private string soxUri { get; set; }
+    [Parameter]
+    public string FY { get; set; }
+    [Parameter]
+    public string ClientName { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        settings = await _getSettings;
+        RcmService = new RcmService(settings);
+        SoxTrackerService = new SoxTrackerService(settings);
+        //ClientSettings settings = new ClientSettings();
+        soxUri = settings.GetSoxTrackerUri();
+        FY = FY ?? "FY";
+        ClientName = ClientName ?? "ClientName";
+        fetch(FY, ClientName);
+        fetch_rcm(FY, ClientName);
+        base.OnInitialized();
+
+        //Console.WriteLine("testttt:" + Text);
+    }
+    private async void fetch(String FY, String ClientName)
+    {
+        // var test = Request.QueryString["subject_type_cd"];
+        var response = await SoxTrackerService.fetch_sox_tracker(Http, FY, ClientName);
+        //Console.WriteLine(rcmUri);
+        //Console.WriteLine(response);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            viewAccessSoxTracker = new List<SoxTracker>();
+            viewAccessSoxTracker = JsonConvert.DeserializeObject<List<SoxTracker>>(result);
+            this.StateHasChanged();
+        }
+
+    }
+    private async void fetch_rcm(String FY, String ClientName)
+    {
+        // var test = Request.QueryString["subject_type_cd"];
+        var response = await RcmService.fetch_rcm(Http, FY, ClientName);
+        //Console.WriteLine(rcmUri);
+        //Console.WriteLine(response);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            viewAccessRcm = JsonConvert.DeserializeObject<List<RcmViewAccess>>(result);
+            this.StateHasChanged();
+        }
+
+    }
+
+}

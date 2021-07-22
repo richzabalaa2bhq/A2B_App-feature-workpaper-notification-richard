@@ -1,0 +1,143 @@
+﻿
+
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using System.Text
+@using System.IO
+@using A2B_App.Shared.Sox
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject HttpClient Http
+
+
+<div class="content px-4">
+    <div class="content px-4">
+        <h1>Client UI Process</h1>
+
+        <div class="row">
+            <div class="col-6">
+                <p class="float-left">Fill in information to add a Client</p>
+            </div>
+        </div>
+
+        <div class="border-top my-3"></div>
+
+        <form>
+
+            <div class="row">
+                <div class="col">
+                    <label for="clientName">Client Name</label>
+                    <input class="form-control" type="text" placeholder="" id="clientName" @bind="VClientName" @bind:event="oninput">
+                </div>
+
+                <div class="col">
+                    <label for="clientCode">Client Code</label>
+                    <input class="form-control" type="text" placeholder="" id="clientCode" @bind="VClientCode" @bind:event="oninput">
+                </div>
+
+                <div class="col">
+                    <label for="externalAuditor">External Auditor</label>
+                    <input class="form-control" type="text" placeholder="" id="ExternalAuditor" @bind="VExternalAuditor" @bind:event="oninput">
+                </div>
+
+                <div class="col">
+                    <label for="clientName">Round 1 Percent</label>
+                    <input class="form-control" type="text" placeholder="" id="R1Percent" @bind="VR1Percent" @bind:event="oninput">
+                </div>
+
+                <div class="col">
+                    <label for="clientCode">Round 2 Percent</label>
+                    <input class="form-control" type="text" placeholder="" id="R2Percent" @bind="VR2Percent" @bind:event="oninput">
+                </div>
+            </div>
+
+
+            <div class="row">
+
+
+                <div class="col">
+                    <label for="externalAuditor">Sharefile ID (Save File)</label>
+                    <input class="form-control" type="text" placeholder="" id="SFID" @bind="VSFID" @bind:event="oninput">
+                </div>
+
+                <div class="col">
+                    <label for="externalAuditor">SF Key Report ID (Screenshot)</label>
+                    <input class="form-control" type="text" placeholder="" id="SFID" @bind="VSKeyReportScreenhot" @bind:event="oninput">
+                </div>
+
+                <div class="col">
+                    <label for="externalAuditor">SF Key Report ID (Report)</label>
+                    <input class="form-control" type="text" placeholder="" id="SFID" @bind="VSKeyID" @bind:event="oninput">
+                </div>
+            </div>
+
+            <br /><br />
+            <div class="row">
+                <div class="col">
+                    <button class="btn btn-primary float-right" type="button" @onclick="SubmitClient">Submit Client</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@code {
+
+
+
+    private string VClientName { get; set; }
+    private ClientSettings settings;
+    private string VClientCode { get; set; }
+    private int VClientItemId { get; set; }
+    private string VExternalAuditor { get; set; }
+    private int VR1Percent { get; set; }
+    private int VR2Percent { get; set; }
+    private string VSFID { get; set; }
+    private string VSKeyReportScreenhot { get; set; }
+    private string VSKeyID { get; set; }
+    private SampleSelectionService SampleSelectionService;
+
+    private A2B_App.Shared.Sox.ClientSs Clients = new A2B_App.Shared.Sox.ClientSs();
+
+
+    protected async void SubmitClient()
+    {
+        Clients.ClientName = VClientName;
+        Clients.ClientCode = VClientCode;
+        Clients.ClientItemId = VClientItemId;
+        Clients.ExternalAuditor = VExternalAuditor;
+        Clients.Percent = VR1Percent;
+        Clients.PercentRound2 = VR2Percent;
+        Clients.SharefileId = VSFID;
+        Clients.SharefileScreenshotId = VSKeyReportScreenhot;
+        Clients.SharefileReportId = VSKeyID;
+
+        Save();
+    }
+    public async void Save ()
+    {
+
+        var response = await SampleSelectionService.CreateNewClient(Clients, Http);
+        if (response.StatusCode.ToString() == "OK")
+        {
+            toastService.ShowSuccess($"Successfully save to podio and database");
+            this.StateHasChanged();
+        }
+        else
+        {
+            toastService.ShowError($"Something wrong on save to podio and database");
+            this.StateHasChanged();
+        }
+
+
+    }
+
+    protected async override void OnInitialized()
+    {
+        settings = await _getSettings;
+        SampleSelectionService = new SampleSelectionService(settings);
+        base.OnInitialized();
+    }
+
+}

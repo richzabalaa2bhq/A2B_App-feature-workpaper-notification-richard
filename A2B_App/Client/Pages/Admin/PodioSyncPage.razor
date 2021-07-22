@@ -1,0 +1,687 @@
+﻿@page "/podiosync"
+@using A2B_App.Client.Component.PodioSync
+@using A2B_App.Client.Services
+@using A2B_App.Shared.Podio
+@using A2B_App.Shared.Sox
+@using Newtonsoft.Json
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@*@inject IToastService toastService*@
+@*@inject Task<ClientSettings> _getSettings*@
+@attribute [Authorize(Roles = "Admin, IT")]
+@inject HttpClient Http
+
+
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+
+<div class="container">
+
+    <article class="panel is-info">
+
+        <p class="panel-heading cursor-pointer" @onclick="()=>expandRcm = !expandRcm">
+            RCM and Sox Tracker
+        </p>
+
+
+        @if (expandRcm)
+        {
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "RCM";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                RCM
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "RCM Questionnaire";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                RCM Questionnaire
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "RCM Process";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                RCM Process
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "RCM Subprocess";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                RCM Subprocess
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "RCM Control Id";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                RCM Control Id
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Sox Tracker";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Sox Tracker
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Sox Tracker Questionnaire";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Sox Tracker Questionnaire
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Questionnaire Field";
+                                                    modalSyncQuestionnaireField.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Workpaper
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "IUC System Gen Field";
+                                                    modalSyncQuestionnaireField.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                IUC System Gen Field
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "IUC System Non Gen Field";
+                                                    modalSyncQuestionnaireField.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                IUC Non System Gen Field
+            </a>
+
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                   LoadClientAppConfig();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Load Client App Config
+            </a>
+
+        }
+
+    </article>
+
+
+    <article class="panel is-info">
+
+        <p class="panel-heading cursor-pointer" @onclick="()=>expandSampleSelection = !expandSampleSelection">
+            Sample Selection
+        </p>
+
+        @if (expandSampleSelection)
+        {
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Sample Selection Client";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Client
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Sample Selection Matrix";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Matrix
+            </a>
+        }
+
+
+    </article>
+
+
+    <article class="panel is-info">
+
+        <p class="panel-heading cursor-pointer" @onclick="()=>expandKeyReport = !expandKeyReport">
+            Key Report
+        </p>
+
+        @if (expandKeyReport)
+        {
+            @*<a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Leadsheet Workpaper";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Leadsheet Workpaper
+            </a>*@
+
+            @*<a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Consolidated Original Format Workpaper";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Consolidated Original Format Workpaper
+            </a>*@
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report IUC KR Questionnaire Workpaper";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report IUC KR Questionnaire Workpaper
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report IUC Report List Workpaper";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report IUC Report List Workpaper
+            </a>
+
+            @*<a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Exception Workpaper";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Exception Workpaper
+            </a>*@
+
+            @*<a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Consolidated Original Format Items";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Consolidated Original Format Items
+            </a>*@
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report IUC KR Questionnaire Items";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report IUC KR Questionnaire Items
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report IUC Report List Items";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report IUC Report List Items
+            </a>
+
+            @*<a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Exception Items";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Exception Items
+            </a>*@
+
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Control Activity";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Control Activity
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Key Control";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Key Control
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Name";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Name
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report System Source";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report System Source
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report - Non Key Report";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report - Non Key Report
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Customized";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Customized
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report IUC Type";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report IUC Type
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Controls Relying IUC";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Controls Relying IUC
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Preparer";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Preparer
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Unique Key Report";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Unique Key Report
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Notes";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Notes
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Number";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Number
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Tester";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Tester
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Key Report Reviewer";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Key Report Reviewer
+            </a>
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Parameter Library";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Parameter Library
+            </a>
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Report Library";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Report Library
+            </a>
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Completeness Library";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Completeness Library
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Accuracy Library";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Accuracy Library
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Method Library";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Method Library
+            </a>
+
+
+        }
+
+
+    </article>
+
+
+    <article class="panel is-info">
+        <p class="panel-heading cursor-pointer" @onclick="()=>expandMastertime = !expandMastertime">
+            Master Time
+        </p>
+
+        @if (expandMastertime)
+        {
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Client Reference";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Client Reference
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Project Reference";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Project Reference
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Task Reference";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Task Reference
+            </a>
+
+            <a class="panel-block" @onclick="@(() =>
+                                               {
+                                                    title = "Time Code";
+                                                    modalSyncRcm.Show();
+                                               })">
+                <span class="panel-icon">
+                    <i class="fas fa-book" aria-hidden="true"></i>
+                </span>
+                Time Code
+            </a>
+        }
+
+
+
+    </article>
+
+
+</div>
+
+
+<ModalSyncByDate @ref="modalSyncRcm" ReturnValue="ReturnValueSycnRcm" title="@title"></ModalSyncByDate>
+<ModalSyncQuestionnaireField @ref="modalSyncQuestionnaireField" ReturnValue="ReturnValueSycnQuestionnaireField" title="@title"></ModalSyncQuestionnaireField>
+@*<ModalSync @ref="modalSyncRcm" ReturnValue="ReturnValue" title="@title"></ModalSync>*@
+
+
+@code {
+
+    private PodioSyncService PodioSyncService;
+    private QuestionnaireService QuestionnaireService;
+    private ClientSettings settings;
+
+    private ModalSyncByDate modalSyncRcm;
+    //private ModalSyncRcm modalSyncRcm;
+    private ModalSyncQuestionnaireField modalSyncQuestionnaireField;
+    private string title;
+    private bool expandRcm, expandSampleSelection, expandMastertime, expandKeyReport;
+
+    protected override void OnParametersSet()
+    {
+
+        Initialize();
+    }
+
+    private async void Initialize()
+    {
+        settings = await _getSettings;
+        PodioSyncService = new PodioSyncService(settings);
+        QuestionnaireService = new QuestionnaireService(settings);
+        Http.Timeout = TimeSpan.FromMinutes(30);
+    }
+
+    private async void ReturnValueSycnRcm(SyncDateRange syncDate)
+    {
+        if (syncDate.startDate != null && PodioSyncService != null)
+        {
+            var response = await PodioSyncService.SyncByDateAsync(syncDate, Http, title);
+
+            HttpResponseMessage httpResponse = response.Item1;
+            string retTitle = response.Item2;
+
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+                    toastService.ShowSuccess($"Successfully Sync Podio Items - {retTitle}");
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError($"Failed Sync Podio Items - {title}");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError($"Failed Sync Podio Items - {title}");
+            }
+
+            this.StateHasChanged();
+        }
+    }
+
+    private async void ReturnValueSycnQuestionnaireField(QuestionnaireFieldParam questionnaireField)
+    {
+        if (questionnaireField != null && PodioSyncService != null)
+        {
+
+            var httpResponse = await PodioSyncService.SyncPodioQuestionnaireFieldAsync(questionnaireField, Http, title);
+            if (httpResponse.StatusCode.ToString() == "OK")
+            {
+                try
+                {
+                    toastService.ShowSuccess($"Successfully Sync Podio Fields - {title}");
+
+                }
+                catch (Exception)
+                {
+                    toastService.ShowError($"Failed Sync Podio Fields - {title}");
+                }
+
+            }
+            else
+            {
+                toastService.ShowError($"Failed Sync Podio Fields - {title}");
+            }
+
+            this.StateHasChanged();
+        }
+
+
+    }
+
+    private async void LoadClientAppConfig()
+    {
+        string fileName = "ClientApp.xlsx";
+        var httpResponse = await QuestionnaireService.LoadSoxClientParam(fileName, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                toastService.ShowSuccess($"Successfully Loaded Questinnaire App Id and Token");
+
+            }
+            catch (Exception)
+            {
+                toastService.ShowError($"Failed to Load Questinnaire App Id and Token");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError($"Failed to Load Questinnaire App Id and Token");
+        }
+
+        this.StateHasChanged();
+    }
+}

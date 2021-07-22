@@ -1,0 +1,347 @@
+﻿@using A2B_App.Shared.Sox
+@using System.Text
+@using System.IO
+@using System.Net.Http.Headers
+@using A2B_App.Client.Component.Questionnaire
+@using A2B_App.Client.Services
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@inject Task<ClientSettings> _getSettings
+@inject NavigationManager NavManager
+
+
+
+
+<h3>Key Report Exception</h3>
+
+@if (keyReportAnswer != null && keyReportQuestion != null)
+{
+    foreach (var item in keyReportQuestion)
+    {
+        switch (item.Type)
+        {
+            case "text":
+
+                <div class="row">
+                    <div class="col-10">
+                        <div class="form-group">
+                            <label for="@($"{item.FieldId}{item.Id}{item.AppId}")">@item.QuestionString</label>
+                            <div class="field">
+                                <div class="control is-expanded">
+                                    @if (item.Tag != "large")
+                                    {
+                                        //if not multiline then we set as input field
+                                        <input type="text" class="input" id="@($"{item.FieldId}{item.Id}{item.AppId}")" @bind-value="keyReportAnswer[item.Position - 1].StrAnswer" @onfocusout="ReturnAnswer">
+                                    }
+                                    else
+                                    {
+                                        //if multi line then we set as textarea
+                                        <textarea rows="4" class="textarea" id="@($"{item.FieldId}{item.Id}{item.AppId}")" @bind="keyReportAnswer[item.Position - 1].StrAnswer" @onfocusout="ReturnAnswer"></textarea>
+                                    }
+                                </div>
+                                @if (item.Description != null && item.Description != string.Empty)
+                                {
+                                    <p class="is-size-7 has-text-left has-text-grey-light">@keyReportQuestion[item.Position - 1].Description</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                break;
+
+            case "date":
+
+                <div class="row">
+                    <div class="col-10">
+                        <div class="form-group">
+                            <label>@(item.QuestionString)</label>
+                            <QuestionnaireDateFieldComponent position="@(item.Position - 1)"
+                                                             OnDateChanged="GetDate"
+                                                             answer1="@keyReportAnswer[item.Position - 1].StrAnswer"
+                                                             answer2="@keyReportAnswer[item.Position - 1].StrAnswer2"
+                                                             isDateRange="@(item.Tag == "enabled" ? false : true)"
+                                                             enabled="true">
+                            </QuestionnaireDateFieldComponent>
+
+                            @if (item.Description != null && item.Description != string.Empty)
+                            {
+                                <p class="is-size-7 has-text-left has-text-grey-light">@keyReportQuestion[item.Position - 1].Description</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                break;
+
+            case "category":
+            case "app":
+
+                switch (item.QuestionString.ToLower())
+                {
+
+                    case string s when s.Contains("1. what is the fy"):
+
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="@($"{item.FieldId}{item.Id}{item.AppId}")">@(item.QuestionString) </label>
+                                    @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                    <select class="form-control">
+                                        <option value="@(fy)" selected>@(fy)</option>
+                                    </select>
+                                    @if (item.Description != null && item.Description != string.Empty)
+                                    {
+                                        <p class="is-size-7 has-text-left has-text-grey-light">@keyReportQuestion[item.Position - 1].Description</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        break;
+
+                    case string s when s.Contains("2. client name"):
+
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="@($"{item.FieldId}{item.Id}{item.AppId}")">@(item.QuestionString) </label>
+                                    @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                    <select class="form-control">
+                                        <option value="@(clientName)" selected>@(clientName)</option>
+                                    </select>
+                                    @if (item.Description != null && item.Description != string.Empty)
+                                    {
+                                        <p class="is-size-7 has-text-left has-text-grey-light">@keyReportQuestion[item.Position - 1].Description</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        break;
+
+                    case string s when s.Contains("name of key report/iuc"):
+
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="@($"{item.FieldId}{item.Id}{item.AppId}")">@(item.QuestionString) </label>
+                                    @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                    <select class="form-control">
+                                        @if (controlId != null && controlId != string.Empty)
+                                        {
+                                            <option value="@(reportName)" selected>@(reportName)</option>
+                                        }
+                                    </select>
+                                    @if (item.Description != null && item.Description != string.Empty)
+                                    {
+                                        <p class="is-size-7 has-text-left has-text-grey-light">@keyReportQuestion[item.Position - 1].Description</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        break;
+
+                    case string s when s.Contains("key control id"):
+
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="@($"{item.FieldId}{item.Id}{item.AppId}")">@(item.QuestionString) </label>
+                                    @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                    <select class="form-control">
+                                        @if (controlId != null && controlId != string.Empty)
+                                        {
+                                            <option value="@(controlId)" selected>@(controlId)</option>
+                                        }
+                                    </select>
+                                    @if (item.Description != null && item.Description != string.Empty)
+                                    {
+                                        <p class="is-size-7 has-text-left has-text-grey-light">@keyReportQuestion[item.Position - 1].Description</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        break;
+
+                        
+                    case string s when s.Contains("control activity"):
+
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="@($"{item.FieldId}{item.Id}{item.AppId}")">@item.QuestionString</label>
+                                    <div class="field">
+                                        <div class="control is-expanded">
+
+
+                                            <textarea rows="4" class="textarea" id="@($"{item.FieldId}{item.Id}{item.AppId}")" @bind="keyReportAnswer[item.Position - 1].StrAnswer" @onfocusout="ReturnAnswer"></textarea>
+
+                                        </div>
+                                        @if (item.Description != null && item.Description != string.Empty)
+                                        {
+                                            <p class="is-size-7 has-text-left has-text-grey-light">@keyReportQuestion[item.Position - 1].Description</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        break;
+
+                        
+
+                    default:
+
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <label for="@($"{item.FieldId}{item.Id}{item.AppId}")">@(item.QuestionString)</label>
+                                    @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                    <select class="form-control" id="@($"{item.FieldId}{item.Id}{item.AppId}")"
+                                            @bind="keyReportAnswer[item.Position - 1].StrAnswer" @onfocusout="ReturnAnswer">
+                                        @if (item.Options.Count > 0)
+                                        {
+                                            <option value="">Select Option</option>
+                                            foreach (var option in item.Options)
+                                            {
+                                                <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                            }
+                                        }
+                                    </select>
+                                    @if (item.Description != null && item.Description != string.Empty)
+                                    {
+                                        <p class="is-size-7 has-text-left has-text-grey-light">@keyReportQuestion[item.Position - 1].Description</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        break;
+                }
+
+
+                break;
+
+            case "image":
+                //System.Diagnostics.Debug.WriteLine($"Screenshot Question: {item.QuestionString} - Screenshot Answer: {keyReportAnswer[item.Position - 1].StrAnswer}");
+                //System.Diagnostics.Debug.WriteLine($"item.Position: {item.Position}");
+
+                <div class="row">
+
+                    <div class="col-4">
+                        <div class="form-group">
+                            <label for="@($"{item.FieldId}{item.Id}{item.AppId}")">@item.QuestionString</label>
+                            <div class="field">
+                                <DragDrop ReturnFiles="@((e) => { ReturnFiles(e); })" position="@item.Position" enable="true" />
+                            </div>
+
+                        </div>
+                    </div>
+
+                    @if (keyReportAnswer[item.Position - 1].StrAnswer != null && keyReportAnswer[item.Position - 1].StrAnswer != string.Empty)
+                    {
+                        <div class="row">
+                            <div class="col-10">
+                                <div class="form-group">
+                                    <div class="is-overlay">
+                                        <a class="delete is-large is-pulled-right has-background-danger" @onclick="@(() => { RemoveImage(item.Position); })"></a>
+                                    </div>
+                                    <img src="@($"{NavManager.BaseUri}include/upload/image/" + keyReportAnswer[item.Position - 1].StrAnswer)" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+
+                break;
+        }
+    }
+}
+
+@code {
+
+    [Parameter] public List<KeyReportQuestion> keyReportQuestion { get; set; }
+    [Parameter] public List<KeyReportUserInput> keyReportAnswer { get; set; }
+    [Parameter] public string clientName { get; set; }
+    [Parameter] public string fy { get; set; }
+    [Parameter] public string reportName { get; set; }
+    [Parameter] public string controlId { get; set; }
+    [Parameter] public EventCallback<KeyReportReturnAnswer> ReturnListAnswer { get; set; }
+    FileService fileService = new FileService();
+
+    protected override Task OnParametersSetAsync()
+    {
+        this.StateHasChanged();
+        return base.OnParametersSetAsync();
+    }
+
+    private void GetDate(DtQuestionnaire dtQuestionnaire)
+    {
+        //if (listUserInput != null && listUserInput.Count > 0)
+        //{
+        //    if (dtQuestionnaire != null && dtQuestionnaire.startDate.HasValue)
+        //    {
+        //        System.Diagnostics.Debug.WriteLine($"Return Start Date: {dtQuestionnaire.startDate.Value.ToString()}");
+        //        System.Diagnostics.Debug.WriteLine($"Return Position: {dtQuestionnaire.position.ToString()}");
+        //        listUserInput[dtQuestionnaire.position].StrAnswer = dtQuestionnaire.startDate.Value.DateTime.ToString();
+
+        //    }
+        //    if (dtQuestionnaire != null && dtQuestionnaire.endDate.HasValue)
+        //    {
+        //        System.Diagnostics.Debug.WriteLine($"Return End Date: {dtQuestionnaire.endDate.Value.ToString()}");
+        //        System.Diagnostics.Debug.WriteLine($"Return Position: {dtQuestionnaire.position.ToString()}");
+        //        listUserInput[dtQuestionnaire.position].StrAnswer2 = dtQuestionnaire.endDate.Value.DateTime.ToString();
+        //    }
+        //}
+
+        this.StateHasChanged();
+    }
+
+    private async void ReturnFiles(FileUpload fileUpload)
+    {
+        if (fileUpload.IFileEntry != null)
+        {
+            var ms = new MemoryStream();
+            await fileUpload.IFileEntry.Data.CopyToAsync(ms);
+
+            //upload file and get response
+            var response = await fileService.UploadFileAsync(ms, fileUpload.IFileEntry.Name, Http);
+
+            if (response.StatusCode.ToString() == "OK")
+            {
+                keyReportAnswer[fileUpload.Position - 1].StrAnswer = response.Content.ReadAsStringAsync().Result.ToString();
+                //file = response.Content.ReadAsStringAsync().Result.ToString();
+                this.StateHasChanged();
+            }
+
+        }
+    }
+
+    private void RemoveImage(int position)
+    {
+        if (keyReportAnswer[position - 1].StrAnswer != string.Empty)
+        {
+            keyReportAnswer[position - 1].StrAnswer = string.Empty;
+            this.StateHasChanged();
+        }
+
+    }
+
+    private async void UpdateCategoryValue(UpdateElement updateElement)
+    {
+        await JSRuntime.InvokeAsync<object>($"SetElement", updateElement.elementId, updateElement.elementValue);
+    }
+
+    private void ReturnAnswer()
+    {
+        KeyReportReturnAnswer userAnswer = new KeyReportReturnAnswer();
+        userAnswer.ListKeyReportUserInput = keyReportAnswer;
+        userAnswer.Position = 4;
+        ReturnListAnswer.InvokeAsync(userAnswer);
+        this.StateHasChanged();
+    }
+}

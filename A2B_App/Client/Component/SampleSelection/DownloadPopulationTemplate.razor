@@ -1,0 +1,50 @@
+﻿@inject Task<ClientSettings> _getSettings
+@inject NavigationManager NavigationManager
+
+<div class="row @(version == "3" ? "" : "hidden-field")">
+    <div class="col-4 form-group">
+        @*<button class="btn btn-primary " @onclick="DownloadTemplate">Download Population File Template</button>*@
+        <a class="btn btn-primary has-text-white" target="_top" download="populationfile.xlsx" href="@DownloadTemplate2()">Download Population File Template</a>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string version { get; set; }
+
+    ClientSettings settings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //Console.WriteLine($"DownloadTemplate Version : {version}");
+        settings = await _getSettings;
+    }
+
+    @inject IJSRuntime JSRuntime;
+
+    public void DownloadTemplate()
+    {
+
+        try
+        {
+
+            //ClientSettings settings = new ClientSettings();
+            JSRuntime.InvokeAsync<object>("DownloadFile", $"{settings.GetApiServer()}SampleSelection/download/upload/populationfile.xlsx");
+
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine("Error Downloading Sample Selection Population Template");
+            System.Diagnostics.Debug.WriteLine($"{ex.ToString()}");
+
+        }
+
+    }
+
+    public string DownloadTemplate2()
+    {
+
+        return $"{NavigationManager.BaseUri}api/SampleSelection/download/upload/populationfile.xlsx";
+
+    }
+
+}

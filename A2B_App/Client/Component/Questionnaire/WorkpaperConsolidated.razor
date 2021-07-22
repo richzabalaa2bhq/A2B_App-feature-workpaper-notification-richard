@@ -1,0 +1,817 @@
+﻿@page "/workpaper/final/{RcmId}/{UniqueId}"
+
+@using BlazorDateRangePicker
+@using A2B_App.Client.Services;
+@using A2B_App.Shared.Sox
+@using A2B_App.Shared.Podio
+@using A2B_App.Client.Component.Questionnaire
+@using Newtonsoft.Json
+@using A2B_App.Client.Component.SampleSelection
+@using A2B_App.Client.Component
+@using System.Text
+@using System;
+@using System.Text.RegularExpressions;
+@using A2B_App.Client.Component.Utilities
+@using Microsoft.AspNetCore.Authorization
+@inject IToastService toastService
+@inject IJSRuntime JSRuntime
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+
+
+
+@if (listTesterDraft != null && listTesterDraft.Any())
+{
+
+    @*<div class="pl-1">
+        <p class="title is-4 is-family-primary">@(clientName != null && clientName != string.Empty ? clientName : string.Empty) Workpaper</p>
+        <p class="subtitle is-5">@(rcm.ControlId != null && rcm.ControlId != string.Empty? rcm.ControlId : string.Empty) Final Draft</p>
+        
+    </div>*@
+
+    <div class="columns is-gapless is-multiline is-mobile">
+        <div class="column is-half">
+            <p class="title is-4 is-family-primary">@(clientName != null && clientName != string.Empty ? clientName : string.Empty) Workpaper</p>
+            <p class="subtitle is-5">@(rcm.ControlId != null && rcm.ControlId != string.Empty? rcm.ControlId : string.Empty) Final Draft</p>
+        </div>
+        <div class="column is-half">
+            @if (fileName != string.Empty)
+            {
+                <a class="button is-info has-text-info-light is-pulled-right mx-2">Download File</a>
+            }
+            <button class="button is-success is-pulled-right" @onclick="GenerateWorkpaper">Generate Workpaper</button>
+        </div>
+    </div>
+
+
+    <div class="pt-5">
+
+        <div class="columns" style="overflow: auto;">
+
+            @foreach (var itemTester in listTesterDraft.Select((value, i) => new { i, value }))
+            {
+
+                bool isFirstRtFound = false;
+
+                <div class="p-2"></div>
+                <div class="card column is-one-third @(BackgroundColor(itemTester.value.WorkpaperStatus != null ? itemTester.value.WorkpaperStatus.Index : 1))">
+                    <div class="block">
+                        <span class="tag is-large @(TextColor(itemTester.value.WorkpaperStatus != null ? itemTester.value.WorkpaperStatus.Index : 3))">
+                            @($"{Subtitle(itemTester.value.WorkpaperStatus != null ? itemTester.value.WorkpaperStatus.StatusName : "No Data", itemTester.value.RoundName)}")
+                        </span>
+                    </div>
+
+                    <EditForm Model="itemTester">
+
+                        @if (itemTester.value.WorkpaperStatus != null && itemTester.value.WorkpaperStatus.Index == 0)
+                        {
+                            @foreach (var item in itemTester.value.ListUserInputRound)
+                            {
+
+                                @if (item.StrQuestion.ToLower().Contains("(rt)") && !isFirstRtFound)
+                                {
+                                    isFirstRtFound = true;
+
+                                    <TestRoundComponent3 listRoundItem="listTesterDraft[itemTester.value.Position].ListRoundItem2.OrderBy(pos => pos.Position).ToList()"
+                                                         roundName="@listTesterDraft[itemTester.value.Position].RoundName"
+                                                         disable="@true"
+                                                         ReturnAddRound="@((e) =>
+                                                                {
+                                                                    if(e != null)
+                                                                    {
+                                                                        if(e.ListUniqueNotes != null && e.ListUniqueNotes.Any())
+                                                                        {
+                                                                            //set previous description
+                                                                            foreach (var item in e.ListUniqueNotes)
+                                                                            {
+                                                                                item.Description = listTesterDraft[itemTester.value.Position].ListUniqueNotes.Where(note => note.Notes.Equals(item.Notes)).Select(desc => desc.Description).FirstOrDefault();
+                                                                            }
+                                                                            //add to list unique notes
+                                                                            listTesterDraft[itemTester.value.Position].ListUniqueNotes = e.ListUniqueNotes;
+                                                                        }
+                                                                        if(e.ListRoundItem != null && e.ListRoundItem.Any())
+                                                                        {
+                                                                            listTesterDraft[itemTester.value.Position].ListRoundItem2 = e.ListRoundItem;
+                                                                        }
+                                                                    }
+
+                                                                })">
+                                    </TestRoundComponent3>
+
+
+                                    <button class="btn @(itemTester.value.GeneralNote.Display ? btnDanger : btnPrimary)" style="cursor: pointer;" disabled="@true"
+                                            @onclick="@(()=>
+                                        {
+                                            itemTester.value.GeneralNote.Display = !itemTester.value.GeneralNote.Display;
+                                        })">
+                                        @(itemTester.value.GeneralNote.Display ? "Remove General Note" : "Add General Note")
+                                    </button>
+
+                                    @if (itemTester.value.ListIPENote != null && itemTester.value.ListIPENote.Any())
+                                    {
+                                        foreach (var itemIPE in itemTester.value.ListIPENote)
+                                        {
+                                            <button class="btn @(itemIPE.Display ? btnDanger : btnPrimary)" style="cursor: pointer;" disabled="@true"
+                                                    @onclick="@(()=> { itemIPE.Display = !itemIPE.Display; })">
+                                                @(itemIPE.Display ? $"Remove {itemIPE.Name}" : $"Add {itemIPE.Name}")
+                                            </button>
+                                        }
+                                    }
+
+                                    <UniqueNotes2 listUniqueNotes="listTesterDraft[itemTester.value.Position].ListUniqueNotes.ToList()"
+                                                  generalNote="listTesterDraft[itemTester.value.Position].GeneralNote"
+                                                  listIPENote="listTesterDraft[itemTester.value.Position].ListIPENote.ToList()"
+                                                  isDisabled="@true">
+
+                                    </UniqueNotes2>
+
+                                    <div class="pb-4"></div>
+
+                                }
+                                else if (!item.StrQuestion.ToLower().Contains("(rt)"))
+                                {
+                                    @switch (item.Type)
+                                    {
+                                        case "text":
+
+                                            <div class="row">
+                                                <div class="col">
+                                                    <div class="form-group">
+                                                        <label for="@($"{itemTester.value.RoundName}{item.Id}{item.AppId}")">@item.StrQuestion</label>
+                                                        <div class="field">
+                                                            <div class="control is-expanded">
+                                                                @if (item.DtEndRequire != "large")
+                                                                {
+                                                                    //if not multiline then we set as input field
+                                                                    <input type="text" class="input" id="@($"{itemTester.value.RoundName}{item.Id}{item.AppId}")" @bind-value="@item.StrAnswer" disabled="@true">
+                                                                }
+                                                                else
+                                                                {
+                                                                    //if multi line then we set as textarea
+                                                                    <textarea rows="4" class="textarea" id="@($"{itemTester.value.RoundName}{item.Id}{item.AppId}")" @bind="@item.StrAnswer" disabled="@true"></textarea>
+                                                                }
+                                                            </div>
+                                                            @if (item.Description != null && item.Description != string.Empty)
+                                                            {
+                                                                <p class="is-size-7 has-text-left has-text-grey-light">@itemTester.value.ListUserInputRound.ToList()[item.Position - 1].Description</p>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            break;
+
+                                        case "date":
+
+                                            <div class="row">
+                                                <div class="col">
+                                                    <div class="form-group">
+                                                        <label>@(item.StrQuestion)</label>
+                                                        @*<label class="label">@(item.QuestionString)</label>*@
+                                                        <QuestionnaireDateFieldComponent position="@(item.Position - 1)"
+                                                                                         OnDateChanged="@((e) => {
+                                                                                                    if(e != null && e.startDate.HasValue)
+                                                                                                    {
+                                                                                                        item.StrAnswer = e.startDate.Value.DateTime.ToString();
+                                                                                                    }
+                                                                                                    if(e != null && e.endDate.HasValue)
+                                                                                                    {
+                                                                                                        item.StrAnswer2 = e.endDate.Value.DateTime.ToString();
+                                                                                                    }
+                                                                                                })"
+                                                                                         answer1="@item.StrAnswer"
+                                                                                         answer2="@item.StrAnswer2"
+                                                                                         isDateRange="@(item.DtEndRequire == "enabled" ? false : true)"
+                                                                                         isDisabled="@true">
+                                                        </QuestionnaireDateFieldComponent>
+
+                                                        @if (item.Description != null && item.Description != string.Empty)
+                                                        {
+                                                            @*<p class="is-size-7 has-text-left has-text-grey-light">@itemTester.value.ListUserInputRound.ToList()[item.Position - 1].Description</p>*@
+                                                            <p class="is-size-7 has-text-left has-text-grey-light">@item.Description</p>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            break;
+
+                                        case "category":
+
+                                            switch (item.StrQuestion.ToLower())
+                                            {
+                                                //create special condition for this question field
+
+                                                case string s when s.Contains("10. select the testing phase"):
+
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label for="@($"{itemTester.value.RoundName}{item.Id}{item.AppId}")">@(item.StrQuestion) </label>
+                                                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                                                <select class="form-control" @onchange="@(()=> { item.StrAnswer = itemTester.value.RoundName; })" id="@($"{itemTester.value.RoundName}{item.Id}{item.AppId}")" disabled="@true">
+                                                                    <option value="@(itemTester.value.RoundName)" selected>@(itemTester.value.RoundName)</option>
+                                                                </select>
+                                                                @if (item.Description != null && item.Description != string.Empty)
+                                                                {
+                                                                    <p class="is-size-7 has-text-left has-text-grey-light">@item.Description</p>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    break;
+
+                                                case string s when s.Contains("what is the level of risk for the control"):
+
+                                                    itemTester.value.SampleSelProp.Risk = listTesterDraft[itemTester.value.Position].ListUserInputRound.ToList()[item.Position - 1].StrAnswer;
+
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>@(item.StrQuestion) </label>
+                                                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                                                <InputSelect class="form-control" disabled="@true"
+                                                                             @bind-Value="@item.StrAnswer">
+                                                                    @if (item.Options.Count > 0)
+                                                                                                        {
+                                                                        @*@(riskPostion = item.Position - 1);*@
+                                                                        <option value="">Select Option</option>
+                                                                                                            foreach (var option in item.Options)
+                                                                                                            {
+                                                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                                                                                            }
+                                                                                                        }
+                                                                </InputSelect>
+                                                                @if (item.Description != null && item.Description != string.Empty)
+                                                                {
+                                                                    <p class="is-size-7 has-text-left has-text-grey-light">@itemTester.value.ListUserInputRound.ToList()[item.Position - 1].Description</p>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    break;
+
+                                                case string s when s.Contains("how often does this control happen"):
+
+                                                    itemTester.value.SampleSelProp.Frequency = listTesterDraft[itemTester.value.Position].ListUserInputRound.ToList()[item.Position - 1].StrAnswer;
+
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>@(item.StrQuestion) </label>
+                                                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                                                <InputSelect class="form-control" disabled="@true"
+                                                                             @bind-Value="@item.StrAnswer">
+                                                                    @if (item.Options.Count > 0)
+                                                                                                        {
+                                                                        @*@(riskPostion = item.Position - 1);*@
+                                                                        <option value="">Select Option</option>
+                                                                                                            foreach (var option in item.Options)
+                                                                                                            {
+                                                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                                                                                            }
+                                                                                                        }
+                                                                </InputSelect>
+                                                                @if (item.Description != null && item.Description != string.Empty)
+                                                                {
+                                                                    <p class="is-size-7 has-text-left has-text-grey-light">@itemTester.value.ListUserInputRound.ToList()[item.Position - 1].Description</p>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    break;
+
+                                                case string s when s.Contains("sample selection required?"):
+
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>@(item.StrQuestion) </label>
+                                                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                                                <InputSelect class="form-control" @bind-Value="@item.StrAnswer" disabled="@true">
+                                                                    @if (item.Options.Count > 0)
+                                                                                                        {
+                                                                        @*@(riskPostion = item.Position - 1);*@
+                                                                        <option value="">Select Option</option>
+                                                                                                            foreach (var option in item.Options)
+                                                                                                            {
+                                                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                                                                                            }
+                                                                                                        }
+                                                                </InputSelect>
+                                                                @if (item.Description != null && item.Description != string.Empty)
+                                                                {
+                                                                    <p class="is-size-7 has-text-left has-text-grey-light">@item.Description</p>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    if (item.StrQuestion.ToLower().Contains("sample selection required?") && item.StrAnswer.ToLower().Contains("yes"))
+                                                    {
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <div class="form-group">
+                                                                    <label for="populationRequired">Population File Required?</label>
+                                                                    <InputSelect class="form-control" disabled="@true"
+                                                                                 @bind-Value="@itemTester.value.SampleSelProp.Version">
+                                                                        <option value="">Select Option</option>
+                                                                        <option value="1">No</option>
+                                                                        <option value="3">Yes</option>
+                                                                    </InputSelect>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <div class="form-group">
+                                                                    <button class="btn btn-primary" disabled="@true"
+                                                                            @onclick="@(() =>
+                                                                                        {
+                                                                                            if (itemTester.value.SampleSelProp.Version == "1" || itemTester.value.SampleSelProp.Version == "3")
+                                                                                            {
+                                                                                                itemTester.value.Rcm.PopulationFileRequired = itemTester.value.SampleSelProp.Version == "3" ? "Yes" : "No";
+                                                                                                itemTester.value.SampleSelProp.display = true;
+                                                                                                this.StateHasChanged();
+                                                                                                //this.Modal.Show();
+                                                                                            }
+                                                                                        })">
+                                                                        Run Sample Selection
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+
+                                                    break;
+
+                                                default:
+
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>@(item.StrQuestion)</label>
+                                                                @* <select class="form-control" id="testPhase" @onchange="@((e) => SetCategory(e, "TestingPhase"))">*@
+                                                                <InputSelect class="form-control" disabled="@true"
+                                                                             @bind-Value="@item.StrAnswer">
+                                                                    @if (item.Options.Count > 0)
+                                                                                                        {
+                                                                        <option value="">Select Option</option>
+                                                                                                            foreach (var option in item.Options)
+                                                                                                            {
+                                                                            <option value="@(option.OptionName)">@(option.OptionName)</option>
+                                                                                                            }
+                                                                                                        }
+                                                                </InputSelect>
+                                                                @if (item.Description != null && item.Description != string.Empty)
+                                                                {
+                                                                    <p class="is-size-7 has-text-left has-text-grey-light">@item.Description</p>
+                                                                }
+                                                                @if (item.StrAnswer != string.Empty && item.StrAnswer != null)
+                                                                {
+                                                                    //UpdateElement updateElement = new UpdateElement();
+                                                                    //updateElement.elementId = TrimElementId($"{itemTester.value.RoundName}{item.Id}{item.AppId}");
+                                                                    //updateElement.elementValue = item.StrAnswer;
+                                                                    //UpdateCategoryValue(updateElement);
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    break;
+                                            }
+
+                                            break;
+
+                                        case "image":
+                                            //System.Diagnostics.Debug.WriteLine($"Screenshot Question: {item.QuestionString} - Screenshot Answer: {listUserInput[item.Position - 1].StrAnswer}");
+                                            //System.Diagnostics.Debug.WriteLine($"item.Position: {item.Position}");
+
+
+                                            <div class="row">
+
+                                                <div class="col-sm col-lg-4 col-md-8 col-4 disable-div">
+                                                    <div class="form-group">
+                                                        <DragDrop ReturnFiles="@((e) => { ReturnFiles(e); })" position="@(item.Position)" enable="@true" />
+                                                    </div>
+                                                </div>
+
+                                                @if (item.StrAnswer != string.Empty)
+                                                {
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+
+                                                                <div class="is-overlay">
+                                                                    <a class="delete is-large is-pulled-right has-background-danger" @onclick="@(() => { RemoveImage(item.Position); })"></a>
+                                                                </div>
+                                                                @*<img src="@($"{NavManager.BaseUri}include/upload/image/" + itemTester.value.ListUserInputRound.ToList()[item.Position - 1].StrAnswer)" />*@
+                                                                <img src="@($"{NavManager.BaseUri}include/upload/image/" + item.StrAnswer)" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                            </div>
+
+                                            break;
+                                    }
+
+                                }
+
+
+
+                            }
+
+                            <SampleSelectionComponent2 roundName="@itemTester.value.RoundName"
+                                                       rcm="@itemTester.value.Rcm"
+                                                       sampleSelection1="@itemTester.value.SampleSel"
+                                                       sampleSelectionProp="@itemTester.value.SampleSelProp"
+                                                       clientName="@itemTester.value.Rcm.ClientName"
+                                                       ReturnSampleSelection="@((e) =>
+                                                                    {
+                                                                        if(e != null)
+                                                                        {
+                                                                            if(e.SampleSelection != null)
+                                                                            {
+                                                                                itemTester.value.SampleSel = e.SampleSelection;
+                                                                            }
+
+                                                                            if(e.SampleSelProp != null)
+                                                                                itemTester.value.SampleSelProp = e.SampleSelProp;
+                                                                        }
+                                                                    })">
+                            </SampleSelectionComponent2>
+                        }
+
+                    </EditForm>
+
+                </div>
+
+            }
+
+        </div>
+
+    </div>
+
+
+}
+else
+{
+    <p><em>@loadingStatus</em></p>
+}
+
+
+
+@if (authState != null)
+{
+    var user = authState.User;
+}
+
+@code {
+
+    [Parameter] public string UniqueId { get; set; }
+    [Parameter] public string RcmId { get; set; }
+
+    private AuthenticationState authState { get; set; }
+    private string email { get; set; }
+    private List<QuestionnaireQuestion> listQuestion { get; set; }
+    private SampleSelectionComponent2 Modal;
+    private QuestionnaireService QuestionnaireService;
+    private FormatService FormatService = new FormatService();
+    private ClientSettings settings;
+    private SampleSelectionService SampleSelectionService;
+    private RcmService RcmService;
+
+    private Rcm rcm { get; set; }
+    private QuestionnaireFieldParam questionnaireParam { get; set; }
+    private PodioAppKey appkey { get; set; }
+    private IUCSystemGen objIUCSystemGen { get; set; }
+    private IUCNonSystemGen objIUCNonSystemGen { get; set; }
+    private List<ClientSs> ListClient { get; set; }
+    private List<QuestionnaireQuestion> listQuestion1stSet, listQuestion2ndSet;
+    private List<RoundQA> listQA { get; set; }
+    private List<HeaderNote> listHeaderNote { get; set; }
+    private List<QuestionnaireTesterSet> listTesterDraft { get; set; }
+    private List<RoundQA2> listRoundQA { get; set; }
+    private SampleSelection sampleSel;
+
+    public string appId { get; set; }
+    private string round1Percent { get; set; }
+    private string round2Percent { get; set; }
+    private string loadingStatus { get; set; }
+    private string clientName { get; set; }
+    private bool isLoading { get; set; }
+    //private bool isFirstRtFound { get; set; }
+
+
+    //private QuestionaireAddedInputs AddedInputss { get; set; } //keyword to search: mark
+    private string SeventeenA { get; set; }
+    private string SeventeenB { get; set; }
+    private string SeventeenC { get; set; }
+    private string SeventeenD { get; set; }
+    private string SeventeenE { get; set; }
+    private string SeventeenF { get; set; }
+    private string fileName { get; set; } = string.Empty;
+
+    private string sampleSelectionReq;
+    //private string risk, frequency, version;
+    private int sampleRound1 = 0, sampleRound2 = 0, sampleRound3 = 0;
+    private int posSampleSize { get; set; }
+    private int postPopulationSize { get; set; }
+    //private bool isRender = false;
+    private string roundName { get; set; }
+    private int totalDraftTestItem { get; set; }
+    private string userAction { get; set; }
+    private bool fieldEnabled { get; set; } = true;
+    private string btnDanger { get; set; } = "btn-danger";
+    private string btnPrimary { get; set; } = "btn-info";
+    private bool isGeneratingWorkpaper { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        Initialize();
+
+        this.StateHasChanged();
+    }
+
+    private async void Initialize()
+    {
+
+        LoadStatus("Initialize service component...");
+
+        authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        settings = await _getSettings;
+        QuestionnaireService = new QuestionnaireService(settings);
+        RcmService = new RcmService(settings);
+        SampleSelectionService = new SampleSelectionService(settings);
+        GetData();
+
+    }
+
+    private async void GetData()
+    {
+        LoadStatus("Loading data...");
+        isLoading = false;
+        //isFirstRtFound = false;
+        //isRendered = false;
+        //settings = await _getSettings;
+        //RcmService = new RcmService(settings);
+        //QuestionnaireService = new QuestionnaireService(settings);
+        //SampleSelectionService = new SampleSelectionService(settings);
+
+        //roundSet = new QuestionnaireRoundSet();
+        //roundSet.UniqueId = string.Empty;
+
+        //if (roundSetId != "0")
+        //{
+        //    System.Diagnostics.Debug.WriteLine($"Get Round Set");
+        //    var roundResponse = await QuestionnaireService.GetSpecificRoundSetAsync(roundSetId, Http);
+        //    if (roundResponse.StatusCode.ToString() == "OK")
+        //    {
+        //        string result = roundResponse.Content.ReadAsStringAsync().Result.ToString();
+        //        roundSet = JsonConvert.DeserializeObject<QuestionnaireRoundSet>(result);
+        //    }
+        //}
+
+
+        //listQuestion1stSet = new List<QuestionnaireQuestion>();
+        //listQuestion2ndSet = new List<QuestionnaireQuestion>();
+
+        if (RcmId != "0")
+        {
+            LoadStatus("Loading RCM...");
+            rcm = new Rcm();
+            rcm = await RcmService.GetRcmByPodioItemId(RcmId, Http);
+            questionnaireParam = new QuestionnaireFieldParam();
+            questionnaireParam.ClientName = rcm.ClientName;
+            questionnaireParam.ControlName = rcm.ControlId;
+            clientName = rcm.ClientName;
+
+            LoadStatus("Loading Questions...");
+
+        }
+
+
+
+        //Get IUC System Question
+        appkey = new PodioAppKey();
+        appkey.AppToken = string.Empty;
+        appkey.AppId = settings.GetIUCSystemAppId();
+        questionnaireParam.AppKey = appkey;
+        //GetIUCSystem(questionnaireParam);
+
+        //Get IUC Non System Question
+        appkey = new PodioAppKey();
+        appkey.AppToken = string.Empty;
+        appkey.AppId = settings.GetIUCNonSystemAppId();
+        questionnaireParam.AppKey = appkey;
+        //GetIUCNonSystem(questionnaireParam);
+
+
+        GetClientDetail();
+
+        //Get All Draft for this Id
+        GetTesterDraft();
+
+        //Get All Tester for this Id
+        //GetReviewerDraft();
+
+
+        this.StateHasChanged();
+
+    }
+
+    private void LoadStatus(string status)
+    {
+        loadingStatus = status;
+        this.StateHasChanged();
+    }
+
+    private string SetTitle(int num)
+    {
+
+        //var result = num % 2;
+        //if (result == 0 || (result != 0 && num > 1)) // even or odd but num is greater than 1
+        //{
+        //    num = num - 2 <= 1 ? 1 : num;
+        //}
+        return num.ToString();
+    }
+
+    private string Subtitle(string status, string roundName)
+    {
+
+
+        string result = string.Empty;
+        result = $"{roundName} ({status})";
+
+
+        //if (name != string.Empty && name != null && name != "Final")
+        //{
+        //    result = $"Draft {draft} ({name})";
+        //}
+        //else if (name == "Final")
+        //    result = $"{name}";
+        //else
+        //    result = $"Draft {draft} ";
+        return result;
+    }
+
+    private string TextColor(int status)
+    {
+        string result = string.Empty;
+
+        if (status == 1 || status == 5)
+            result = "is-info";
+        else if (status == 0)
+            result = "is-success";
+        else
+            result = "is-danger";
+
+        return result;
+    }
+
+    private string BackgroundColor(int status)
+    {
+        string result = string.Empty;
+
+        if (status == 0)
+            result = "has-background-success-light";
+        else
+            result = "has-background-white-bis";
+
+        return result;
+    }
+
+    private async void GetClientDetail()
+    {
+        LoadStatus("Loading client details...");
+        ListClient = new List<ClientSs>();
+        ListClient = await SampleSelectionService.SetClientAsync(Http);
+
+        List<ClientSs> selectedClient = new List<ClientSs>();
+        round1Percent = ListClient.Where(x => x.ClientName == rcm.ClientName).Select(d => d.Percent.ToString()).FirstOrDefault();
+        round2Percent = ListClient.Where(x => x.ClientName == rcm.ClientName).Select(d => d.PercentRound2.ToString()).FirstOrDefault();
+
+    }
+
+    private async void GetTesterDraft()
+    {
+        LoadStatus("Loading final draft...");
+        listTesterDraft = new List<QuestionnaireTesterSet>();
+        QuestionnaireDraftId draftId = new QuestionnaireDraftId();
+        draftId.UniqueId = UniqueId;
+        draftId.RcmItemId = RcmId != string.Empty ? int.Parse(RcmId) : 0;
+        //draftId.RoundName = RoundName;
+
+        var httpResponse = await QuestionnaireService.GetQuestionnaireTesterFinalAsync(draftId, Http);
+        if (httpResponse.StatusCode.ToString() == "OK")
+        {
+            try
+            {
+                var result = httpResponse.Content.ReadAsStringAsync().Result.ToString();
+                listTesterDraft = JsonConvert.DeserializeObject<List<QuestionnaireTesterSet>>(result);
+
+                if (listTesterDraft.Any())
+                {
+                    int pos = 0;
+                    foreach (var item in listTesterDraft)
+                    {
+                        item.Rcm = rcm;
+
+                        if (item.GeneralNote == null)
+                        {
+                            item.GeneralNote = new GeneralNote();
+                            item.GeneralNote.GeneralNoteText = "General Note";
+                            item.GeneralNote.Display = false;
+                        }
+
+                        item.SampleSelProp = item.SampleSelProp ?? new SampleSelectionProperties(); //if null, instantiate
+                        item.SampleSel = item.SampleSel ?? new SampleSelection(); //if null, instantiate
+
+                        //set population file required
+                        if (item.Rcm.PopulationFileRequired == "Yes")
+                            item.SampleSelProp.Version = "3";
+                        else
+                            item.SampleSelProp.Version = "1";
+
+                        item.SampleSelProp.ClientName = item.Rcm.ClientName;
+
+
+                        //update position since we only select specific round and position may not be in sequence
+                        item.Position = pos;
+                        pos++;
+                    }
+
+                    totalDraftTestItem = listTesterDraft.Count() - 1;
+                    //sampleSel = listTesterDraft[listTesterDraft.Count() - 1].SampleSel ?? new SampleSelection();
+                    //roundName = listTesterDraft[listTesterDraft.Count() - 1].RoundName;
+                }
+
+                this.StateHasChanged();
+            }
+            catch (Exception)
+            {
+                toastService.ShowError("Failed to load tester draft");
+            }
+
+        }
+        else
+        {
+            toastService.ShowError("Failed to load tester draft");
+        }
+
+    }
+
+    private async void ReturnFiles(FileUpload fileUpload)
+    {
+        //fileUpload.IFileEntry = _file;
+        //if (fileUpload.IFileEntry != null)
+        //{
+        //    var ms = new MemoryStream();
+        //    await fileUpload.IFileEntry.Data.CopyToAsync(ms);
+
+        //    //upload file and get response
+        //    var response = await fileService.UploadFileAsync(ms, fileUpload.IFileEntry.Name, Http);
+
+        //    if (response.StatusCode.ToString() == "OK")
+        //    {
+        //        listUserInput[fileUpload.Position - 1].StrAnswer = response.Content.ReadAsStringAsync().Result.ToString();
+        //        //file = response.Content.ReadAsStringAsync().Result.ToString();
+        //        this.StateHasChanged();
+        //    }
+
+        //}
+    }
+
+    private void RemoveImage(int position)
+    {
+        //if (listUserInput[position - 1].StrAnswer != string.Empty)
+        //{
+        //    listUserInput[position - 1].StrAnswer = string.Empty;
+        //    this.StateHasChanged();
+        //}
+
+    }
+
+    private void GenerateWorkpaper()
+    {
+        isGeneratingWorkpaper = true;
+        this.StateHasChanged();
+
+        fileName = "Test";
+
+
+        isGeneratingWorkpaper = false;
+        this.StateHasChanged();
+    }
+
+}

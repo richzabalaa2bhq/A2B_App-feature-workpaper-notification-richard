@@ -1,0 +1,84 @@
+﻿
+@using A2B_App.Shared.Sox
+
+@if ((listUniqueNotes != null && listUniqueNotes.Any()) ||
+ (generalNote != null && generalNote.Display) ||
+ (listIPENote != null && listIPENote.Where(x => x.Display.Equals(true)).Any()))
+{
+
+    <h3>Notes</h3>
+
+    @if (generalNote != null && generalNote.Display)
+    {
+        <div class="row">
+            <div class="col-4">
+                <div class="form-group">
+                    <input type="text" class="form-control has-text-centered" id="@(generalNote.GeneralNoteText)" maxlength="3" value="@(generalNote.GeneralNoteText)" disabled="@true">
+                </div>
+            </div>
+            <div class="col-8">
+                <div class="form-group">
+                    <textarea rows="4" class="form-control" id="@($"desc{generalNote.GeneralNoteText}")" @bind="generalNote.Description" disabled="@isDisabled"></textarea>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (listIPENote != null && listIPENote.Any())
+    {
+        @foreach (var itemIPE in listIPENote)
+        {
+            if (itemIPE.Display)
+            {
+                <div class="row">
+                    <div class="col-4">
+                        <div class="form-group">
+                            <input type="text" class="form-control has-text-centered" id="@(itemIPE.Note)" maxlength="3" value="@(itemIPE.Note)" disabled="@true">
+                        </div>
+                    </div>
+                    <div class="col-8">
+                        <div class="form-group">
+                            <textarea rows="4" class="form-control" id="@($"desc{itemIPE.Note}")" @bind="@(itemIPE.Description)" disabled="@isDisabled"></textarea>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+    }
+
+    @foreach (var uniqueNotes in listUniqueNotes.OrderBy(x => x.Notes))
+    {
+        <div class="row">
+            <div class="col-4">
+                <div class="form-group">
+                    <input type="text" class="form-control has-text-centered" id="@(uniqueNotes.Notes)" maxlength="3" value="@(uniqueNotes.Notes)" disabled="@true">
+                </div>
+            </div>
+            <div class="col-8">
+                <div class="form-group">
+                    <textarea rows="4" class="form-control" id="@($"desc{uniqueNotes.Notes}")" @bind="@(uniqueNotes.Description)" disabled="@isDisabled"></textarea>
+                </div>
+            </div>
+        </div>
+    }
+
+}
+
+
+@code {
+
+    [Parameter] public List<NotesItem2> listUniqueNotes { get; set; }
+    [Parameter] public GeneralNote generalNote { get; set; }
+    [Parameter] public List<IPENote> listIPENote { get; set; }
+    [Parameter] public bool isDisabled { get; set; }
+
+    protected override Task OnParametersSetAsync()
+    {
+        this.StateHasChanged();
+        return base.OnParametersSetAsync();
+    }
+
+
+
+}

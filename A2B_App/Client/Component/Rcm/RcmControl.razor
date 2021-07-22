@@ -1,0 +1,1412 @@
+﻿
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using System.Text
+@using A2B_App.Shared.Sox
+@using A2B_App.Client.Component.Utilities
+@using System.Globalization 
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+
+
+<h4>New Control</h4>
+
+<div class="columns">
+
+    <div class="column is-half">
+
+        @*Q1 FY*@
+        <div class="row">
+            <div class="col-10">
+                <div class="form-group">
+                    <label for="Question1"><span class="has-text-weight-bold">1. </span> For what year is the RCM for?</label>
+                    <select class="form-control" id="Question1" @bind="Q1Answer">
+                        <option value="">Select Year</option>
+                        @if (listFy != null && listFy.Count > 0)
+                        {
+                            @foreach (var item in listFy)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        }
+
+                    </select>
+                </div>
+            </div>
+        </div>
+
+
+        @*Q2 Client*@
+        <div class="row">
+            <div class="col-10">
+                <div class="form-group">
+                    <label for="Q2Client"><span class="has-text-weight-bold">2. </span> Client</label>
+                    <select class="form-control" id="Q2Client" @bind="Q2Answer">
+                        <option value="">Select Client</option>
+                        @if (listClient != null && listClient.Count > 0)
+                        {
+                            @foreach (var item in listClient)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        }
+
+                    </select>
+                </div>
+            </div>
+        </div>
+
+
+        @if (rcm.ClientName != null && rcm.ClientName != string.Empty && rcm.ClientName != "Select Client")
+        {
+
+            @*Q3 Process*@
+            <div class="row">
+                <div class="col-10">
+                    <div class="form-group">
+                        <label for="Q3Process"><span class="has-text-weight-bold">3. </span> Process</label>
+                        <select class="form-control" id="Q3Process" @bind="Q3Answer">
+                            <option value="">Select Process</option>
+                            @if (listProcess != null && listProcess.Count > 0)
+                            {
+                                @foreach (var item in listProcess)
+                                {
+                                    <option value="@item">@item</option>
+                                }
+                            }
+
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+            @if (rcm.Process != null && rcm.Process != string.Empty && rcm.Process != "Select Process")
+            {
+
+                @*Q4 Sub Process*@
+                <div class="row">
+                    <div class="col-10">
+                        <div class="form-group">
+                            <label for="Q4SubProcess"><span class="has-text-weight-bold">4. </span>Sub-Process</label>
+                            <select class="form-control" id="Q4SubProcess" @bind="Q4Answer">
+                                <option value="">Select Sub Process</option>
+                                @if (listSubProcess != null && listSubProcess.Count > 0)
+                                {
+                                    @foreach (var item in listSubProcess)
+                                    {
+                                        <option value="@item">@item</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                @if (rcm.Subprocess != null && rcm.Subprocess != string.Empty && rcm.Subprocess != "Select Sub Process")
+                {
+
+                    @*Q5 What is the control objective*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q5ControlActivity"><span class="has-text-weight-bold">5. </span>What is the control objective?</label>
+                                <div class="field">
+                                    <div class="control is-expanded">
+                                        <textarea rows="4" class="textarea" id="Q5ControlActivity" @bind="rcm.ControlObjective"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q6 What is the specific risk?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q5ControlActivity"><span class="has-text-weight-bold">6. </span>What is the specific risk?</label>
+                                <div class="field">
+                                    <div class="control is-expanded">
+                                        <textarea rows="4" class="textarea" id="Q5ControlActivity" @bind="rcm.SpecificRisk"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q7 What is the financial statement element?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">7. </span> What is the financial statement element?</label>
+                                <div class="field">
+                                    @if (rcmQ13toQ19 != null && rcmQ13toQ19.ListQ7FinStatementElement != null && rcmQ13toQ19.ListQ7FinStatementElement.Count > 0)
+                                    {
+                                        @foreach (var item in rcmQ13toQ19.ListQ7FinStatementElement)
+                                        {
+                                            @if (item.selected)
+                                            {
+                                                <label class="checkbox"><input type="checkbox" checked @onchange="eventArgs => { Q7ClickEvent(item.item, eventArgs.Value); }"> @item.item</label> <br />
+                                            }
+                                            else
+                                            {
+                                                <label class="checkbox"><input type="checkbox" @onchange="eventArgs => { Q7ClickEvent(item.item, eventArgs.Value); }"> @item.item</label> <br />
+                                            }
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @*Q8 Financial Statement Assertions*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">8. </span> Financial Statement Assertions</label>
+                                <div class="field">
+                                    @if (rcmQ13toQ19 != null && rcmQ13toQ19.ListQ8FinStatementAssert != null && rcmQ13toQ19.ListQ8FinStatementAssert.Count > 0)
+                                    {
+                                        @foreach (var item in rcmQ13toQ19.ListQ8FinStatementAssert)
+                                        {
+                                            @if (item.selected)
+                                            {
+                                                <label class="checkbox"><input type="checkbox" checked @onchange="eventArgs => { Q8ClickEvent(item.item, eventArgs.Value); }"> @item.item</label> <br />
+                                            }
+                                            else
+                                            {
+                                                <label class="checkbox"><input type="checkbox" @onchange="eventArgs => { Q8ClickEvent(item.item, eventArgs.Value); }"> @item.item</label> <br />
+                                            }
+
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q9 What is the Control ID?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">9. </span> What is the Control ID?</label>
+                                <select class="form-control" id="Q2Client" @bind="Q9Answer">
+                                    <option value="">Select Option</option>
+                                    @if (listControlId != null && listControlId.Count > 0)
+                                    {
+                                        @foreach (var item in listControlId)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q10A What is the control activity?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q10ControlActivity"><span class="has-text-weight-bold">10.A </span>What is the control activity?</label>
+                                <div class="field">
+                                    <div class="control is-expanded">
+                                        <textarea rows="4" class="textarea" id="Q10ControlActivity" @bind="rcm.ControlActivityFy19"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @*Q10B When is the control in place date?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q11AShortDesc"><span class="has-text-weight-bold">10.B </span>What is the short description?</label>
+                                <div class="field">
+                                    <div class="control is-expanded">
+                                        <input type="text" class="input" id="Q11AShortDesc" @bind="rcm.ShortDescription">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @*Q11 When is the control in place date?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q11ControlPlaceDate"><span class="has-text-weight-bold">11.B </span>When is the control in place date?</label>
+                                <div class="field">
+                                    <div class="control is-expanded">
+                                        <input type="text" class="input" id="Q11ControlPlaceDate" @bind="rcm.ControlPlaceDate">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q12 Who is the control owner?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">12. </span> Who is the control owner?</label>
+                                <div class="field">
+                                    @if (rcmQ13toQ19 != null && rcmQ13toQ19.ListQ12ControlOwner != null && rcmQ13toQ19.ListQ12ControlOwner.Count > 0)
+                                    {
+                                        @foreach (var item in rcmQ13toQ19.ListQ12ControlOwner)
+                                        {
+                                            @if (item.selected)
+                                            {
+                                                <label class="checkbox"><input type="checkbox" checked" @onchange="eventArgs => { Q12ClickEvent(item.item, eventArgs.Value); }"> @item.item</label> <br />
+                                            }
+                                            else
+                                            {
+                                                <label class="checkbox"><input type="checkbox" @onchange="eventArgs => { Q12ClickEvent(item.item, eventArgs.Value); }"> @item.item</label> <br />
+                                            }
+
+                                            //this to make sure the "other" option is rendered at the bottom
+                                            if (rcmQ13toQ19.ListQ12ControlOwner.IndexOf(item) == rcmQ13toQ19.ListQ12ControlOwner.Count - 1)
+                                            {
+                                                // this is the last item
+                                                isQ12Rendered = true;
+                                            }
+
+                                        }
+
+
+
+                                        @if (q12IsOthers && isQ12Rendered)
+                                        {
+                                            <div class="field">
+                                                <div class="control is-expanded">
+                                                    <input type="text" class="input" id="Q12COtherValue" @bind="q12OtherValue">
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q13. What is the control frequency?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">13. </span> What is the control frequency?</label>
+                                <select class="form-control" id="Q2Client" @bind="Q13Answer">
+                                    <option value="">Select Option</option>
+                                    @if (rcmQ13toQ19 != null && rcmQ13toQ19.ListQ13Frequency != null && rcmQ13toQ19.ListQ13Frequency.Count > 0)
+                                    {
+                                        @foreach (var item in rcmQ13toQ19.ListQ13Frequency)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q14. Is it a key/ non-key control?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">14. </span> Is it a key/ non-key control?</label>
+                                <select class="form-control" id="Q2Client" @bind="Q14Answer">
+                                    <option value="">Select Option</option>
+                                    @if (rcmQ13toQ19 != null && rcmQ13toQ19.ListQ14ControlKey != null && rcmQ13toQ19.ListQ14ControlKey.Count > 0)
+                                    {
+                                        @foreach (var item in rcmQ13toQ19.ListQ14ControlKey)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q15. What is the control type?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">15. </span> What is the control type?</label>
+                                <select class="form-control" id="Q2Client" @bind="Q15Answer">
+                                    <option value="">Select Option</option>
+                                    @if (rcmQ13toQ19 != null && rcmQ13toQ19.ListQ15ControlType != null && rcmQ13toQ19.ListQ15ControlType.Count > 0)
+                                    {
+                                        @foreach (var item in rcmQ13toQ19.ListQ15ControlType)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q16. What is the nature of procedure?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">16. </span> What is the nature of procedure?</label>
+                                <select class="form-control" id="Q2Client" @bind="Q16Answer">
+                                    <option value="">Select Option</option>
+                                    @if (rcmQ13toQ19 != null && rcmQ13toQ19.ListQ16NatureProcedure != null && rcmQ13toQ19.ListQ16NatureProcedure.Count > 0)
+                                    {
+                                        @foreach (var item in rcmQ13toQ19.ListQ16NatureProcedure)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q17. Is it a fraud control?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">17. </span> Is it a fraud control?</label>
+                                <select class="form-control" id="Q2Client" @bind="Q17Answer">
+                                    <option value="">Select Option</option>
+                                    @if (rcmQ13toQ19 != null && rcmQ13toQ19.ListQ17FraudControl != null && rcmQ13toQ19.ListQ17FraudControl.Count > 0)
+                                    {
+                                        @foreach (var item in rcmQ13toQ19.ListQ17FraudControl)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q18. What is the risk level?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">18. </span> What is the risk level?</label>
+                                <select class="form-control" id="Q2Client" @bind="Q18Answer">
+                                    <option value="">Select Option</option>
+                                    @if (rcmQ13toQ19 != null && rcmQ13toQ19.ListQ18RiskLevel != null && rcmQ13toQ19.ListQ18RiskLevel.Count > 0)
+                                    {
+                                        @foreach (var item in rcmQ13toQ19.ListQ18RiskLevel)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q19. Is it a management review control?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q2Client"><span class="has-text-weight-bold">19. </span> Is it a management review control?</label>
+                                <select class="form-control" id="Q2Client" @bind="Q19Answer">
+                                    <option value="">Select Option</option>
+                                    @if (rcmQ13toQ19 != null && rcmQ13toQ19.ListQ19MgmtReviewControl != null && rcmQ13toQ19.ListQ19MgmtReviewControl.Count > 0)
+                                    {
+                                        @foreach (var item in rcmQ13toQ19.ListQ19MgmtReviewControl)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q20 What PBC's (supporting documents) are needed to test this control?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q20Pbc"><span class="has-text-weight-bold">20. </span>What PBC's (supporting documents) are needed to test this control?</label>
+                                <div class="field">
+                                    <div class="control is-expanded">
+                                        <textarea rows="4" class="textarea" id="Q20Pbc" @bind="rcm.PbcList"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Q21 What is the testing procedure?*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <label for="Q21TestProc"><span class="has-text-weight-bold">21. </span>What is the testing procedure?</label>
+                                <div class="field">
+                                    <div class="control is-expanded">
+                                        <textarea rows="4" class="textarea" id="Q21TestProc" @bind="rcm.TestProc"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    @*Save button*@
+                    <div class="row">
+                        <div class="col-10">
+                            <div class="form-group">
+                                <button class="btn btn-success" @onclick="StopTimer">Save Control</button>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                }
+
+
+            }
+
+
+
+        }
+
+
+
+    </div>
+
+</div>
+
+
+<ElapsedTime startTimer="@startTimer"
+             ReturnTimeValue="ReturnTimeValue">
+
+</ElapsedTime>
+
+@code {
+
+
+    [Parameter] public  bool startTimer { get; set; }
+    //ElapsedTime refElapseTime;
+    private bool isSavingState { get; set; } = false;
+    private bool isQ12Rendered { get; set; } = false;
+    private ClientSettings settings;
+    private RcmService RcmService;
+    private SoxTrackerService SoxTrackerService;
+    private bool q12IsOthers { get; set; } = false;
+    private bool isRcmFound { get; set; } = false;
+    private string q12OtherValue { get; set; } = string.Empty;
+    private List<string> listFy = new List<string>();
+    private List<string> listClient = new List<string>();
+    private List<string> listProcess = new List<string>();
+    private List<string> listSubProcess = new List<string>();
+
+    private List<string> listFinStatementElement = new List<string>();
+    private List<string> listFinStatementAssert = new List<string>();
+    private List<string> listControlId = new List<string>();
+    private List<string> listControlOwner = new List<string>();
+    //private List<string> listFrequency = new List<string>();
+    //private List<string> listControlKey = new List<string>();
+    //private List<string> listControlType = new List<string>();
+    //private List<string> listNatureProc = new List<string>();
+    //private List<string> listFraudControl = new List<string>();
+    //private List<string> listRiskLevel = new List<string>();
+    //private List<string> listMgmtRevControl = new List<string>();
+    private RcmQ13toQ19 rcmQ13toQ19 = new RcmQ13toQ19();
+
+    private A2B_App.Shared.Sox.Rcm rcm = new A2B_App.Shared.Sox.Rcm();
+    private RcmQuestionnaireFilter filter = new RcmQuestionnaireFilter();
+
+    protected async override void OnInitialized()
+    {
+        Http.Timeout = TimeSpan.FromMinutes(30);
+        settings = await _getSettings;
+        rcm.ControlObjective = string.Empty;
+        RcmService = new RcmService(settings);
+        SoxTrackerService = new SoxTrackerService(settings);
+        GetFY();
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        this.StateHasChanged();
+    }
+
+    #region Category Events
+
+    private string Q1Answer
+    {
+        get
+        {
+            return rcm.FY;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ1Selected(eventArgs);
+        }
+    }
+
+    private void EventQ1Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.FY: {e.Value}");
+            rcm.FY = e.Value.ToString();
+            rcm.ClientName = string.Empty;
+            rcm.Process = string.Empty;
+            rcm.Subprocess = string.Empty;
+            if (rcm.FY != string.Empty)
+            {
+                GetClient(rcm.FY); //pass fy to get all client name that is related to
+            }
+        }
+        else
+        {
+            rcm.FY = string.Empty;
+        }
+
+    }
+
+    private string Q2Answer
+    {
+        get
+        {
+            return rcm.ClientName;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ2Selected(eventArgs);
+        }
+    }
+
+    private void EventQ2Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.ClientName: {e.Value}");
+            rcm.ClientName = e.Value.ToString();
+            rcm.Process = string.Empty;
+            rcm.Subprocess = string.Empty;
+            if (rcm.ClientName != string.Empty)
+            {
+                GetProcess(rcm.ClientName);
+            }
+        }
+        else
+        {
+            rcm.ClientName = string.Empty;
+        }
+
+    }
+
+    private string Q3Answer
+    {
+        get
+        {
+            return rcm.Process;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ3Selected(eventArgs);
+        }
+    }
+
+    private void EventQ3Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.Process: {e.Value}");
+            rcm.Process = e.Value.ToString();
+            if (rcm.Process != string.Empty)
+            {
+                GetSubProcess(rcm.Process);
+            }
+        }
+        else
+        {
+            rcm.Process = string.Empty;
+        }
+
+    }
+
+    private string Q4Answer
+    {
+        get
+        {
+            return rcm.Subprocess;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ4Selected(eventArgs);
+        }
+    }
+
+    private void EventQ4Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.Subprocess: {e.Value}");
+            rcm.Subprocess = e.Value.ToString();
+            if (rcm.Subprocess != string.Empty)
+            {
+                GetControlId(rcm.Subprocess);
+                GetQ13toQ19(rcm.Subprocess);
+            }
+        }
+        else
+        {
+            rcm.Subprocess = string.Empty;
+        }
+    }
+
+    private void Q7ClickEvent(string value, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            if (!listFinStatementElement.Contains(value))
+            {
+                listFinStatementElement.Add(value);
+                System.Diagnostics.Debug.WriteLine($"Add Q7: {value}");
+            }
+        }
+        else
+        {
+            if (listFinStatementElement.Contains(value))
+            {
+                listFinStatementElement.Remove(value);
+                System.Diagnostics.Debug.WriteLine($"Remove Q7: {value}");
+            }
+        }
+    }
+
+    private void Q8ClickEvent(string value, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            if (!listFinStatementAssert.Contains(value))
+            {
+                listFinStatementAssert.Add(value);
+                System.Diagnostics.Debug.WriteLine($"Add Q8: {value}");
+            }
+        }
+        else
+        {
+            if (listFinStatementAssert.Contains(value))
+            {
+                listFinStatementAssert.Remove(value);
+                System.Diagnostics.Debug.WriteLine($"Remove Q8: {value}");
+            }
+        }
+    }
+
+    private void Q12ClickEvent(string value, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            if (!listControlOwner.Contains(value))
+            {
+                if (value.Equals("Others"))
+                {
+                    q12IsOthers = true;
+                    q12OtherValue = string.Empty;
+                }
+                else
+                {
+                    listControlOwner.Add(value);
+                    System.Diagnostics.Debug.WriteLine($"Add Q12: {value}");
+                }
+            }
+        }
+        else
+        {
+            if (listControlOwner.Contains(value))
+            {
+                listControlOwner.Remove(value);
+                System.Diagnostics.Debug.WriteLine($"Remove Q12: {value}");
+            }
+
+            if (value.Equals("Others"))
+            {
+                q12IsOthers = false;
+                q12OtherValue = string.Empty;
+            }
+        }
+    }
+
+    private string Q9Answer
+    {
+        get
+        {
+            return rcm.ControlId;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ9Selected(eventArgs);
+        }
+    }
+
+    private void EventQ9Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.ControlId: {e.Value}");
+            rcm.ControlId = e.Value.ToString();
+        }
+        else
+        {
+            rcm.ControlId = string.Empty;
+        }
+    }
+
+    private string Q13Answer
+    {
+        get
+        {
+            return rcm.ControlFrequency;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ13Selected(eventArgs);
+        }
+    }
+
+    private void EventQ13Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.ControlFrequency: {e.Value}");
+            rcm.ControlFrequency = e.Value.ToString();
+        }
+        else
+        {
+            rcm.ControlFrequency = string.Empty;
+        }
+
+    }
+
+    private string Q14Answer
+    {
+        get
+        {
+            return rcm.Key;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ14Selected(eventArgs);
+        }
+    }
+
+    private void EventQ14Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.Key: {e.Value}");
+            rcm.Key = e.Value.ToString();
+        }
+        else
+        {
+            rcm.Key = string.Empty;
+        }
+    }
+
+    private string Q15Answer
+    {
+        get
+        {
+            return rcm.ControlType;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ15Selected(eventArgs);
+        }
+    }
+
+    private void EventQ15Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.ControlType: {e.Value}");
+            rcm.ControlType = e.Value.ToString();
+        }
+        else
+        {
+            rcm.ControlType = string.Empty;
+        }
+    }
+
+    private string Q16Answer
+    {
+        get
+        {
+            return rcm.NatureProc;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ16Selected(eventArgs);
+        }
+    }
+
+    private void EventQ16Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.NatureProc: {e.Value}");
+            rcm.NatureProc = e.Value.ToString();
+        }
+        else
+        {
+            rcm.NatureProc = string.Empty;
+        }
+    }
+
+    private string Q17Answer
+    {
+        get
+        {
+            return rcm.FraudControl;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ17Selected(eventArgs);
+        }
+    }
+
+    private void EventQ17Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.FraudControl: {e.Value}");
+            rcm.FraudControl = e.Value.ToString();
+        }
+        else
+        {
+            rcm.FraudControl = string.Empty;
+        }
+
+    }
+
+    private string Q18Answer
+    {
+        get
+        {
+            return rcm.RiskLvl;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ18Selected(eventArgs);
+        }
+    }
+
+    private void EventQ18Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.RiskLvl: {e.Value}");
+            rcm.RiskLvl = e.Value.ToString();
+        }
+        else
+        {
+            rcm.RiskLvl = string.Empty;
+        }
+    }
+
+    private string Q19Answer
+    {
+        get
+        {
+            return rcm.ManagementRevControl;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ19Selected(eventArgs);
+        }
+    }
+
+    private void EventQ19Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty)
+        {
+            System.Diagnostics.Debug.WriteLine($"rcm.ManagementRevControl: {e.Value}");
+            rcm.ManagementRevControl = e.Value.ToString();
+        }
+        else
+        {
+            rcm.ManagementRevControl = string.Empty;
+        }
+
+
+    }
+
+    #endregion
+
+
+    private async void GetFY()
+    {
+        listFy = await RcmService.GetRcmQuestionnaireFy(Http);
+        this.StateHasChanged();
+    }
+
+    private async void GetClient(string Fy)
+    {
+        filter.FY = Fy;
+        var response = await RcmService.GetRcmQuestionnaireClient(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            listClient = JsonConvert.DeserializeObject<List<string>>(result);
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetProcess(string clientName)
+    {
+        filter.Client = clientName;
+        var response = await RcmService.GetRcmQuestionnaireProcess(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            listProcess = JsonConvert.DeserializeObject<List<string>>(result);
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetSubProcess(string process)
+    {
+        filter.Process = process;
+        var response = await RcmService.GetRcmQuestionnaireSubProcess(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            listSubProcess = JsonConvert.DeserializeObject<List<string>>(result);
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetControlId(string subProcess)
+    {
+        filter.SubProcess = subProcess;
+
+        var response = await RcmService.GetRcmQuestionnaireControlId(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            listControlId = JsonConvert.DeserializeObject<List<string>>(result);
+            this.StateHasChanged();
+        }
+    }
+
+    private async void GetQ13toQ19(string subProcess)
+    {
+        filter.SubProcess = subProcess;
+        var response = await RcmService.GetRcmQuestionnaireQ13toQ19(filter, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            string result = response.Content.ReadAsStringAsync().Result.ToString();
+            //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+            rcmQ13toQ19 = new RcmQ13toQ19();
+            rcmQ13toQ19 = JsonConvert.DeserializeObject<RcmQ13toQ19>(result);
+
+            this.StateHasChanged();
+        }
+    }
+
+    private void GetRcm()
+    {
+        //var response = await RcmService.GetRcmControl(filter, Http);
+
+        //if (response.StatusCode.ToString() == "OK")
+        //{
+        //    string result = response.Content.ReadAsStringAsync().Result.ToString();
+        //    //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+        //    var tempRcm = JsonConvert.DeserializeObject<A2B_App.Shared.Sox.Rcm>(result);
+        //    if (tempRcm != null)
+        //    {
+        //        isRcmFound = true;
+        //        rcm.PodioItemId = tempRcm.PodioItemId;
+        //        rcm.PodioUniqueId = tempRcm.PodioUniqueId;
+        //        rcm.PodioLink = tempRcm.PodioLink;
+        //        rcm.PodioRevision = tempRcm.PodioRevision;
+        //        rcm.Status = tempRcm.Status;
+
+        //        rcm.ControlObjective = tempRcm.ControlObjective;
+        //        rcm.SpecificRisk = tempRcm.SpecificRisk;
+        //        rcm.ControlActivity = tempRcm.ControlActivity;
+        //        rcm.ControlPlaceDate = tempRcm.ControlPlaceDate;
+        //        rcm.PbcList = tempRcm.PbcList;
+        //        rcm.TestProc = tempRcm.TestProc;
+        //        rcm.ControlFrequency = tempRcm.ControlFrequency;
+        //        rcm.Key = tempRcm.Key;
+        //        rcm.ControlType = tempRcm.ControlType;
+        //        rcm.NatureProc = tempRcm.NatureProc;
+        //        rcm.FraudControl = tempRcm.FraudControl;
+        //        rcm.RiskLvl = tempRcm.RiskLvl;
+        //        rcm.ManagementRevControl = tempRcm.ManagementRevControl;
+
+        //        //manage checkbox in field financial statement
+        //        if (tempRcm.FinStatemenElement != null && tempRcm.FinStatemenElement != string.Empty)
+        //        {
+        //            listTempFinStatementElement = tempRcm.FinStatemenElement.Split(", ").ToList();
+        //            if (listTempFinStatementElement != null && listTempFinStatementElement.Count > 0)
+        //            {
+
+        //                foreach (var item in rcmQ13toQ19.ListQ7FinStatementElement)
+        //                {
+        //                    var checkItem = listTempFinStatementElement.FirstOrDefault(x => x.Equals(item.item));
+        //                    if (checkItem != null)
+        //                    {
+        //                        item.selected = true;
+        //                        Q7ClickEvent(item.item, true);
+        //                    }
+        //                }
+
+        //            }
+        //        }
+
+        //        //manage checkbox in field financial statement assert
+        //        if (tempRcm.CompletenessAccuracy != null && tempRcm.CompletenessAccuracy != string.Empty)
+        //        {
+        //            listTempFinStatementAssert = tempRcm.ControlOwner.Split(", ").ToList();
+        //            if (listTempFinStatementAssert != null && listTempFinStatementAssert.Count > 0)
+        //            {
+
+        //                foreach (var item in rcmQ13toQ19.ListQ8FinStatementAssert)
+        //                {
+        //                    var checkItem = listTempFinStatementAssert.FirstOrDefault(x => x.Equals(item.item));
+        //                    if (checkItem != null)
+        //                    {
+        //                        item.selected = true;
+        //                        Q8ClickEvent(item.item, true);
+        //                    }
+        //                }
+
+        //            }
+        //        }
+
+        //        //manage checkbox in field control owner
+        //        if (tempRcm.ControlOwner != null && tempRcm.ControlOwner != string.Empty)
+        //        {
+        //            listTempControlOwner = tempRcm.ControlOwner.Split(", ").ToList();
+        //            if (listTempControlOwner != null && listTempControlOwner.Count > 0)
+        //            {
+        //                q12IsOthers = false;
+        //                q12OtherValue = string.Empty;
+
+        //                ////get "Others" if selected
+        //                foreach (var itemOthers in listTempControlOwner)
+        //                {
+        //                    var checkContains = rcmQ13toQ19.ListQ12ControlOwner.Where(x => x.item.Equals(itemOthers)).FirstOrDefault();
+        //                    if (checkContains == null)
+        //                    {
+        //                        q12IsOthers = true;
+        //                        q12OtherValue = itemOthers;
+        //                    }
+        //                }
+
+        //                foreach (var item in rcmQ13toQ19.ListQ12ControlOwner)
+        //                {
+        //                    var checkItem = listTempControlOwner.FirstOrDefault(x => x.Equals(item.item));
+        //                    if (checkItem != null)
+        //                    {
+        //                        item.selected = true;
+        //                        Q12ClickEvent(item.item, true);
+        //                    }
+
+        //                    if (item.item.Equals("Others") && q12IsOthers)
+        //                    {
+        //                        item.selected = true;
+        //                    }
+        //                }
+
+        //            }
+        //        }
+
+        //    }
+        //    else
+        //    {
+        //        isRcmFound = false;
+        //    }
+        //    this.StateHasChanged();
+        //}
+    }
+
+    private void InitSave()
+    {
+
+        StopTimer();
+
+        //save q12 others
+        if (q12IsOthers && q12OtherValue != string.Empty)
+        {
+            listControlOwner.Add(q12OtherValue);
+        }
+
+        //Format answer from Question 7, Question 8 and Question 8
+        StringBuilder sbQ7Answer = new StringBuilder();
+        StringBuilder sbQ8Answer = new StringBuilder();
+        StringBuilder sbQ12Answer = new StringBuilder();
+
+        rcm.ControlActivity = rcm.ControlActivityFy19;
+
+        if (listFinStatementElement.Count > 0)
+        {
+            foreach (var item in listFinStatementElement)
+            {
+                sbQ7Answer.Append(item);
+                sbQ7Answer.Append(", ");
+            }
+            sbQ7Answer.Length -= 2;
+            rcm.FinStatemenElement = sbQ7Answer.ToString();
+        }
+
+        if (listFinStatementAssert.Count > 0)
+        {
+            foreach (var item in listFinStatementAssert)
+            {
+                sbQ8Answer.Append(item);
+                sbQ8Answer.Append(", ");
+            }
+            sbQ8Answer.Length -= 2;
+            rcm.FinancialStatementAssert = sbQ8Answer.ToString();
+        }
+
+        if (listControlOwner.Count > 0)
+        {
+            foreach (var item in listControlOwner)
+            {
+                sbQ12Answer.Append(item);
+                sbQ12Answer.Append(", ");
+            }
+            sbQ12Answer.Length -= 2;
+
+            rcm.ControlOwner = sbQ12Answer.ToString();
+        }
+        checkDuplicateControl();
+
+        // SaveToPodio(); //create RCM in Podio
+        // SaveToPodioSoxTracker(); //create sox tracker in Podio
+
+    }
+
+    private async void SaveControl()
+    {
+        //check if podio item id is already created
+        if (rcm.PodioItemId != 0)
+        {
+            var response = await RcmService.SaveRcmControl(rcm, Http);
+
+            if (response.StatusCode.ToString() == "OK")
+            {
+                toastService.ShowSuccess("Successfully save RCM control in database");
+                this.StateHasChanged();
+            }
+            else
+            {
+                toastService.ShowError("Failed to save RCM control in database");
+            }
+        }
+
+    }
+    private async void checkDuplicateControl()
+    {
+        //check if podio item id is already created
+
+        var response = await RcmService.CheckDuplicatesRcmControl(rcm, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            //toastService.ShowSuccess("Successfully save RCM control in database");
+            SaveToPodio(); //create RCM in Podio
+            SaveToPodioSoxTracker(); //create sox tracker in Podio
+            isSavingState = false;
+        }
+        else
+        {
+            toastService.ShowError("RCM Control ID Already Exists");
+            isSavingState = false;
+            // return false;
+        }
+    }
+
+
+
+    private async void SaveToPodio()
+    {
+
+        var response = await RcmService.SavePodioRcmControl(rcm, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var tempRcm = JsonConvert.DeserializeObject<A2B_App.Shared.Sox.Rcm>(response.Content.ReadAsStringAsync().Result.ToString());
+            if (tempRcm != null)
+            {
+                // rcm.PodioItemId = tempRcm.PodioItemId; 052121
+                //052121
+                rcm = tempRcm;
+                SaveControl();
+            }
+            toastService.ShowSuccess("Successfully save RCM control in Podio");
+            this.StateHasChanged();
+        }
+        else
+        {
+            toastService.ShowError("Failed to save RCM control in Podio");
+        }
+    }
+
+    private async void SaveControlSoxTracker(SoxTracker soxTracker)
+    {
+        //check if podio item id is already created
+        if (rcm.PodioItemId != 0)
+        {
+            var response = await SoxTrackerService.SaveSoxTrackerDB(soxTracker, Http);
+
+            if (response.StatusCode.ToString() == "OK")
+            {
+                toastService.ShowSuccess("Successfully save sox tracker control in database");
+                this.StateHasChanged();
+            }
+            else
+            {
+                toastService.ShowError("Failed to save sox tracker control in database");
+            }
+        }
+
+    }
+
+    private async void SaveToPodioSoxTracker()
+    {
+        Rcm rcm_shared = new Rcm();
+        SoxTracker soxTracker = new SoxTracker();
+        soxTracker.FY = rcm.FY;
+        soxTracker.ClientName = rcm.ClientName;
+        soxTracker.Process = rcm.Process;
+        soxTracker.Subprocess = rcm.Subprocess;
+        soxTracker.ControlId = rcm.ControlId;
+        soxTracker.PBC = rcm.PbcList;
+        //soxTracker.Duration = rcm.Duration;
+
+        var response = await SoxTrackerService.CreatePodioSoxTracker(soxTracker, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var tempSoXTracker = JsonConvert.DeserializeObject<A2B_App.Shared.Sox.SoxTracker>(response.Content.ReadAsStringAsync().Result.ToString());
+            if (tempSoXTracker != null)
+            {
+                soxTracker.PodioItemId = tempSoXTracker.PodioItemId;
+                SaveControlSoxTracker(soxTracker);
+            }
+            toastService.ShowSuccess("Successfully created sox tracker control in podio");
+            this.StateHasChanged();
+        }
+        else
+        {
+            toastService.ShowError("Failed to create sox tracker control in Podio");
+        }
+    }
+
+    public void StartTimer()
+    {
+        if (!startTimer)
+        {
+            startTimer = true;
+            //refElapseTime.startTimer = true;
+        }
+        this.StateHasChanged();
+    }
+
+    public void StopTimer()
+    {
+        if (startTimer)
+        {
+            isSavingState = true;
+            startTimer = false;
+        }
+
+
+        this.StateHasChanged();
+    }
+
+    private void ReturnTimeValue(string timeValue)
+    {
+        System.Diagnostics.Debug.WriteLine($"Elapse Time: {timeValue}");
+        if(rcm != null)
+        {
+            TimeSpan ts;
+            if (TimeSpan.TryParse(timeValue, CultureInfo.CurrentCulture, out ts))
+            {
+                rcm.Duration = ts;
+            }
+
+            if (isSavingState)
+                InitSave();
+        }
+
+        //Console.WriteLine($"rcm.Duration: {rcm.Duration}");
+    }
+
+
+}

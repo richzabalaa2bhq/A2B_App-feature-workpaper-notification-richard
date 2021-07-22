@@ -1,0 +1,67 @@
+﻿@using A2B_App.Shared.Sox
+<div class="row">
+
+    @if (sampleSelection != null && sampleSelection1 != null && sampleSelection2 != null)
+    {
+        <div class="col">
+            <table class="table table-sm table-hover ">
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Round 1</th>
+                        <th>Round 2</th>
+                        <th>Round 3</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Population by Round</td>
+                        <td>@sampleSelection.PopulationByRound1</td>
+                        <td>@sampleSelection1.PopulationByRound2</td>
+                        <td>@sampleSelection2.PopulationByRound3</td>
+                        @*<td>@sampleSelection.PopulationByRoundTot</td>*@
+                        <td>@(sampleSelection.PopulationByRound1 + sampleSelection1.PopulationByRound2 + sampleSelection2.PopulationByRound3)</td>
+                    </tr>
+                    <tr>
+                        <td>Samples by Round</td>
+                        <td>@sampleSelection.SamplesByRound1</td>
+                        <td>@sampleSelection1.SamplesByRound2</td>
+                        <td>@sampleSelection2.SamplesByRound3</td>
+                        @*<td>@sampleSelection.SamplesByRoundTot</td>*@
+                        <td>@(sampleSelection.SamplesByRound1 + sampleSelection1.SamplesByRound2 + sampleSelection2.SamplesByRound3)</td>
+                    </tr>
+                    <tr class="hidden-field">
+                        <td>Samples Closed</td>
+                        <td>@sampleSelection.SamplesCloseRound1</td>
+                        <td>@sampleSelection1.SamplesCloseRound2</td>
+                        <td>@sampleSelection2.SamplesCloseRound3</td>
+                        @*<td>@sampleSelection.SamplesCloseRoundTot</td>*@
+                        <td>@(sampleSelection.SamplesCloseRound1 + sampleSelection1.SamplesCloseRound2 + sampleSelection2.SamplesCloseRound3)</td>
+                    </tr>
+                    <tr class="hidden-field">
+                        <td>Samples Remaining</td>
+                        <td>@sampleSelection.SamplesRemainingRound1</td>
+                        <td>@sampleSelection1.SamplesRemainingRound2</td>
+                        <td>@sampleSelection2.SamplesRemainingRound3</td>
+                        @*<td>@sampleSelection.SamplesRemainingRoundTot</td>*@
+                        <td>@(sampleSelection.SamplesRemainingRound1 + sampleSelection1.SamplesRemainingRound2 + sampleSelection2.SamplesRemainingRound3)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    }
+
+</div>
+
+
+
+@code {
+    [Parameter] public SampleSelection sampleSelection { get; set; }    //sample selection for round 1
+    [Parameter] public SampleSelection sampleSelection1 { get; set; }   //sample selection for round 2
+    [Parameter] public SampleSelection sampleSelection2 { get; set; }   //sample selection for round 3
+
+
+
+}

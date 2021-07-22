@@ -1,0 +1,28 @@
+﻿@page "/sod/"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject Task<ClientSettings> _getSettings
+@attribute [Authorize(Roles = "Admin, IT, Accounting")]
+@using A2B_App.Client.Component.Utilities
+
+<NotificationBetaTest></NotificationBetaTest>
+
+<!-- 1:1 aspect ratio -->
+@*<div class="embed-responsive embed-responsive-1by1">
+        <iframe class="embed-responsive-item" src="@sodUri" frameborder="0" allowfullscreen></iframe>
+    </div>*@
+
+<A2B_App.Client.Component.Sod.Sod></A2B_App.Client.Component.Sod.Sod>
+
+@code {
+
+    private string sodUri { get; set; }
+    private ClientSettings settings;
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await _getSettings;
+        //ClientSettings settings = new ClientSettings();
+        sodUri = settings.GetSodUri();
+    }
+
+}

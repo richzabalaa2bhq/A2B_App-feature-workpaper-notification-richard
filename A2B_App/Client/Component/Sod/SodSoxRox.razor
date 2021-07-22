@@ -1,0 +1,350 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+
+@using A2B_App.Client.Component.Rcm
+@using A2B_App.Shared.Sox
+@using System.IO
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using Microsoft.AspNetCore.Http
+@inject HttpClient Http
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@*Q1 Client*@
+<div class="columns">
+    <div class="column is-half">
+        <div class="form-group">
+            <label for="Q2Client"><span class="has-text-weight-bold">1. </span> Client</label>
+            <select class="form-control" id="Q2Client" @bind="Q2Answer">
+                <option value="">Select Client</option>
+                @if (listClient != null && listClient.Count > 0)
+                {
+                    @foreach (var item in listClient)
+                    {
+                        <option value="@item">@item</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+</div>
+
+@if (clientName != string.Empty && clientName != "Select Client")
+{
+    <div class="columns">
+        <div class="column is-half">
+            <p>Role User</p>
+            <DragDropFile @ref="refDragDropFile1" ReturnFiles="@((e) => { ReturnFiles(e); })" enableRemove="true" title="Upload Role User Excel File" position="1" fileFormatAccepted="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"></DragDropFile>
+        </div>
+    </div>
+
+    <div class="columns">
+        <div class="column is-half">
+            <p>Role Permission</p>
+            <DragDropFile @ref="refDragDropFile2" ReturnFiles="@((e) => { ReturnFiles(e); })"  enableRemove="true" title="Upload Role Permission Excel File" position="2" fileFormatAccepted="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"></DragDropFile>
+        </div>
+    </div>
+
+    <div class="columns">
+        <div class="column is-half">
+            <p>Conflict Permission</p>
+            <DragDropFile @ref="refDragDropFile3" ReturnFiles="@((e) => { ReturnFiles(e); })" enableRemove="true" title="Upload Conflict Excel File" position="3" fileFormatAccepted="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"></DragDropFile>
+        </div>
+    </div>
+
+    <div class="columns">
+        <div class="column is-half">
+            <p>Description to Permission</p>
+            <DragDropFile @ref="refDragDropFile4" ReturnFiles="@((e) => { ReturnFiles(e); })"  enableRemove="true" title="Upload Description Excel File" position="4" fileFormatAccepted="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"></DragDropFile>
+        </div>
+    </div>
+
+
+    @if (listFileUpload.Count() == 4)
+    {
+        <div class="columns">
+            <div class="column is-one-third">
+                <div class="form-group">
+                    <button class="btn btn-success @(importStatus ? "is-loading" : "")" @onclick="GenerateSod">Generate SOD</button>
+                </div>
+            </div>
+        </div>
+    }
+
+}
+
+
+
+
+@code {
+
+    private DragDropFile refDragDropFile1, refDragDropFile2, refDragDropFile3, refDragDropFile4;
+    private bool importStatus { get; set; }
+    private SodSoxRoxImport fileImport { get; set; }
+    private FileService fileService { get; set; }
+    private ImportFields importFields { get; set; }
+    private string clientName { get; set; } = string.Empty;
+    private List<string> listClient = new List<string>();
+    private RcmService rcmService;
+    private ClientSettings settings;
+    private string fileNameUpload { get; set; } = string.Empty;
+    private string fileNameDownload { get; set; } = string.Empty;
+    private FileUpload fileUpload { get; set; }
+    private List<FileUpload> listFileUpload { get; set; }
+    private ServiceResponse serviceResponse { get; set; }
+    private AuthenticationState authState { get; set; }
+    protected async override void OnInitialized()
+    {
+        fileImport = new SodSoxRoxImport();
+        fileService = new FileService();
+        settings = await _getSettings;
+        rcmService = new RcmService(settings);
+        listFileUpload = new List<FileUpload>();
+        GetClient();
+        authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        base.OnInitialized();
+    }
+
+    private string Q2Answer
+    {
+        get
+        {
+            return clientName;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            EventQ2Selected(eventArgs);
+        }
+    }
+
+    private void EventQ2Selected(ChangeEventArgs e)
+    {
+
+        if (e.Value.ToString() != string.Empty && e.Value.ToString() != "Select Client")
+        {
+            System.Diagnostics.Debug.WriteLine($"ClientName: {e.Value}");
+            clientName = e.Value.ToString();
+        }
+        else
+        {
+            clientName = string.Empty;
+            fileNameUpload = string.Empty;
+        }
+        this.StateHasChanged();
+
+    }
+
+    private async void GetClient()
+    {
+
+        var responseClientName = await rcmService.GetClient(Http);
+        if (responseClientName != null)
+        {
+            listClient = responseClientName;
+        }
+        this.StateHasChanged();
+        //if (response.StatusCode.ToString() == "OK")
+        //{
+        //    string result = response.Content.ReadAsStringAsync().Result.ToString();
+        //    //listRcmCta = JsonConvert.DeserializeObject<List<RcmCta>>(result);
+        //    listClient = JsonConvert.DeserializeObject<List<string>>(result);
+        //    this.StateHasChanged();
+        //}
+    }
+
+    private void ReturnFiles(FileUpload _fileUpload)
+    {
+
+        if (_fileUpload.IFileEntry != null)
+        {
+            switch (_fileUpload.Position)
+            {
+                case 1:
+                    System.Diagnostics.Debug.WriteLine($"Upload Role User File");
+                    var searchRoleFile = listFileUpload.FirstOrDefault(x => x.Position.Equals(1));
+                    if (searchRoleFile == null)
+                    {
+                        listFileUpload.Add(_fileUpload);
+                    }
+                    break;
+                case 2:
+                    System.Diagnostics.Debug.WriteLine($"Upload Role Permission File");
+                    var searchPermFile = listFileUpload.FirstOrDefault(x => x.Position.Equals(2));
+                    if (searchPermFile == null)
+                    {
+                        listFileUpload.Add(_fileUpload);
+                    }
+                    break;
+                case 3:
+                    System.Diagnostics.Debug.WriteLine($"Upload Conflict File");
+                    var searchConflictFile = listFileUpload.FirstOrDefault(x => x.Position.Equals(3));
+                    if (searchConflictFile == null)
+                    {
+                        listFileUpload.Add(_fileUpload);
+                    }
+                    break;
+                case 4:
+                    System.Diagnostics.Debug.WriteLine($"Upload Description Permission FIle");
+                    var searchDescFile = listFileUpload.FirstOrDefault(x => x.Position.Equals(4));
+                    if (searchDescFile == null)
+                    {
+                        listFileUpload.Add(_fileUpload);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            //fileNameUpload = _fileUpload.IFileEntry.Name;
+            //fileUpload = _fileUpload;
+        }
+        else
+        {
+            switch (_fileUpload.Position)
+            {
+                case 1:
+                    System.Diagnostics.Debug.WriteLine($"Remove Role User File");
+                    var searchRoleFile = listFileUpload.FirstOrDefault(x => x.Position.Equals(1));
+                    if (searchRoleFile != null)
+                    {
+                        listFileUpload.Remove(searchRoleFile);
+                    }
+                    break;
+                case 2:
+                    System.Diagnostics.Debug.WriteLine($"Remove Role Permission File");
+                    var searchPermFile = listFileUpload.FirstOrDefault(x => x.Position.Equals(2));
+                    if (searchPermFile != null)
+                    {
+                        listFileUpload.Remove(searchPermFile);
+                    }
+                    break;
+                case 3:
+                    System.Diagnostics.Debug.WriteLine($"Remove Conflict File");
+                    var searchConflictFile = listFileUpload.FirstOrDefault(x => x.Position.Equals(3));
+                    if (searchConflictFile != null)
+                    {
+                        listFileUpload.Remove(searchConflictFile);
+                    }
+                    break;
+                case 4:
+                    System.Diagnostics.Debug.WriteLine($"Remove Description Permission FIle");
+                    var searchDescFile = listFileUpload.FirstOrDefault(x => x.Position.Equals(4));
+                    if (searchDescFile != null)
+                    {
+                        listFileUpload.Remove(searchDescFile);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+
+            //fileNameUpload = string.Empty;
+            //fileNameDownload = string.Empty;
+        }
+        this.StateHasChanged();
+
+    }
+
+    private async void GenerateSod()
+    {
+        importStatus = true;
+        serviceResponse = new ServiceResponse();
+        if (authState != null && listFileUpload.Any())
+        {
+            var user = authState.User;
+
+            System.Diagnostics.Debug.WriteLine($"Upload file {user.Identity.Name}");
+            fileImport.ClientName = clientName;
+            fileImport.RequestedBy = user.Identity.Name;
+
+
+            var ms1 = new MemoryStream();
+            await listFileUpload[0].IFileEntry.Data.CopyToAsync(ms1);
+
+            var ms2 = new MemoryStream();
+            await listFileUpload[1].IFileEntry.Data.CopyToAsync(ms2);
+
+            var ms3 = new MemoryStream();
+            await listFileUpload[2].IFileEntry.Data.CopyToAsync(ms3);
+
+            var ms4 = new MemoryStream();
+            await listFileUpload[3].IFileEntry.Data.CopyToAsync(ms4);
+
+            //foreach (var item in listFileUpload)
+            //{
+            //    switch (item.Position)
+            //    {
+            //        case 1:
+            //            await item.IFileEntry.Data.CopyToAsync(ms1);
+            //            break;
+            //        case 2:
+            //            await item.IFileEntry.Data.CopyToAsync(ms2);
+            //            break;
+            //        case 3:
+            //            await item.IFileEntry.Data.CopyToAsync(ms3);
+            //            break;
+            //        case 4:
+            //            await item.IFileEntry.Data.CopyToAsync(ms4);
+            //            break;
+            //    }
+            //}
+
+            var response = await fileService.UploadFileForImportSodSoxRox(
+                ms1,
+                ms2,
+                ms3,
+                ms4,
+                listFileUpload[0].IFileEntry.Name,
+                listFileUpload[1].IFileEntry.Name,
+                listFileUpload[2].IFileEntry.Name,
+                listFileUpload[3].IFileEntry.Name,
+                fileImport,
+                Http);
+            if (response.StatusCode.ToString() == "OK")
+            {
+                //serviceResponse = JsonConvert.DeserializeObject<ServiceResponse>(response.Content.ReadAsStringAsync().Result.ToString());
+                //fileNameDownload = serviceResponse.Content;
+                toastService.ShowSuccess($"Successfully uploaded file");
+                toastService.ShowSuccess($"Background process is running for SOD SoxRox, please check email for the report");
+                Reset();
+                this.StateHasChanged();
+            }
+            else
+                toastService.ShowError($"Failed to read excel file");
+
+
+        }
+
+
+
+
+
+        importStatus = false;
+    }
+
+    private string DownloadExcelFile2(string fileName)
+    {
+        return $"{NavigationManager.BaseUri}api/FileDownload/sod/{fileName}";
+    }
+
+    private string DownloadTemplateFile(string fileName)
+    {
+        return $"{NavigationManager.BaseUri}api/FileDownload/sod/template/{fileName}";
+    }
+
+    private void Reset()
+    {
+        refDragDropFile1.Reset(1);
+        refDragDropFile2.Reset(2);
+        refDragDropFile3.Reset(3);
+        refDragDropFile4.Reset(4);
+        this.StateHasChanged();
+    }
+
+}

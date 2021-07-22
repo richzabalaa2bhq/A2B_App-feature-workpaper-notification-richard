@@ -1,0 +1,135 @@
+﻿@using A2B_App.Client.Services
+@using A2B_App.Shared.Sox 
+@using A2B_App.Shared.Podio
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+
+@if (display)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Sync @title</p>
+                <button class="delete" aria-label="close" @onclick="Close"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="simple-form">
+
+                    <div class="field">
+                        <label class="label">Client Name</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Client Name" @bind="@questionnaireFieldParam.ClientName">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Control</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Control" @bind="@questionnaireFieldParam.ControlName">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">App Id</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Podio App Id" @bind="@questionnaireFieldParam.AppKey.AppId">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">App Token</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Podio App Token" @bind="@questionnaireFieldParam.AppKey.AppToken">
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success" @onclick="@(() => { SetReturnValue(); })">Sync Questionnaire Field</button>
+                <button class="button" @onclick="Close">Cancel</button>
+            </footer>
+        </div>
+    </div>
+
+}
+
+
+
+
+@code {
+
+    [Parameter] public EventCallback<QuestionnaireFieldParam> ReturnValue { get; set; }
+    [Parameter] public string title { get; set; }
+
+    private PodioSyncService PodioSyncServices;
+    private ClientSettings settings;
+    private HttpResponseMessage httpResponseMessage { get; set; }
+    private QuestionnaireFieldParam questionnaireFieldParam;
+    private PodioAppKey appKey;
+    private DateTimeOffset? startDate { get; set; } = null;
+    private DateTimeOffset? endDate { get; set; } = null;
+
+    protected override void OnParametersSet()
+    {
+
+    }
+
+    private async void Initialize()
+    {
+        settings = await _getSettings;
+        PodioSyncServices = new PodioSyncService(settings);
+
+    }
+
+    private void SetReturnValue()
+    {
+        ReturnValue.InvokeAsync(questionnaireFieldParam);
+        Close();
+    }
+
+    private void GetApiResponse()
+    {
+        //if (PodioSyncServices != null)
+        //{
+        //    var httpResponse = await PodioSyncServices.SyncPodioRcmAsync(syncDate, Http);
+        //    if (httpResponse.StatusCode.ToString() == "OK")
+        //    {
+        //        try
+        //        {
+        //            toastService.ShowError("Successfully sync podio items");
+        //        }
+        //        catch (Exception)
+        //        {
+        //            toastService.ShowError("Failed to sync podio items");
+        //        }
+
+        //    }
+        //    else
+        //    {
+        //        toastService.ShowError("Failed to sync podio items");
+        //    }
+        //}
+        this.StateHasChanged();
+    }
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.display = true;
+        questionnaireFieldParam = new QuestionnaireFieldParam();
+        appKey = new PodioAppKey();
+        questionnaireFieldParam.AppKey = appKey;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+}

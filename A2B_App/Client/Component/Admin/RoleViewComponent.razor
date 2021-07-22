@@ -1,0 +1,133 @@
+﻿@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@using A2B_App.Shared.User 
+@using A2B_App.Client.Component.PodioSync
+@using A2B_App.Client.Services 
+
+@if (display && appRole != null)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">@($"{state} Role")</p>
+                <button class="delete" aria-label="close" @onclick="SetReturnValue"></button>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <div class="form-group">
+                        <label for="Role">Role</label>
+                        <input class="input" type="text" placeholder="Role" id="Role" @bind="appRole.RoleName" disabled="@(state == "View" ? true : false)"></input>
+                    </div>
+                </div>
+                @if (state != "View")
+                {
+                    <div class="form-group">
+                        <button class="button is-success @(isLoading ? "is-loading" : string.Empty )" type="submit" @onclick="ProcessRequest">@($"{state} Role")</button>
+                    </div>
+                }
+            </section>
+            @if (isProcess != null && isProcess.Value == true)
+            {
+                <section>
+                    <HttpResComponent isSuccess="@isSuccess" response="@response"></HttpResComponent>
+                </section>
+            }
+            <footer class="modal-card-foot">
+                <button class="button" @onclick="SetReturnValue">Close</button>
+            </footer>
+        </div>
+
+    </div>
+}
+
+
+@code {
+
+    [Parameter] public string state { get; set; } //Add, Update, View
+    [Parameter] public AppRole appRole { get; set; }
+    [Parameter] public EventCallback<bool> ReturnValue { get; set; }
+    private bool isSuccess { get; set; } = false;
+    private string response { get; set; } = string.Empty;
+    private bool? isProcess { get; set; }
+    private bool isLoading { get; set; }
+
+    private ClientSettings settings;
+    private AdminService adminService;
+
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await _getSettings;
+        adminService = new AdminService(settings);
+        //GetAllRoles();
+        //return base.OnInitializedAsync();
+    }
+
+    private void SetReturnValue()
+    {
+        ReturnValue.InvokeAsync(true);
+        Close();
+    }
+
+    private async void ProcessRequest()
+    {
+        isLoading = true;
+        isProcess = false;
+        string title = string.Empty;
+        try
+        {
+            switch (state)
+            {
+                case "Add":
+                    title = "Add Role";
+                    break;
+                case "Update":
+                    title = "Update Role";
+                    break;
+            }
+
+            var httpResponse = await adminService.RoleManagement(appRole, Http, title);
+            var httpResult = httpResponse.Item1;
+            if (httpResult.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                //string result = httpResponse.Content.ReadAsStringAsync().Result.ToString();
+                response = httpResult.Content.ReadAsStringAsync().Result.Trim();
+                isSuccess = true;
+            }
+            else
+            {
+                isSuccess = false;
+                response = $"Error processing request {httpResponse.Item2}";
+            }
+            isProcess = true;
+        }
+        catch (Exception ex)
+        {
+            isSuccess = false;
+            response = ex.ToString();
+        }
+
+        isLoading = false;
+        this.StateHasChanged();
+    }
+
+    private bool display = false;
+
+    public void Show()
+    {
+        this.isProcess = false;
+        this.isLoading = false;
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+
+}

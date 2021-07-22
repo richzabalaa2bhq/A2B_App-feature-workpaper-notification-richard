@@ -1,0 +1,193 @@
+﻿
+@using A2B_App.Shared.Admin
+@using A2B_App.Client.Component.Utilities
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using A2B_App.Shared.User
+@inject HttpClient Http
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+
+<article class="panel is-info">
+    <p class="panel-heading">
+        List of Role(s)
+    </p>
+    @*<div class="panel-block">
+            <p class="control has-icons-left">
+                <input class="input is-primary" type="text" placeholder="Search">
+                <span class="icon is-left">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                </span>
+            </p>
+        </div>*@
+</article>
+
+@*<div class="ml-2 mr-2">
+        <nav class="pagination is-rounded is-small" role="navigation" style="margin: 0 2em 0 2em;">
+            <a class="pagination-previous is-link">Previous</a>
+            <a class="pagination-next is-link">Next page</a>
+            <ul class="pagination-list" style="list-style: none !important; margin-left: 0; margin-top: 0">
+                <li><a class="pagination-link is-link">1</a></li>
+                <li><a class="pagination-link is-link">2</a></li>
+                <li><a class="pagination-link is-link">3</a></li>
+            </ul>
+        </nav>
+    </div>*@
+
+<table class="table is-striped is-narrow is-hoverable is-fullwidth ">
+    <thead class="ml-2 mr-2">
+        <tr>
+            <th style="width: 40%;" class="pl-4">Id</th>
+            <th style="width: 40%;">Role</th>
+            <th style="width: 20%;">
+                <button class="btn btn-info btn-sm is-size-7 is-pulled-right"
+                         @onclick="@(() => {
+                                         state = "Add";
+                                         appRole = new AppRole();
+                                         roleView.Show();
+                                     })">
+                    <span class="oi oi-plus is-small"></span>
+                </button>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+
+
+
+        @if (listRole != null)
+        {
+            foreach (var item in listRole)
+            {
+
+                <tr>
+                    <td class="pl-4">@item.Id</td>
+                    <td>@item.RoleName</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm is-size-7 is-pulled-right"
+                                @onclick="@(() => {
+                                                message = $"Do you wish to remove role with Id = {item.Id}";
+                                                title = $"Delete Role Confirmation";
+                                                id = item.Id;
+                                                modalConfirmation.Show();
+                                            })">
+                            <span class="oi oi-minus is-small"></span>
+                        </button>
+                        <button class="btn btn-warning btn-sm is-size-7 is-pulled-right ml-1 mr-1"
+                                @onclick="@(() => {
+                                                state = "Update";
+                                                appRole = new AppRole();
+                                                appRole.Id = item.Id;
+                                                appRole.RoleName = item.RoleName;
+                                                appRole.PrevRoleName = item.RoleName;
+                                                roleView.Show();
+                                            })">
+                            <span class="oi oi-pencil"></span>
+                        </button>
+                    </td>
+                </tr>
+            
+            }
+        }
+
+
+               
+
+    </tbody>
+</table>
+
+<ModalConfirmation @ref="modalConfirmation" title="@title" message="@message" id="@id" ReturnValue="@((e) => { ReturnValue(e); })"></ModalConfirmation>
+<RoleViewComponent @ref="roleView" state="@state" appRole="appRole" ReturnValue="GetAllRoles"></RoleViewComponent>
+
+@code {
+
+    private ModalConfirmation modalConfirmation;
+    private RoleViewComponent roleView;
+    private string title { get; set; }
+    private string message { get; set; }
+    private string id { get; set; }
+    private string role { get; set; }
+    private string state { get; set; }
+    private List<AppRole> listRole { get; set; }
+    private AppRole appRole { get; set; }
+    private ClientSettings settings;
+    private AdminService adminService;
+
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await _getSettings;
+        adminService = new AdminService(settings);
+        //GetAllRoles();
+        //return base.OnInitializedAsync();
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        GetAllRoles();
+        return base.OnParametersSetAsync();
+    }
+
+    private async void GetAllRoles()
+    {
+        try
+        {
+            listRole = new List<AppRole>();
+            appRole = new AppRole();
+            var response = await adminService.RoleManagement(appRole, Http, "Get Roles");
+            var httpResponse = response.Item1;
+            if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                string result = httpResponse.Content.ReadAsStringAsync().Result.ToString();
+                listRole = JsonConvert.DeserializeObject<List<AppRole>>(result);
+            }
+            else
+            {
+                toastService.ShowError($"Error fetching roles {response.Item2}");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError($"Error fetching roles {ex.ToString()}");
+        }
+
+        this.StateHasChanged();
+
+    }
+
+    private void ReturnValue(ModalYesWithId modalYesWithId)
+    {
+        if (modalYesWithId.Answer.Equals("Yes"))
+            DeleteRoleAsync(modalYesWithId.Id);
+
+
+    }
+
+    private async void DeleteRoleAsync(string id)
+    {
+        try
+        {
+
+            appRole = new AppRole();
+            appRole.Id = id;
+            var response = await adminService.RoleManagement(appRole, Http, "Delete Role");
+            var httpResponse = response.Item1;
+            if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                GetAllRoles();
+            }
+            else
+            {
+                toastService.ShowError($"Error removing role {response.Item2}");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError($"Error removing role {ex.ToString()}");
+        }
+
+        this.StateHasChanged();
+    }
+
+}

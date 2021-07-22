@@ -1,0 +1,265 @@
+﻿
+
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using System.Text
+@using System.IO
+@using A2B_App.Shared.Sox
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@inject NavigationManager NavManager
+
+
+<div class="content px-4">
+    <div class="content px-4">
+        <h1>Client UI Process</h1>
+
+        <div class="row">
+            <div class="col-6">
+                <p class="float-left">Fill in information to Update a Client</p>
+            </div>
+        </div>
+
+        <div class="border-top my-3"></div>
+
+        <form>
+
+            <div class="row">
+                <div class="col">
+                    <label for="clientName">Client Name</label>
+                    <select class="form-control" id="Question1" @bind="ClientSelected">
+                        <option value="">Select Client</option>
+                        @if (listClient != null && listClient.Count > 0)
+                        {
+                            @foreach (var item in listClient)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        }
+
+                    </select>
+                </div>
+
+                <div class="col">
+                    <label for="clientCode">Client Code(unique code)</label>
+                    <select class="form-control" id="Question1" @bind="ClientCodeSelected">
+                        <option value="">Select Client</option>
+                        @if (listCode != null && listCode.Count > 0)
+                        {
+                            @foreach (var item in listCode)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        }
+
+                    </select>
+                </div>
+
+                <div class="col">
+                    <label for="externalAuditor">External Auditor</label>
+
+
+                    <input class="form-control" type="text" placeholder="" id="ExternalAuditor" @bind="VExternalAuditor" @bind:event="oninput">
+
+                </div>
+
+                <div class="col">
+                    <label for="clientName">Round 1 Percent</label>
+
+
+                    <input class="form-control" type="text" placeholder="" id="R1Percent" @bind="VR1Percent" @bind:event="oninput">
+
+                </div>
+
+                <div class="col">
+                    <label for="clientCode">Round 2 Percent</label>
+
+
+                    <input class="form-control" type="text" placeholder="" id="R2Percent" @bind="VR2Percent" @bind:event="oninput">
+
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label for="externalAuditor">Sharefile ID (Save File)</label>
+                    <input class="form-control" type="text" placeholder="" id="SFID" @bind="VSFID" @bind:event="oninput">
+                </div>
+
+                <div class="col">
+                    <label for="externalAuditor">SF Key Report ID (Screenshot)</label>
+                    <input class="form-control" type="text" placeholder="" id="SFID" @bind="VSKeyReportScreenhot" @bind:event="oninput">
+                </div>
+
+                <div class="col">
+                    <label for="externalAuditor">SF Key Report ID (Report)</label>
+                    <input class="form-control" type="text" placeholder="" id="SFID" @bind="VSKeyID" @bind:event="oninput">
+                </div>
+            </div>
+
+            <br /><br />
+
+          
+            <div class="row">
+                <div class="col">
+                    <button class="btn btn-primary float-right" type="button" @onclick="SubmitClient">Submit Client</button>
+                </div>
+            </div>
+           
+        </form>
+    </div>
+</div>
+@code {
+    private List<string> listClient = new List<string>();
+    private List<string> listCode = new List<string>();
+    private SampleSelectionService SampleSelectionService;
+    private ClientSettings settings;
+
+    private A2B_App.Shared.Sox.ClientSs client = new A2B_App.Shared.Sox.ClientSs();
+
+    private string ClientName { get; set; }
+    private string ClientCode { get; set; }
+
+    private string VExternalAuditor { get; set; }
+    private int VR1Percent { get; set; }
+    private int VR2Percent { get; set; }
+    private string VSFID { get; set; }
+    private string VSKeyReportScreenhot { get; set; }
+    private string VSKeyID { get; set; }
+
+    private int complete { get; set; }
+
+
+    private List<string> Results = new List<string>();
+
+
+
+
+    private string ClientCodeSelected
+    {
+        get
+        {
+            return client.ClientCode;
+        }
+        set
+        {
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            ClientCode = value;
+            Search(eventArgs);
+        }
+    }
+
+    private string ClientSelected
+    {
+        get
+        {
+            return client.ClientName;
+        }
+        set
+        {
+
+            ChangeEventArgs eventArgs = new ChangeEventArgs();
+            eventArgs.Value = value;
+            ClientName = value;
+            Search(eventArgs);
+        }
+    }
+
+    protected async override void OnInitialized()
+    {
+        Http.Timeout = TimeSpan.FromMinutes(30);
+        settings = await _getSettings;
+        SampleSelectionService = new SampleSelectionService(settings);
+        GetClient();
+        GetClientCodeeee();
+        base.OnInitialized();
+
+    }
+
+
+
+    private async void GetClient()
+    {
+        listClient = await SampleSelectionService.GetClients(Http);
+        this.StateHasChanged();
+    }
+
+
+    private async void GetClientCodeeee()
+    {
+        listCode = await SampleSelectionService.GetClientCode(Http);
+        this.StateHasChanged();
+    }
+
+    private async void Search(ChangeEventArgs e)
+    {
+        if (e.Value.ToString() != string.Empty)
+        {
+            client.ClientName = ClientName;
+            client.ClientCode = ClientCode;
+            await SearchClient();
+        }
+    }
+
+    protected async Task SearchClient()
+    {
+        var response = await SampleSelectionService.Search(client, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var result = JsonConvert.DeserializeObject<A2B_App.Shared.Sox.ClientSs>(response.Content.ReadAsStringAsync().Result.ToString());
+            VExternalAuditor = result.ExternalAuditor;
+            VR1Percent = result.Percent;
+            VR2Percent = result.PercentRound2;
+            VSFID = result.SharefileId;
+            VSKeyReportScreenhot = result.SharefileScreenshotId;
+            VSKeyID = result.SharefileReportId;
+            toastService.ShowSuccess($"Client Found");
+            this.StateHasChanged();
+            complete = 1;
+        }
+        else
+        {
+            complete = 0;
+            VExternalAuditor = "";
+            VR1Percent = 0;
+            VR2Percent = 0;
+            VSFID = "";
+            VSKeyReportScreenhot = "";
+            VSKeyID = "";
+            toastService.ShowWarning($"Client Not Found");
+            this.StateHasChanged();
+        }
+    }
+    protected async Task SubmitClient ()
+    {
+        if (complete == 1) {
+
+            client.ExternalAuditor = VExternalAuditor;
+            client.Percent = VR1Percent;
+            client.PercentRound2 = VR2Percent;
+            client.SharefileId = VSFID;
+            client.SharefileScreenshotId = VSKeyReportScreenhot;
+            client.SharefileReportId = VSKeyID;
+
+            var response = await SampleSelectionService.CreateNewClient(client, Http);
+            if (response.StatusCode.ToString() == "OK")
+            {
+                toastService.ShowSuccess($"Successfully save to podio and database");
+                this.StateHasChanged();
+            }
+            else
+            {
+                toastService.ShowError($"Something wrong on save to podio and database");
+                this.StateHasChanged();
+            }
+
+        }
+        else
+        {
+            toastService.ShowError($"Cannot update, Client not found");
+        }
+    }
+}

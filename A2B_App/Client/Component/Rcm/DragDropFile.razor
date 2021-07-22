@@ -1,0 +1,148 @@
+﻿@using BlazorInputFile
+@using A2B_App.Shared.Sox
+
+<div class="row">
+    <div class="col-12">
+        <div class="dropzone @dropClass rounded">
+            <InputFile id="fileInput" multiple title=""
+                       OnChange="HandleFileInputChange"
+                       accept="@fileFormatAccepted"
+                       @ondragenter="HandleDragEnter"
+                       @ondragleave="HandleDragLeave" />
+            @title
+        </div>
+        @if ((fileTypeError || fileSizeError))
+        {
+            <ul class="validation-errors mb-0">
+                @if (fileTypeError)
+                {
+                    <li class="validation-message">Only excel files are accepted.</li>
+                }
+                @if (fileSizeError)
+                {
+                    <li class="validation-message">The max file size is @MaxFileSizeMB MB.</li>
+                }
+            </ul>
+        }
+        @if (selectedFiles != null)
+        {
+            <div class="col-12">
+                <ul>
+                    <li>
+                        @selectedFiles.Name
+                        @if (enableRemove)
+                        {
+                            <button class="btn btn-link text-danger p-0 pl-1" type="button"
+                                    @onclick="@(e => RemoveFile(selectedFiles))">
+                                <small class="align-text-bottom">Remove</small>
+                            </button>
+                        }
+                    </li>
+
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    const int MaxFileSizeMB = 5;
+    const int MaxFileSize = MaxFileSizeMB * 1024 * 1024; // 5MB
+    private string dropClass = "";
+    private bool fileSizeError = false;
+    private bool fileTypeError = false;
+    //private List<IFileListEntry> selectedFiles = new List<IFileListEntry>();
+    private IFileListEntry selectedFiles;
+    [Parameter] public EventCallback<FileUpload> ReturnFiles { get; set; }
+    [Parameter] public int position { get; set; }
+    [Parameter] public string title { get; set; }
+    [Parameter] public string fileFormatAccepted { get; set; }
+    [Parameter] public bool enableRemove { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        //Console.WriteLine($"isRemove : {enableRemove}");
+        //base.OnParametersSet();
+    }
+
+    private void HandleDragEnter()
+    {
+        dropClass = "dropzone-drag";
+    }
+
+    private void HandleDragLeave()
+    {
+        dropClass = string.Empty;
+    }
+
+    private void HandleFileInputChange(IFileListEntry[] files)
+    {
+        dropClass = string.Empty;
+        fileSizeError = false;
+        fileTypeError = false;
+        List<string> acceptedFileTypes = new List<string>() { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel" }; //mime types for excel
+        if (files != null)
+        {
+            foreach (var file in files)
+            {
+                bool error = false;
+                if (file.Size > MaxFileSize)
+                {
+                    error = true;
+                    fileSizeError = true;
+                }
+
+                if (!acceptedFileTypes.Contains(file.Type))
+                {
+                    error = true;
+                    fileTypeError = true;
+                }
+
+                //keep the good files
+                if (!error)
+                {
+                    //selectedFiles.Add(file);
+                    selectedFiles = file;
+                    ReturnFileUpload(selectedFiles);
+                }
+            }
+        }
+    }
+
+    private void RemoveFile(IFileListEntry file)
+    {
+        if(enableRemove)
+        {
+            //selectedFiles.Remove(file);
+            selectedFiles = null;
+            ReturnFileUpload(selectedFiles);
+        }
+    }
+
+    private void ReturnFileUpload(IFileListEntry file)
+    {
+        FileUpload fileUpload = new FileUpload();
+        if (file != null)
+        {
+
+            fileUpload.IFileEntry = file;
+            fileUpload.Position = position;
+            ReturnFiles.InvokeAsync(fileUpload);
+        }
+        else
+        {
+            fileUpload.Position = position;
+            ReturnFiles.InvokeAsync(fileUpload);
+        }
+    }
+
+    public void Reset(int i)
+    {
+        FileUpload fileUpload = new FileUpload();
+        selectedFiles = null;
+        fileUpload.IFileEntry = null;
+        fileUpload.Position = position;
+        ReturnFiles.InvokeAsync(fileUpload);
+    }
+
+}

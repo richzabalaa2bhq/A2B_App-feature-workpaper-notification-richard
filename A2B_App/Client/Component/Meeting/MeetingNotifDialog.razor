@@ -1,0 +1,286 @@
+﻿@using A2B_App.Client.Services
+@using A2B_App.Shared.Skype
+@using A2B_App.Shared.Podio
+@using Newtonsoft.Json
+@using A2B_App.Shared.Meeting
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+
+
+@if (display)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">@title</p>
+                <button class="delete" aria-label="close" @onclick="Close"></button>
+            </header>
+            <section class="modal-card-body">
+
+                <div class="@messageClass">
+                    <button class="delete" @onclick="HideNotification"></button>
+                    @message
+                </div>
+
+                @if (skypeGC != null)
+                {
+                    <EditForm Model="@skypeGC">
+
+                        <div class="form-group">
+                            <label for="client">GC Name</label>
+                            <input type="text" class="input" @bind-value="@skypeGC.Name" disabled="@disabled">
+                        </div>
+
+                        <label class="checkbox pr-1">
+                            <input type="checkbox" @bind="@skypeGC.IsAllGC" disabled="@disabled">
+                            Notify All GC?
+                        </label>
+
+                        <label class="checkbox">
+                            <input type="checkbox" @bind="@skypeGC.IsEnabled" disabled="@disabled">
+                            Enabled?
+                        </label>
+
+                        <label class="checkbox">
+                            <input type="checkbox" @bind="@skypeGC.IsBizDev" disabled="@disabled">
+                            BizDev?
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" @bind="@skypeGC.Is3PMNotification" disabled="@disabled">
+                            3PM Notification
+                        </label>
+
+
+                        <nav class="level">
+                            <div class="level-item has-text-centered">
+                                <div>
+                                    <p class="title">Skype Address</p>
+                                </div>
+                            </div>
+                        </nav>
+
+                        <div class="form-group">
+                            <label for="client">ID</label>
+                            <input type="text" class="input" @bind-value="@skypeObj.id" disabled="@disabled">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="client">Channel ID</label>
+                            <input type="text" class="input" @bind-value="@skypeObj.channelId" disabled="@disabled">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="client">Service URL</label>
+                            <input type="text" class="input" @bind-value="@skypeObj.serviceUrl" disabled="@disabled">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="client">Conversation Id</label>
+                            <input type="text" class="input" @bind-value="@conversation.id" disabled="@disabled">
+                        </div>
+
+                        <label class="checkbox">
+                            <input type="checkbox" @bind="@conversation.isgroup" disabled="@disabled">
+                            Is Group?
+                        </label>
+
+                        <div class="form-group">
+                            @*<label for="client">Keyword</label>*@
+                            <div class="field has-addons">
+                                <div class="control is-expanded">
+                                    <input type="text" class="input" @bind-value="@tempKeyword" disabled="@disabled">
+                                </div>
+                                <div class="control">
+                                    @if(meetingProcess != 3)
+                                    {
+                                        <button type="submit" class="button is-primary" @onclick="@(()=> { AddKeyword(tempKeyword); })">Add Keyword</button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <div class="block">
+
+                            @if (listKeyword != null && listKeyword.Count > 0)
+                            {
+                                foreach (var item in listKeyword)
+                                {
+                                    <span class="tag is-success is-medium">
+                                        @item.Keyword
+                                        @if (meetingProcess != 3)
+                                        {
+                                            <button class="delete is-small" @onclick="@(()=> { DeleteKeyword(item.Keyword); })"></button>
+                                        }
+                                    </span>
+                                }
+                            }
+                        </div>
+
+
+
+                    </EditForm>
+                }
+
+
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button" @onclick="Close">Close</button>
+                @if (meetingProcess != 3)
+                {
+                    <button class="button is-danger" @onclick="@(() => { SetReturnValue("Yes"); })">Save</button>
+                }
+
+            </footer>
+        </div>
+    </div>
+
+}
+
+
+
+
+@code {
+
+    [Parameter] public EventCallback<string> ReturnValue { get; set; }
+    [Parameter] public string title { get; set; }
+    [Parameter] public SkypeAddress skypeGC { get; set; }
+    [Parameter] public Conversation conversation { get; set; }
+    [Parameter] public SkypeObj skypeObj { get; set; }
+    [Parameter] public List<KeyWordGC> listKeyword { get; set; }
+    [Parameter] public int meetingProcess { get; set; }
+    private string tempKeyword { get; set; }
+    private string message { get; set; }
+    private string messageClass { get; set; }
+    private bool disabled { get; set; }
+    private ClientSettings settings;
+    private MeetingService meetingService;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await _getSettings;
+        message = string.Empty;
+        HideNotification();
+        meetingService = new MeetingService(settings);
+    }
+
+    protected override void OnParametersSet()
+    {
+
+        if (meetingProcess == 3)
+        {
+            disabled = true;
+        }
+        else
+            disabled = false;
+
+        this.StateHasChanged();
+        base.OnParametersSet();
+    }
+
+    private void SetReturnValue(string answer)
+    {
+
+        skypeObj.conversation = conversation;
+        skypeGC.ListKeyword = listKeyword;
+        skypeGC.SkypeObj = skypeObj;
+        SaveGC(skypeGC);
+    }
+
+    private async void SaveGC(SkypeAddress skypeGC)
+    {
+        var response = await meetingService.SaveSkypeGC(skypeGC, Http);
+
+        if (response.StatusCode.ToString() == "OK")
+        {
+            var result = response.Content.ReadAsStringAsync().Result.ToString();
+            skypeObj = new SkypeObj();
+            conversation = new Conversation();
+            listKeyword = new List<KeyWordGC>();
+            this.skypeGC = new SkypeAddress();
+            if(meetingProcess == 1)
+            {
+                ShowSuccessNotification("Sucessfully save skype address", 3000);
+            }
+            else if(meetingProcess == 2)
+            {
+                ShowSuccessNotification("Sucessfully save skype address", 1000);
+                Close();
+            }
+
+
+        }
+        else
+        {
+            ShowErrorNotification($"Error saving skype address {response.Content.ReadAsStringAsync().Result.ToString()}");
+        }
+
+        this.StateHasChanged();
+    }
+
+    private async void ShowErrorNotification(string notifMessage)
+    {
+        messageClass = "notification is-danger";
+        message = notifMessage;
+        this.StateHasChanged();
+        await Task.Delay(5000);
+        HideNotification();
+    }
+
+    private void HideNotification()
+    {
+        messageClass = "is-hidden";
+        this.StateHasChanged();
+    }
+
+    private async void ShowSuccessNotification(string notifMessage, int delay)
+    {
+        messageClass = "notification is-success";
+        message = notifMessage;
+        await Task.Delay(delay);
+        HideNotification();
+        this.StateHasChanged();
+    }
+
+    private void DeleteKeyword(string keyword)
+    {
+        var keywordToDelete = listKeyword.Where(x => x.Keyword.ToLower().Equals(keyword.ToLower())).FirstOrDefault();
+        if (keywordToDelete != null)
+        {
+            listKeyword.Remove(keywordToDelete);
+        }
+        this.StateHasChanged();
+    }
+
+    private void AddKeyword(string keyword)
+    {
+        var keywordToAdd = listKeyword.Where(x => x.Keyword.ToLower().Equals(keyword.ToLower())).FirstOrDefault();
+        if (keywordToAdd == null)
+        {
+            KeyWordGC keywordGc = new KeyWordGC();
+            keywordGc.Keyword = keyword;
+            listKeyword.Add(keywordGc);
+        }
+    }
+
+    private bool display = false;
+
+    public void Show()
+    {
+
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        ReturnValue.InvokeAsync(string.Empty);
+        this.StateHasChanged();
+    }
+
+}

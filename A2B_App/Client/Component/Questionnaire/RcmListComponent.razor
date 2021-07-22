@@ -1,0 +1,93 @@
+﻿@typeparam TItem
+@using System.Reflection
+@using System.Text.RegularExpressions
+
+@if (memberInfo != null && memberInfo.Length > 0)
+{
+    
+
+    
+<div class="table-container">
+    <!--@*<table class="@($"table {tableClass}")">*@-->
+    <table id="example" class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                @foreach (var member in memberInfo)
+                {
+                    if (member.MemberType == MemberTypes.Property
+                        && !ColumnsToExcludeCSV.Contains(member.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <th>
+                            @(Regex.Replace(member.Name, $"[A-Z]", " $0").Trim())
+                        </th>
+                    }
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in this.Items)
+            {
+                <tr class="@($" {rowBodyClass} ")" @onclick="@(() => SetReturnId(item.GetType().GetProperty(ReturnField).GetValue(item)))">
+                    @foreach (var member in memberInfo)
+                    {
+                        if (member.MemberType == MemberTypes.Property
+                            && !ColumnsToExcludeCSV.Contains(member.Name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            <td>
+                                @item.GetType().GetProperty(member.Name).GetValue(item)
+                            </td>
+
+                        }
+                    }
+                </tr>
+            }
+
+        </tbody>
+    </table>
+</div>
+    
+}
+
+
+@code {
+
+    MemberInfo[] memberInfo;
+
+    [Parameter] public List<TItem> Items { get; set; }
+
+    [Parameter] public string ColumnsToExcludeCSV { get; set; }
+
+    [Parameter] public string ReturnField { get; set; }
+
+    [Parameter] public string tableClass { get; set; }
+
+    [Parameter] public string rowBodyClass { get; set; }
+
+    [Parameter] public EventCallback<int> ReturnItemId { get; set; }
+    [Parameter] public EventCallback<string> ReturnItemIdAsStr { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        if (Items != null && Items.Count() > 0)
+        {
+            Type typeofItem = this.Items[0].GetType();
+            memberInfo = typeofItem.GetMembers();
+        }
+    }
+
+    private void SetReturnId(object Id)
+    {
+
+        if (int.TryParse(Id.ToString(), out int itemId))
+        {
+            ReturnItemId.InvokeAsync(itemId);
+        }
+        else
+        {
+            ReturnItemIdAsStr.InvokeAsync(Id.ToString());
+        }
+
+    }
+}

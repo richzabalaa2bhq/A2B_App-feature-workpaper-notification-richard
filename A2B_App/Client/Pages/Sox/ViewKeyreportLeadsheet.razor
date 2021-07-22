@@ -1,0 +1,315 @@
+﻿@page "/keyreport/leadsheet/{fy}/{clientName}/{keyreportName}"
+
+@using Microsoft.AspNetCore.Authorization
+@using A2B_App.Client.Services
+@using Newtonsoft.Json
+@using System.Text
+@using System.IO
+@using System.Web
+@using A2B_App.Shared.Sox
+@using A2B_App.Client.Component.Utilities
+@inject IToastService toastService
+@inject Task<ClientSettings> _getSettings
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@attribute [Authorize(Roles = "Admin, IT, Accounting")]
+
+
+@if (answers_list[0] == null)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <progress class="progress is-medium is-dark" max="100">45%</progress>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="table-responsive">
+                    <table class="table table-bordered is-bordered">
+                        <thead>
+                            <tr>
+                                <th scope="col" rowspan="2" style="vertical-align : middle;text-align:center;">Step #</th>
+                                <th scope="col" style="background: #536878; max-width: 850px; min-width: 850px; color: #fff;">Procedures</th>
+                                <th scope="col" style="background: #536878; max-width: 850px; min-width: 850px; color: #fff;">Results</th>
+                            </tr>
+                            <tr>
+                                <th scope="col" colspan="2" style="background: #536878; color: #fff;">Key Report Information</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">1</th>
+                                <td>What is the key report name?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[0]) ? answers_list[0] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2</th>
+                                <td>Was this report previously evaluated for reliability? (If so, link to those procedures)</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[1]) ? answers_list[1] : string.Empty))</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">3</th>
+                                <td>What is the purpose of the report?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[2]) ? answers_list[2] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">4</th>
+                                <td>What are the key data fields used from this report?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[3]) ? answers_list[3] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">5</th>
+                                <td>What type of report is this?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[4]) ? answers_list[4] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">6</th>
+                                <td>Define a condition that would represent an exception on this report</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[5]) ? answers_list[5] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">7</th>
+                                <td>What is the application/system name? (source of the data used to generate the report)</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[6]) ? answers_list[6] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">8</th>
+                                <td>Is this report: custom, canned, custom query?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[7]) ? answers_list[7] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">9</th>
+                                <td>When was the last time this report was modified?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[8]) ? answers_list[8] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">10</th>
+                                <td>What are the key report parameters?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[9]) ? answers_list[9] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">11</th>
+                                <td>Are parameters input into the report each time it is run?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[10]) ? answers_list[10] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">12</th>
+                                <td>How does the report user verify the report is complete?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[11]) ? answers_list[11] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">13</th>
+                                <td>How does the report user verify the report is accurate?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[12]) ? answers_list[12] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">14</th>
+                                <td>How does the report user verify the report data has integrity?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[13]) ? answers_list[13] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">15</th>
+                                <td>
+                                    Procedures performed to assess the accuracy, completeness, and validity of the source data.<br><br>
+                                    All Applications<br>
+                                    Accuracy - trace one item to the outside source<br>
+                                    Completeness - identify an outside data point and trace back to the report<br><br><br><br>
+                                    NetSuite<br>
+                                    Canned Report - Review report name to ensure it is still unmodified. If true, no additional testing needed.<br>
+                                    Customized Report - Review report builder for customization and reconcile against the report requirement / purpose <br>
+                                    Search - Review search criteria and results tab and reconcile against requirement / purpose
+                                </td>
+
+                                <td>
+                                    @if (!string.IsNullOrEmpty(answers_list[14])) 
+                                    { 
+                                        @if (answers_list[14].Contains("<br/>"))
+                                        {
+                                            @foreach (string a in this.formatString(answers_list.Any() ? answers_list[14] : string.Empty))
+                                            {
+                                                <p>@a</p><br />
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <p>@answers_list[14]</p>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        @string.Empty;
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">16</th>
+                                <td>Who is the report user (report runner)? Name and Title, date of observation.</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[15]) ? answers_list[15] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">17</th>
+                                <td>When did the tester observe the report being run?</td>
+                                <td>@*@(!string.IsNullOrEmpty(answers_list[16]) ? answers_list[16] : string.Empty)*@</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">18</th>
+                                <td style="background: #536878; color: #fff;">Frequency of the report/query generation</td>
+                                <td style="background: #536878; color: #fff;">@(!string.IsNullOrEmpty(answers_list[17]) ? answers_list[17] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">19</th>
+                                <td>Are there other UAT, Change Management testing, ITGC that support the reliability of this Key Report?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[18]) ? answers_list[18] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">20</th>
+                                <td>Is the report output modifiable? (Y/N?)</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[19]) ? answers_list[19] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"></th>
+                                <td>Testing Information </td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[20]) ? answers_list[20] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">21</th>
+                                <td>What date was testing performed?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[21]) ? answers_list[21] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">22</th>
+                                <td>Who performed the testing?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[22]) ? answers_list[22] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">23</th>
+                                <td>What date was testing reviewed?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[23]) ? answers_list[23] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">24</th>
+                                <td style="background: #536878; color: #fff;">Who performed the review?</td>
+                                <td style="background: #536878; color: #fff;">@(!string.IsNullOrEmpty(answers_list[24]) ? answers_list[24] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">25</th>
+                                <td>What period did the report cover?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[25]) ? answers_list[25] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">26</th>
+                                <td>Was testing performed during another period? If yes, when?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[26]) ? answers_list[26] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"></th>
+                                <td>Conclusion</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[27]) ? answers_list[27] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">27</th>
+                                <td>Any exceptions noted?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[28]) ? answers_list[28] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">28</th>
+                                <td>Is the report complete and accurate?</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[29]) ? answers_list[29] : string.Empty)</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">28</th>
+                                <td>Notes</td>
+                                <td>@(!string.IsNullOrEmpty(answers_list[30]) ? answers_list[30] : string.Empty)</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter] public string fy { get; set; }
+    [Parameter] public string clientName { get; set; }
+    [Parameter] public string keyreportName { get; set; }
+    private string[] answers_list = new string[41];
+    private KeyReportService KeyReportService;
+    private KeyReportFilter reportFilter;
+    private ClientSettings settings;
+    public bool isLoading = true;
+    KeyReportScreenshot keyrepScreenshot { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Http.Timeout = TimeSpan.FromMinutes(30);
+        settings = await _getSettings;
+        KeyReportService = new KeyReportService(settings);
+        reportFilter = new KeyReportFilter();
+        keyrepScreenshot = new KeyReportScreenshot();
+        GenerateKeyReportOutput();
+    }
+
+    private async void GenerateKeyReportOutput()
+    {
+
+        reportFilter.FY = fy;
+        reportFilter.ClientName = clientName;
+        reportFilter.KeyReportName = keyreportName;
+        this.StateHasChanged();
+
+        var responseSf = await KeyReportService.GetSharefileScreenshot(reportFilter, Http);
+        var res = responseSf.StatusCode.ToString();
+        Console.WriteLine(res);
+        switch (responseSf.StatusCode.ToString())
+        {
+            case "OK":
+                string result = responseSf.Content.ReadAsStringAsync().Result.ToString();
+                keyrepScreenshot = result != string.Empty ? JsonConvert.DeserializeObject<KeyReportScreenshot>(result) : null;
+                toastService.ShowSuccess($"Successfully downloaded screenshot in SF");
+                isLoading = false;
+                break;
+
+
+            case "NoContent":
+                toastService.ShowInfo($"No screenshot found in SF");
+                keyrepScreenshot = new KeyReportScreenshot();
+                keyrepScreenshot.Filter = reportFilter;
+                break;
+            default:
+                toastService.ShowError($"Failed to downloaded screenshot in SF");
+                break;
+        }
+
+        //Fetching of Data to be Rendered on HTML/Table
+        var response = await KeyReportService.GenerateKeyReportViewAccess(keyrepScreenshot, Http);
+        switch (response.StatusCode.ToString())
+        {
+            case "OK":
+                string result = response.Content.ReadAsStringAsync().Result.ToString();
+                answers_list = result != string.Empty ? JsonConvert.DeserializeObject<String[]>(result) : null;
+                Console.WriteLine(answers_list);
+
+                break;
+            case "NoContent":
+                toastService.ShowInfo($"No unique key found for this report name");
+                break;
+            default:
+                toastService.ShowError($"Failed to create key report leadsheet file");
+                break;
+        }
+        this.StateHasChanged();
+    }
+
+    public string[] formatString(String s)
+    {
+        var tempArr = s.Split("<br/>");
+        return tempArr;
+    }
+}

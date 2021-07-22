@@ -1,0 +1,111 @@
+﻿@using A2B_App.Client.Services
+@using A2B_App.Shared.Sox
+@using A2B_App.Shared.Podio
+@using A2B_App.Shared.Admin
+@using A2B_App.Shared.Meeting
+
+@if (display)
+{
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="h5">@title</p>
+              
+            </header>
+            <section class="modal-card-body">
+                <h3>Meeting Participants</h3>
+
+                @if (participants != null)
+                {
+                    <ul>
+                        @foreach (var item in participants)
+                        {
+                            <li>@item</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>No Meeting Attendees Found</p>
+                }
+
+                </section>
+            <footer class="modal-card-foot">
+                <button class="button" @onclick="Close">Close</button>
+
+            </footer>
+        </div>
+    </div>
+
+}
+
+
+
+
+@code {
+
+    [Parameter] public EventCallback<ModalYesWithId> ReturnValue { get; set; }
+    [Parameter] public string title { get; set; }
+    public List<meeting> meeting_info { get; set; }
+    [Parameter] public string id { get; set; }
+    public List<MeetingAttendees> list_attendees;
+    public List<string> participants = new List<string>();
+    private bool display = false;
+
+    public void Show(List<meeting> meeting)
+    {
+        meeting_info = new List<meeting>();
+        Console.WriteLine(meeting);
+        meeting_info.AddRange(meeting);
+        string[] temp_member;
+        title = meeting_info[0].title;
+        if (meeting_info[0] != null)
+        {
+            if (meeting_info[0].team_member != null)
+            {
+                if(meeting_info[0].team_member.Contains(";"))
+                {
+                    temp_member = meeting_info[0].team_member.Split(";");
+                    foreach(var item in temp_member)
+                    {
+                        participants.Add(item);
+                    }
+                }
+                else
+                {
+                    participants.Add(meeting_info[0].team_member);
+                }
+
+            }
+            if (meeting_info[0].other_participant != null)
+            {
+
+                if (meeting_info[0].other_participant.Contains(";"))
+                {
+
+                    temp_member = meeting_info[0].other_participant.Split(";");
+                    foreach (var item in temp_member)
+                    {
+                        participants.Add(item);
+                    }
+                }
+                else
+                {
+                    participants.Add(meeting_info[0].other_participant);
+                }
+            }
+
+            
+        }
+        this.display = true;
+        this.StateHasChanged();
+    }
+
+    public void Close()
+    {
+        this.display = false;
+        this.StateHasChanged();
+    }
+
+}
